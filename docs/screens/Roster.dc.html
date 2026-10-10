@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RetailOS Roster</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&amp;family=Instrument+Serif&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#6F5B71;text-decoration:none}a:hover{color:#4E3F50}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F8F5F1; font-family: 'DM Sans', system-ui, sans-serif; color: #222024; display: flex; flex-direction: column; overflow: hidden">
+
+<header style="padding: 60px 20px 10px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: flex-end; justify-content: space-between">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<p style="margin: 0; font-size: 11px; font-weight: 600; letter-spacing: 0.14em; color: #5E5A61">TEAM</p>
+<h1 style="margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; font-size: 38px; line-height: 1">Roster</h1>
+</div>
+<div style="display: flex; align-items: center; gap: 4px">
+<button type="button" aria-label="Previous week" style="width: 40px; height: 40px; border-radius: 999px; border: 1px solid #E6E1DC; background: #FFFFFF; color: #222024; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"></path></svg></button>
+<span style="font-size: 13px; font-weight: 600; padding: 0 6px">5 – 11 Oct</span>
+<button type="button" aria-label="Next week" style="width: 40px; height: 40px; border-radius: 999px; border: 1px solid #E6E1DC; background: #FFFFFF; color: #222024; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"></path></svg></button>
+</div>
+</div>
+<div role="group" aria-label="Choose a day" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px">
+<sc-for list="{{ days }}" as="d" hint-placeholder-count="7">
+<button type="button" aria-pressed="{{ d.pressed }}" aria-label="{{ d.aria }}" onClick="{{ d.pick }}" style="{{ d.style }}">
+<span style="font-size: 11px; font-weight: 500">{{ d.dow }}</span>
+<span style="font-size: 16px; font-weight: 600">{{ d.num }}</span>
+</button>
+</sc-for>
+</div>
+</header>
+
+<main style="flex: 1; overflow-y: auto; padding: 6px 20px 16px; display: flex; flex-direction: column; gap: 12px">
+<section aria-labelledby="cover-title" style="background: #FFFFFF; border: 1px solid #E6E1DC; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; align-items: baseline; justify-content: space-between">
+<h2 id="cover-title" style="margin: 0; font-size: 15px; font-weight: 600">Floor cover · Sat 10 Oct</h2>
+<span style="font-size: 12px; color: #5E5A61">6 staff · 37.5 h</span>
+</div>
+<div role="img" aria-label="Staff on the floor by hour, 9 am to 8 pm. Lowest is 2 people at 11 am, below the minimum of 3." style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 4px; align-items: end; height: 76px">
+<sc-for list="{{ cover }}" as="c" hint-placeholder-count="12">
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; height: 100%">
+<span style="{{ c.countStyle }}">{{ c.n }}</span>
+<div style="{{ c.barStyle }}"></div>
+<span style="font-size: 10px; color: #5E5A61">{{ c.label }}</span>
+</div>
+</sc-for>
+</div>
+<p style="margin: 0; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #A8323C"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20z"></path><path d="M12 10v4M12 17v.5"></path></svg>Below minimum of 3 at 11 am</p>
+</section>
+
+<sc-for list="{{ shifts }}" as="s" hint-placeholder-count="6">
+<div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: #FFFFFF; border: 1px solid #E6E1DC; border-radius: 16px">
+<span aria-hidden="true" style="{{ s.avatarStyle }}">{{ s.initials }}</span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 14px; font-weight: 600">{{ s.name }}</span>
+<span style="font-size: 12px; color: #5E5A61">{{ s.role }}</span>
+<span style="{{ s.stateStyle }}"><span style="{{ s.dotStyle }}"></span>{{ s.state }}</span>
+</span>
+<span style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0">
+<span style="font-size: 13px; font-weight: 600">{{ s.time }}</span>
+<span style="font-size: 11px; color: #5E5A61">{{ s.meta }}</span>
+</span>
+<button type="button" aria-label="{{ s.editLabel }}" style="width: 36px; height: 44px; border: none; background: none; color: #5E5A61; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.2"></circle><circle cx="12" cy="12" r="1.2"></circle><circle cx="12" cy="19" r="1.2"></circle></svg></button>
+</div>
+</sc-for>
+
+<p style="margin: 2px 0 0; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; color: #5E5A61"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>Hours only. Pay rates are visible to managers.</p>
+</main>
+
+<div style="padding: 12px 20px 14px; background: #F8F5F1; border-top: 1px solid #E6E1DC">
+<button type="button" style="width: 100%; min-height: 52px; border: none; border-radius: 14px; background: #222024; color: #FFFFFF; font-family: inherit; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>Add shift</button>
+</div>
+
+<nav aria-label="Main navigation" style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); background: #FFFFFF; border-top: 1px solid #E6E1DC; padding: 6px 6px 26px">
+<a href="Main.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 52px; font-size: 11px; font-weight: 500; color: #6E6672"><span style="display: flex; align-items: center; justify-content: center; width: 52px; height: 30px; border-radius: 999px"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"></path></svg></span>Dashboard</a>
+<a href="Orders.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 52px; font-size: 11px; font-weight: 500; color: #6E6672"><span style="display: flex; align-items: center; justify-content: center; width: 52px; height: 30px; border-radius: 999px"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1 12H7z"></path><path d="M9 8V6a3 3 0 0 1 6 0v2"></path></svg></span>Orders</a>
+<a href="Roster.dc.html" aria-current="page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 52px; font-size: 11px; font-weight: 600; color: #222024"><span style="display: flex; align-items: center; justify-content: center; width: 52px; height: 30px; border-radius: 999px; background: #EBCDD3"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></span>Roster</a>
+<a href="Inventory.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 52px; font-size: 11px; font-weight: 500; color: #6E6672"><span style="display: flex; align-items: center; justify-content: center; width: 52px; height: 30px; border-radius: 999px"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z"></path><path d="M3 7.5 12 12l9-4.5M12 12v9"></path></svg></span>Inventory</a>
+<button type="button" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 52px; font-family: inherit; font-size: 11px; font-weight: 500; color: #6E6672; background: none; border: none; cursor: pointer"><span style="display: flex; align-items: center; justify-content: center; width: 52px; height: 30px; border-radius: 999px"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.2"></circle><circle cx="12" cy="12" r="1.2"></circle><circle cx="19" cy="12" r="1.2"></circle></svg></span>More</button>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { day: 10 };
+  }
+  renderVals() {
+    var self = this;
+    var dayBase = 'min-height: 56px; border-radius: 14px; font-family: inherit; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; ';
+    var days = [['Mon',5],['Tue',6],['Wed',7],['Thu',8],['Fri',9],['Sat',10],['Sun',11]].map(function (d) {
+      var on = self.state.day === d[1];
+      return {
+        dow: d[0], num: d[1], pressed: on ? 'true' : 'false',
+        aria: d[0] + ' ' + d[1] + ' October' + (d[1] === 10 ? ', today' : ''),
+        style: dayBase + (on ? 'background: #222024; color: #FFFFFF; border: 1px solid #222024' : 'background: #FFFFFF; color: #222024; border: 1px solid #E6E1DC'),
+        pick: function () { self.setState({ day: d[1] }); }
+      };
+    });
+    var counts = [['9a',3],['10',3],['11',2],['12p',3],['1',4],['2',4],['3',3],['4',4],['5',4],['6',3],['7',3],['8',3]];
+    var cover = counts.map(function (c) {
+      var low = c[1] < 3;
+      return {
+        label: c[0], n: c[1],
+        countStyle: 'font-size: 10px; font-weight: 600; color: ' + (low ? '#A8323C' : '#5E5A61'),
+        barStyle: 'width: 100%; border-radius: 4px; height: ' + (c[1] * 10) + 'px; ' + (low ? 'background: repeating-linear-gradient(135deg, #C44D56 0 3px, #F7E1E3 3px 6px)' : 'background: #816C83')
+      };
+    });
+    var palette = ['#F3E3E7', '#ECE6F0', '#DCE8E4', '#F2EBDD', '#EAD9CF', '#E6E1DC'];
+    var rows = [
+      ['PS', 'Priya Sharma', 'Store Manager · Full time', '9:00 am – 5:30 pm', '30m break · 8h', 'On the floor', 'on'],
+      ['JL', 'Jordan Lee', 'Shift Runner · Full time', '12:00 – 8:30 pm', '30m break · 8h', 'On the floor (you)', 'on'],
+      ['GL', 'Grace Liu', 'Beauty Advisor · Casual', '1:00 – 9:00 pm', '30m break · 7.5h', 'Break at 5:00 pm · needs cover', 'warn'],
+      ['LM', 'Leo Martin', 'Beauty Advisor · Casual', '4:00 – 9:00 pm', '30m break · 4.5h', 'On the floor', 'on'],
+      ['AR', 'Aisha Rahman', 'Beauty Advisor · Part time', '9:00 am – 3:00 pm', '30m break · 5.5h', 'Finished', 'off'],
+      ['TB', 'Tom Becker', 'Stock Associate · Part time', '7:00 – 11:00 am', 'No break · 4h', 'Finished', 'off']
+    ];
+    var shifts = rows.map(function (r, i) {
+      var colour = r[6] === 'on' ? '#2C5B4A' : r[6] === 'warn' ? '#8A5A1F' : '#5E5A61';
+      var dot = r[6] === 'on' ? '#4C826C' : r[6] === 'warn' ? '#C98A2E' : '#A49CA6';
+      return {
+        initials: r[0], name: r[1], role: r[2], time: r[3], meta: r[4], state: r[5],
+        editLabel: 'Edit shift for ' + r[1],
+        avatarStyle: 'width: 42px; height: 42px; border-radius: 999px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; background: ' + palette[i],
+        stateStyle: 'display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; margin-top: 2px; color: ' + colour,
+        dotStyle: 'width: 6px; height: 6px; border-radius: 999px; background: ' + dot
+      };
+    });
+    return { days: days, cover: cover, shifts: shifts };
+  }
+}
+</script>
+</body>
+</html>
