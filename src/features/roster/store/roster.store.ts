@@ -29,7 +29,8 @@ type States = {
 };
 
 type Actions = {
-  addShift: (draft: ShiftDraft) => SaveShiftResult;
+  /** Adds a shift. It may not start before `now` (defaults to the current time). */
+  addShift: (draft: ShiftDraft, now?: Date) => SaveShiftResult;
   removeShift: (shiftId: string) => void;
   resetDemoData: () => void;
   updateShift: (shiftId: string, draft: ShiftDraft) => SaveShiftResult;
@@ -67,19 +68,23 @@ export function isPersistedShift(value: unknown): value is Shift {
 export const useRosterStore = create<States & Actions>()(
   persist(
     (set, get) => {
-      const context = (editingShiftId?: string) => ({
+      const context = (editingShiftId?: string, now?: Date) => ({
         storeId: DEMO_STORE_ID,
         employees: get().employees,
         shifts: get().shifts,
         editingShiftId,
+        now,
       });
 
       return {
         employees: MOCK_EMPLOYEES,
         shifts: createMockShifts(),
 
-        addShift: (draft) => {
-          const errors = ShiftUtils.validateShift(draft, context());
+        addShift: (draft, now = new Date()) => {
+          const errors = ShiftUtils.validateShift(
+            draft,
+            context(undefined, now),
+          );
           if (ShiftUtils.hasErrors(errors)) {
             return { ok: false, errors };
           }

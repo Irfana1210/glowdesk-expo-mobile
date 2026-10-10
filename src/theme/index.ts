@@ -4,6 +4,8 @@ export { maxFontScale, radius, spacing, touchTarget } from "./spacing";
 export type { StatusTone } from "./tokens";
 export {
   darkSurface,
+  displayLetterSpacing,
+  fonts,
   fontSizes,
   palette,
   shiftStateColors,

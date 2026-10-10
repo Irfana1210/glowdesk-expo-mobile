@@ -12,6 +12,7 @@ const at = (day: number, h: number, m = 0) =>
 const employees: Array<Employee> = [
   {
     id: "e1",
+    staffId: "RO9001",
     storeId: STORE,
     name: "Olivia Carter",
     role: "STORE_MANAGER",
@@ -20,6 +21,7 @@ const employees: Array<Employee> = [
   },
   {
     id: "e2",
+    staffId: "RO9002",
     storeId: STORE,
     name: "Liam Nguyen",
     role: "BEAUTY_ADVISOR",
@@ -28,6 +30,7 @@ const employees: Array<Employee> = [
   },
   {
     id: "e3",
+    staffId: "RO9003",
     storeId: STORE,
     name: "Jack Wilson",
     role: "CASHIER",
@@ -36,6 +39,7 @@ const employees: Array<Employee> = [
   },
   {
     id: "e4",
+    staffId: "RO9004",
     storeId: "other-store",
     name: "Grace Lee",
     role: "CASHIER",

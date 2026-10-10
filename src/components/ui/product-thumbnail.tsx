@@ -1,7 +1,7 @@
 import { type FC } from "react";
 import { StyleSheet, View } from "react-native";
 
-import { colors, fontFamily, radius, swatches } from "@/theme";
+import { colors, displayLetterSpacing, fonts, radius, swatches } from "@/theme";
 
 import { AppText } from "./app-text";
 
@@ -73,5 +73,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  mono: { fontFamily: fontFamily.display, color: colors.text },
+  mono: {
+    fontFamily: fonts.display,
+    letterSpacing: displayLetterSpacing,
+    color: colors.text,
+  },
 });

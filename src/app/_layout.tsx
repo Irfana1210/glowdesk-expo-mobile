@@ -8,7 +8,7 @@ import { DMSans_400Regular } from "@expo-google-fonts/dm-sans/400Regular";
 import { DMSans_500Medium } from "@expo-google-fonts/dm-sans/500Medium";
 import { DMSans_600SemiBold } from "@expo-google-fonts/dm-sans/600SemiBold";
 import { DMSans_700Bold } from "@expo-google-fonts/dm-sans/700Bold";
-import { InstrumentSerif_400Regular } from "@expo-google-fonts/instrument-serif/400Regular";
+import { DMSerifDisplay_400Regular } from "@expo-google-fonts/dm-serif-display/400Regular";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
@@ -19,6 +19,12 @@ import { createQueryClient } from "@/utils/query-client/app-query-client";
 import { toastConfig } from "@/utils/toast-config";
 
 import { useAppStateFocusManager } from "@/hooks/query/use-app-state-focus";
+
+import { useSessionBootstrap } from "@/features/auth/hooks/use-session-bootstrap";
+import {
+  selectSessionStatus,
+  useSessionStore,
+} from "@/features/auth/store/session.store";
 
 import { colors } from "@/theme";
 
@@ -33,15 +39,20 @@ void SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const [queryClient] = useState(createQueryClient);
   useAppStateFocusManager();
+  useSessionBootstrap();
+  const sessionStatus = useSessionStore(selectSessionStatus);
   const [fontsLoaded, fontError] = useFonts({
-    InstrumentSerif_400Regular,
+    DMSerifDisplay_400Regular,
     DMSans_400Regular,
     DMSans_500Medium,
     DMSans_600SemiBold,
     DMSans_700Bold,
   });
   // If fonts fail we still render with the system font rather than blocking the app.
-  const ready = fontsLoaded || fontError !== null;
+  // The session must be resolved too, so the first screen is the right one.
+  const ready =
+    (fontsLoaded || fontError !== null) && sessionStatus !== "loading";
+  const signedIn = sessionStatus === "signedIn";
 
   useEffect(() => {
     if (ready) {
@@ -64,15 +75,22 @@ export default function RootLayout() {
               contentStyle: { backgroundColor: colors.background },
             }}
           >
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="orders/[id]" />
-            <Stack.Screen name="orders/scan" />
-            <Stack.Screen name="orders/complete" />
-            <Stack.Screen name="inventory/[id]" />
-            <Stack.Screen name="inventory/scan" />
-            <Stack.Screen name="roster/shift" />
-            <Stack.Screen name="more/labour" />
-            <Stack.Screen name="more/settings" />
+            {/* Everything behind sign-in. When the guard turns false, Expo Router
+                leaves these screens and shows the first available one: sign-in. */}
+            <Stack.Protected guard={signedIn}>
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="orders/[id]" />
+              <Stack.Screen name="orders/scan" />
+              <Stack.Screen name="orders/complete" />
+              <Stack.Screen name="inventory/[id]" />
+              <Stack.Screen name="inventory/scan" />
+              <Stack.Screen name="roster/shift" />
+              <Stack.Screen name="more/labour" />
+              <Stack.Screen name="more/settings" />
+            </Stack.Protected>
+            <Stack.Protected guard={!signedIn}>
+              <Stack.Screen name="sign-in" />
+            </Stack.Protected>
             <Stack.Screen name="+not-found" />
           </Stack>
           <Toast config={toastConfig} />

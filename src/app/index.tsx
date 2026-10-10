@@ -1,6 +1,12 @@
 import { Redirect } from "expo-router";
 
-/** Demo mode: no sign-in yet, so launch goes straight to the dashboard (brief §5). */
+import {
+  selectSessionStatus,
+  useSessionStore,
+} from "@/features/auth/store/session.store";
+
+/** Launch lands on the dashboard when signed in, otherwise on the sign-in screen. */
 export default function Index() {
-  return <Redirect href="/dashboard" />;
+  const status = useSessionStore(selectSessionStatus);
+  return <Redirect href={status === "signedIn" ? "/dashboard" : "/sign-in"} />;
 }

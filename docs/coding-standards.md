@@ -1,8 +1,6 @@
 # RetailOS — Coding Standards
 
 Expo (expo-router) app with TypeScript, TanStack Query, Zustand and react-hook-form + zod.
-Project-specific choices are called out under
-**RetailOS differs** so they are deliberate, not drift.
 
 Run `npm run check` before every commit (format, lint, typecheck, spelling, knip, tests). The
 husky pre-commit hook runs the same gates.
@@ -32,8 +30,7 @@ test/utils/           # Shared test helpers (@test/*)
 __mocks__/            # Jest manual mocks for native modules
 ```
 
-**RetailOS differs:** a type-first layout groups by type (`screens/`, `stores/`, `services/` at the top). RetailOS
-groups by feature, then by type inside the feature. Cross-feature imports use `@/features/...`.
+Code is grouped by feature, then by type inside the feature. Cross-feature imports use `@/features/...`.
 
 ## Naming
 
@@ -76,7 +73,8 @@ groups by feature, then by type inside the feature. Cross-feature imports use `@
 ## TanStack Query — Safe Hooks
 
 - Always use `useSafeQuery` from `@/hooks/query/use-safe-query`. Never `useQuery` directly.
-  Add `useSafeMutation` / `useSafeInfiniteQuery` with the first mutation or paged list.
+  Mutations use `useSafeMutation` from `@/hooks/query/use-safe-mutation`. Add `useSafeInfiniteQuery`
+  in the same folder with the first paged list.
 - Wrap each query in a feature hook (`useInventory`), never call a service inside a component.
 - Cache keys are flat constants in `src/services/cache-keys/index.ts`, used as the first element of
   the query key: `[INVENTORY_CACHE_KEY, storeId]`. Never inline a key string.
@@ -90,7 +88,7 @@ groups by feature, then by type inside the feature. Cross-feature imports use `@
 - Actions return result objects (`{ ok: true } | { ok: false; message }`) instead of throwing.
 - Selectors live next to the store (`selectOrderById`).
 
-**RetailOS differs:** persistence uses Zustand's `persist` middleware on expo-sqlite's key-value
+Persistence uses Zustand's `persist` middleware on expo-sqlite's key-value
 store (`persistStorage` in `src/utils/storage.ts`), not MMKV. Keys live in `STORAGE_KEYS` and are
 versioned; never rename one without a `migrate`.
 
@@ -103,7 +101,7 @@ versioned; never rename one without a `migrate`.
 
 ## Forms — react-hook-form + zod
 
-**RetailOS differs:** Formik + Yup is a common choice. RetailOS uses react-hook-form with `zodResolver`.
+Forms use react-hook-form with `zodResolver`.
 
 - Schemas live with the feature domain (`roster/domain/shift-form.ts`).
 - Disable fields and buttons while submitting.
@@ -113,9 +111,8 @@ versioned; never rename one without a `migrate`.
 
 ## Errors and Feedback
 
-- Error toasts: add `handleError(error)` in `src/utils/handle-api-error.ts` with the
-  first server mutation. It shows a `ToastTypes.Error` toast with the API's message or
-  `LOCALE.errors.generic`, and reports through `ReportingUtils`.
+- Error toasts: `handleError(error)` in `src/utils/handle-api-error.ts` shows a `ToastTypes.Error`
+  toast with the API's message or `LOCALE.errors.generic`, and reports through `ReportingUtils`.
 - `successHandler(MessageType.X)` shows a success toast. Use it when the action navigates away
   (shift saved/removed).
 - Keep feedback inline when it relates to what is on screen (scan results, field errors, banners).

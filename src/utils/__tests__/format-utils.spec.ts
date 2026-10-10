@@ -126,3 +126,12 @@ describe("time ranges and durations", () => {
     expect(FormatUtils.formatShortDate(at(9))).toBe("Sat 10 Oct");
   });
 });
+
+describe("formatHourShort", () => {
+  it("labels the first hour and noon with am/pm and the rest with plain numbers", () => {
+    const hours = [9, 10, 11, 12, 13, 20];
+    expect(
+      hours.map((h, i) => FormatUtils.formatHourShort(h, i === 0)),
+    ).toEqual(["9am", "10", "11", "12pm", "1", "8"]);
+  });
+});

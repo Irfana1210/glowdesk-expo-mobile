@@ -11,6 +11,10 @@ import { FormatUtils } from "@/utils/format-utils";
 import { useNow } from "@/hooks/use-now";
 
 import {
+  selectSession,
+  useSessionStore,
+} from "@/features/auth/store/session.store";
+import {
   type Employee,
   EMPLOYMENT_TYPE_LABELS,
   ROLE_LABELS,
@@ -23,7 +27,6 @@ import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenTitle } from "@/components/ui/screen-title";
 import { ShiftRow } from "@/components/ui/shift-row";
 
-import { DEMO_USER } from "@/mocks/user";
 import {
   colors,
   fontFamily,
@@ -59,6 +62,7 @@ export const RosterScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
   const now = fixedNow ?? liveNow;
   const shifts = useRosterStore((s) => s.shifts);
   const employees = useRosterStore((s) => s.employees);
+  const session = useSessionStore(selectSession);
 
   const [weekStart, setWeekStart] = useState(() => DateUtils.startOfWeek(now));
   const [selected, setSelected] = useState(() => now);
@@ -117,6 +121,18 @@ export const RosterScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
       pathname: "/roster/shift",
       params: { date: DateUtils.toDateKey(selected) },
     });
+  const isPastDay =
+    DateUtils.startOfDay(selected).getTime() <
+    DateUtils.startOfDay(now).getTime();
+  const addCover = (hour: number) =>
+    router.push({
+      pathname: "/roster/shift",
+      params: { date: DateUtils.toDateKey(selected), start: String(hour) },
+    });
+  const actionableHours = useMemo(
+    () => CoverUtils.actionableLowHours(cover, selected, now),
+    [cover, selected, now],
+  );
 
   return (
     <Screen testID="ROSTER.SCREEN">
@@ -200,7 +216,11 @@ export const RosterScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
               )}
             </AppText>
           </View>
-          <FloorCoverChart cover={cover} />
+          <FloorCoverChart
+            actionableHours={actionableHours}
+            cover={cover}
+            onAddCover={addCover}
+          />
         </View>
 
         {dayShifts.length === 0 ? (
@@ -213,6 +233,7 @@ export const RosterScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
           dayShifts.map((shift) => (
             <RosterRow
               avatarColor={avatarColor(shift.employeeId)}
+              currentEmployeeId={session?.employeeId}
               employee={employeesById.get(shift.employeeId)}
               key={shift.id}
               now={now}
@@ -234,7 +255,19 @@ export const RosterScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
       </ScrollView>
 
       <View style={styles.footer}>
+        {isPastDay ? (
+          <AppText
+            color="textMuted"
+            style={styles.pastNote}
+            testID="ROSTER.PAST_DAY_NOTE"
+            variant="supporting"
+          >
+            {L.addShiftPastDay}
+          </AppText>
+        ) : null}
         <PrimaryButton
+          accessibilityHint={isPastDay ? L.addShiftPastDay : undefined}
+          disabled={isPastDay}
           icon="add"
           label={L.addShift}
           testID="ROSTER.ADD_SHIFT"
@@ -247,6 +280,7 @@ export const RosterScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
 
 type RosterRowProps = {
   avatarColor: string | undefined;
+  currentEmployeeId: string | undefined;
   employee: Employee | undefined;
   now: Date;
   onEdit: (shiftId: string) => void;
@@ -258,6 +292,7 @@ function RosterRow({
   shift,
   employee,
   avatarColor,
+  currentEmployeeId,
   now,
   showState,
   onEdit,
@@ -268,7 +303,7 @@ function RosterRow({
     : "";
   const state = showState
     ? CoverUtils.shiftState(shift, now, {
-        isCurrentUser: shift.employeeId === DEMO_USER.employeeId,
+        isCurrentUser: shift.employeeId === currentEmployeeId,
       })
     : null;
   const time = FormatUtils.formatTimeRange(
@@ -356,6 +391,7 @@ const styles = StyleSheet.create({
   },
   cardHeader: { flexDirection: "row", alignItems: "baseline", gap: spacing.sm },
   note: { textAlign: "center", marginTop: spacing.sm },
+  pastNote: { textAlign: "center", marginBottom: spacing.sm },
   footer: {
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,

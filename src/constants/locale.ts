@@ -8,12 +8,46 @@ const plural = (
 export namespace LOCALE {
   export const errors = {
     generic: "Something went wrong. Try again.",
+    /** Copy for API error codes. Codes without copy fall back to the server message. */
+    byCode: {
+      ACCOUNT_INACTIVE:
+        "This account is no longer active. Ask your store manager.",
+      INVALID_CREDENTIALS:
+        "That staff ID and PIN don't match. Check them and try again.",
+      NETWORK: "You're offline. Check your connection and try again.",
+      NOT_FOUND: "That record no longer exists.",
+      SESSION_EXPIRED: "Your session has expired. Sign in again.",
+      UNKNOWN: "Something went wrong. Try again.",
+      VERSION_CONFLICT:
+        "This changed on another device. Showing the latest version.",
+    } as Partial<Record<string, string>>,
+  };
+
+  export const auth = {
+    signIn: {
+      brandLabel: (store: string) => `RetailOS, ${store}`,
+      credentials: (staffId: string, pin: string) => `${staffId} · PIN ${pin}`,
+      pin: "PIN",
+      quickHint: "Signs in as this person",
+      quickLabel: (name: string, role: string, staffId: string) =>
+        `Quick sign-in as ${name}, ${role}, ${staffId}`,
+      quickSignIn: "Quick sign-in",
+      staffId: "Staff ID",
+      staffIdPlaceholder: "e.g. RO1001",
+      submit: "Sign in",
+      submitHint: "Signs in with the staff ID and PIN above",
+      subtitle: "Sign in with your staff ID and 4-digit PIN.",
+      title: "Welcome back",
+    },
+    validation: {
+      pin: "Enter your 4-digit PIN",
+      staffId: "Enter your staff ID, like RO1001",
+    },
   };
 
   export const app = {
     format: {
       am: "am",
-      amShort: "a",
       days: (count: number) => `${count} ${count === 1 ? "day" : "days"}`,
       hours: (hours: number) => `${hours}h`,
       hoursMinutes: (hours: number, minutes: number) => `${hours}h ${minutes}m`,
@@ -34,7 +68,6 @@ export namespace LOCALE {
       ],
       notAvailable: "—",
       pm: "pm",
-      pmShort: "p",
       today: (time: string) => `Today, ${time}`,
       unknownTime: "Unknown time",
       weekdays: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
@@ -151,8 +184,6 @@ export namespace LOCALE {
       notificationsLabel: (count: number) =>
         `Notifications, ${count} ${count === 1 ? "item needs" : "items need"} attention`,
       profileLabel: (name: string) => `Profile and settings, ${name}`,
-      footnote:
-        "Demo mode with fictional data. Labour is a flat-rate estimate, not a payroll calculation.",
     },
     greeting: {
       morning: "Good morning",
@@ -620,6 +651,8 @@ export namespace LOCALE {
   export const roster = {
     roster: {
       addShift: "Add shift",
+      addShiftPastDay:
+        "Past days are read-only. Existing shifts can still be edited.",
       dayTotals: (staff: number, hours: string) => `${staff} staff · ${hours}`,
       eyebrow: "Team",
       floorCoverTitle: (day: string) => `Floor cover · ${day}`,
@@ -652,28 +685,23 @@ export namespace LOCALE {
       previousWeek: "Previous week",
     },
     floorCover: {
-      allDay: (range: string, minimum: number) =>
-        `${range} At least ${minimum} people all day.`,
       allDayNote: (minimum: number) =>
         `At least ${minimum} on the floor all day`,
-      belowMinimum: (
-        range: string,
-        count: number,
-        hour: string,
-        minimum: number,
-      ) =>
-        `${range} Lowest is ${count} ${count === 1 ? "person" : "people"} at ${hour}, below the minimum of ${minimum}.`,
       belowMinimumNote: (minimum: number, hours: string) =>
         `Below minimum of ${minimum} at ${hours}`,
-      noTradingHours: "No trading hours.",
-      range: (from: string, to: string) =>
-        `Staff on the floor by hour, ${from} to ${to}.`,
+      addCover: (hour: string) => `Add cover at ${hour}`,
+      addCoverHint: "Opens Add shift starting at this hour",
+      hourLabel: (hour: string, count: number) =>
+        `${hour}, ${count} ${count === 1 ? "person" : "people"} on the floor`,
+      hourLabelLow: (hour: string, count: number, minimum: number) =>
+        `${hour}, ${count} ${count === 1 ? "person" : "people"}, below the minimum of ${minimum}. Add a shift starting ${hour}`,
     },
     shiftEditor: {
       addShift: "Add shift",
       addTitle: "Add Shift",
       backToRoster: "Back to roster",
       dateLabel: "Date",
+      dateFixedHint: "Set by the day you chose on the roster",
       editTitle: "Edit Shift",
       employeeLabel: "Employee",
       employeePlaceholder: "Choose an employee",
@@ -726,6 +754,7 @@ export namespace LOCALE {
       invalidEndTime: "Enter a valid end time.",
       invalidStartTime: "Enter a valid start time.",
       shiftMissing: "This shift no longer exists.",
+      startsInPast: "That start time has already passed. Choose a later time.",
       tooLong: (hours: number) =>
         `Shifts cannot be longer than ${hours} hours. Check the end time and "Ends next day".`,
     },
@@ -745,9 +774,9 @@ export namespace LOCALE {
       rowLabel: (label: string, value: string) => `${label}: ${value}`,
     },
     profile: {
-      accessibilityLabel: (name: string, role: string) =>
-        `${name}, ${role}, demo account`,
-      role: (role: string) => `${role} · Demo account`,
+      accessibilityLabel: (name: string, role: string, staffId: string) =>
+        `${name}, ${role}, staff ID ${staffId}`,
+      summary: (role: string, staffId: string) => `${role} · ${staffId}`,
     },
     store: {
       title: "Assigned store",
@@ -784,8 +813,6 @@ export namespace LOCALE {
       appVersion: "App version",
       platform: "Platform",
       platformValue: (sdkMajor: string) => `Expo SDK ${sdkMajor}`,
-      data: "Data",
-      dataValue: "Fictional demo data",
     },
     reset: {
       label: "Reset demo data",

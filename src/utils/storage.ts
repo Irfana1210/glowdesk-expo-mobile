@@ -15,6 +15,7 @@ export const STORAGE_KEYS = {
   orders: "retailos.orders",
   roster: "retailos.roster",
   preferences: "retailos.preferences",
+  session: "retailos.session",
 } as const;
 
 /** JSON storage adapter for zustand's persist middleware. */

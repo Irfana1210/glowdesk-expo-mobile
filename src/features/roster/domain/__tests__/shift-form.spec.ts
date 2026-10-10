@@ -65,3 +65,79 @@ describe("shift form mapping", () => {
     });
   });
 });
+
+describe("cover shift defaults", () => {
+  it("starts on the tapped hour, runs four hours and has no unpaid break", () => {
+    expect(
+      ShiftFormUtils.defaultFormValues("2026-10-11", 11, 21),
+    ).toMatchObject({
+      date: "2026-10-11",
+      startTime: "11:00",
+      endTime: "15:00",
+      endsNextDay: false,
+      breakMinutes: 0,
+    });
+  });
+
+  it("ends at closing time when four hours would run past it", () => {
+    expect(
+      ShiftFormUtils.defaultFormValues("2026-10-11", 19, 21),
+    ).toMatchObject({
+      startTime: "19:00",
+      endTime: "21:00",
+    });
+    expect(ShiftFormUtils.defaultFormValues("2026-10-11", 20, 21).endTime).toBe(
+      "21:00",
+    );
+  });
+
+  it("keeps the 9 to 5 default when no hour is given", () => {
+    expect(ShiftFormUtils.defaultFormValues("2026-10-11")).toMatchObject({
+      startTime: "09:00",
+      endTime: "17:00",
+      breakMinutes: 30,
+    });
+  });
+
+  it.each([
+    ["9", 9],
+    ["17", 17],
+    ["0", 0],
+    [undefined, undefined],
+    ["23", undefined],
+    ["9am", undefined],
+    ["-1", undefined],
+  ])("parses start hour %p as %p", (value, expected) => {
+    expect(ShiftFormUtils.parseStartHour(value)).toBe(expected);
+  });
+});
+
+describe("today's default start", () => {
+  it("starts at the next full hour later today, otherwise at 9am", () => {
+    const today = "2026-10-07";
+    expect(
+      ShiftFormUtils.defaultFormValues(
+        today,
+        undefined,
+        21,
+        new Date(2026, 9, 7, 13, 20),
+      ),
+    ).toMatchObject({ startTime: "14:00", endTime: "21:00", breakMinutes: 30 });
+    expect(
+      ShiftFormUtils.defaultFormValues(
+        today,
+        undefined,
+        21,
+        new Date(2026, 9, 7, 7),
+      ),
+    ).toMatchObject({ startTime: "09:00", endTime: "17:00" });
+    expect(
+      ShiftFormUtils.defaultFormValues(
+        "2026-10-08",
+        undefined,
+        21,
+        new Date(2026, 9, 7, 13),
+      ),
+    ).toMatchObject({ startTime: "09:00", endTime: "17:00" });
+  });
+});

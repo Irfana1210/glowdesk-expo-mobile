@@ -66,15 +66,82 @@ export namespace ShiftFormUtils {
     };
   }
 
-  export function defaultFormValues(date: string): ShiftFormValues {
+  /** Length of a shift added to fill a gap from the floor cover chart. */
+  export const COVER_SHIFT_HOURS = 4;
+
+  /** Shifts this long or shorter default to no unpaid break. */
+  const NO_BREAK_MAX_HOURS = 5;
+
+  const toTime = (hour: number) => `${String(hour).padStart(2, "0")}:00`;
+
+  /**
+   * New-shift defaults. Without `startHour`: a 9–5 day shift. With it: a cover shift starting
+   * on that hour, `COVER_SHIFT_HOURS` long but ending no later than `closeHour`.
+   */
+  /** Length of a regular shift when the start time is set for the user. */
+  const DAY_SHIFT_HOURS = 8;
+
+  /**
+   * New-shift defaults. A cover shift when `startHour` is given. Otherwise a 9–5 day shift,
+   * except later today, when it starts at the next full hour so it is never in the past.
+   */
+  export function defaultFormValues(
+    date: string,
+    startHour?: number,
+    closeHour = 21,
+    now?: Date,
+  ): ShiftFormValues {
+    if (startHour === undefined && now && date === DateUtils.toDateKey(now)) {
+      const nextHour = now.getHours() + 1;
+      if (now.getHours() >= 9 && nextHour < closeHour) {
+        return withHours(
+          date,
+          nextHour,
+          Math.min(nextHour + DAY_SHIFT_HOURS, closeHour),
+        );
+      }
+    }
+    if (startHour === undefined) {
+      return {
+        employeeId: "",
+        date,
+        startTime: "09:00",
+        endTime: "17:00",
+        endsNextDay: false,
+        breakMinutes: 30,
+      };
+    }
+    const endHour = Math.max(
+      startHour + 1,
+      Math.min(startHour + COVER_SHIFT_HOURS, closeHour),
+    );
+    return withHours(date, startHour, endHour);
+  }
+
+  function withHours(
+    date: string,
+    startHour: number,
+    endHour: number,
+  ): ShiftFormValues {
     return {
       employeeId: "",
       date,
-      startTime: "09:00",
-      endTime: "17:00",
+      startTime: toTime(startHour),
+      endTime: toTime(Math.min(endHour, 23)),
       endsNextDay: false,
-      breakMinutes: 30,
+      breakMinutes: endHour - startHour > NO_BREAK_MAX_HOURS ? 30 : 0,
     };
+  }
+
+  /** Reads an hour (0–23) from a route param, or undefined if missing or malformed. */
+  export function parseStartHour(
+    value: string | undefined,
+  ): number | undefined {
+    if (value === undefined || !/^\d{1,2}$/.test(value)) {
+      return undefined;
+    }
+    const hour = Number(value);
+    return hour >= 0 && hour <= 22 ? hour : undefined;
   }
 
   const FIELD_FOR: Record<keyof ShiftDraft, keyof ShiftFormValues> = {

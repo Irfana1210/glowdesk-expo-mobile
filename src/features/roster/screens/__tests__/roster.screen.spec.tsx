@@ -8,6 +8,7 @@ import { RosterScreen } from "@/features/roster/screens/roster.screen";
 import { createMockShifts } from "@/mocks/shifts";
 
 import { resetRosterStore } from "@test/roster-test-utils";
+import { signInAs } from "@test/session-test-utils";
 
 const L = LOCALE.roster.roster;
 const ROW = LOCALE.roster.rosterRow;
@@ -22,6 +23,7 @@ const NOW = new Date(2026, 9, 10, 16, 40);
 
 beforeEach(() => {
   jest.clearAllMocks();
+  signInAs("manager");
   resetRosterStore(NOW);
 });
 
@@ -61,11 +63,50 @@ describe("RosterScreen", () => {
     expect(screen.getByTestId("FLOOR_COVER_CHART.NOTE")).toHaveTextContent(
       FLOOR.belowMinimumNote(3, "11 am"),
     );
+    expect(screen.getByLabelText(FLOOR.hourLabel("1 pm", 4))).toBeOnTheScreen();
+  });
+
+  it("does not offer cover for a gap that is already over", async () => {
+    await render(<RosterScreen now={NOW} />);
+
+    // At 4:40 pm the 11 am gap has passed, so it is information, not a button.
     expect(
-      screen.getByRole("image", {
-        name: FLOOR.belowMinimum(FLOOR.range("9 am", "8 pm"), 2, "11 am", 3),
-      }),
-    ).toBeOnTheScreen();
+      screen.queryByRole("button", { name: /below the minimum/ }),
+    ).not.toBeOnTheScreen();
+    expect(
+      screen.queryByTestId("FLOOR_COVER_CHART.ADD_COVER"),
+    ).not.toBeOnTheScreen();
+  });
+
+  it("opens Add shift at a low hour from the bar or the note button", async () => {
+    await render(<RosterScreen now={NOW} />);
+    await fireEvent.press(
+      screen.getByTestId("WEEK_DAY_SELECTOR.DAY.2026-10-11"),
+    );
+
+    const addCover = screen.getByTestId("FLOOR_COVER_CHART.ADD_COVER");
+    expect(addCover).toHaveTextContent(/Add cover at 9 am/);
+    await fireEvent.press(addCover);
+    expect(mockPush).toHaveBeenLastCalledWith({
+      pathname: "/roster/shift",
+      params: { date: "2026-10-11", start: "9" },
+    });
+
+    await fireEvent.press(
+      screen.getByRole("button", { name: FLOOR.hourLabelLow("5 pm", 0, 3) }),
+    );
+    expect(mockPush).toHaveBeenLastCalledWith({
+      pathname: "/roster/shift",
+      params: { date: "2026-10-11", start: "17" },
+    });
+  });
+
+  it("offers today's gap while it is still ahead", async () => {
+    await render(<RosterScreen now={new Date(2026, 9, 10, 10, 15)} />);
+
+    expect(screen.getByTestId("FLOOR_COVER_CHART.ADD_COVER")).toHaveTextContent(
+      /Add cover at 11 am/,
+    );
   });
 
   it("lists today's shifts working first with live states", async () => {
@@ -127,7 +168,7 @@ describe("RosterScreen", () => {
     );
     expect(
       screen.getByLabelText(
-        /^Jordan Lee, Shift Runner · Full time, 9:00 am – 5:00 pm/,
+        /^Jordan Lee, Shift Leader · Full time, 9:00 am – 5:00 pm/,
       ),
     ).toBeOnTheScreen();
   });
@@ -189,6 +230,20 @@ describe("RosterScreen", () => {
       pathname: "/roster/shift",
       params: { shiftId: expect.any(String) },
     });
+  });
+
+  it("disables Add shift on a past day and says why", async () => {
+    await render(<RosterScreen now={NOW} />);
+    expect(screen.getByTestId("ROSTER.ADD_SHIFT")).toBeEnabled();
+
+    await fireEvent.press(
+      screen.getByTestId("WEEK_DAY_SELECTOR.DAY.2026-10-09"),
+    );
+
+    expect(screen.getByTestId("ROSTER.ADD_SHIFT")).toBeDisabled();
+    expect(screen.getByTestId("ROSTER.PAST_DAY_NOTE")).toHaveTextContent(
+      L.addShiftPastDay,
+    );
   });
 });
 

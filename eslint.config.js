@@ -1,4 +1,4 @@
-// See docs/coding-standards.md for the standards these enforce.
+// See docs/coding-standards.md for the standards these rules enforce.
 const { defineConfig, globalIgnores } = require("eslint/config");
 const typescriptEslint = require("@typescript-eslint/eslint-plugin");
 const eslintPluginImport = require("eslint-plugin-import");
@@ -173,6 +173,7 @@ module.exports = defineConfig([
     "dist/",
     ".expo/",
     "coverage/",
+    // Custom rule implementations, linted separately.
     "scripts/plugins/",
   ]),
   {

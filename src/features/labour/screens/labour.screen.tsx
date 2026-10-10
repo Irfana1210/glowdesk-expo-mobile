@@ -8,15 +8,15 @@ import { LOCALE } from "@/constants/locale";
 
 import { FormatUtils } from "@/utils/format-utils";
 
+import {
+  selectIsManager,
+  useSessionStore,
+} from "@/features/auth/store/session.store";
 import { ROLE_LABELS } from "@/features/employees/types";
 import { WeekNavigator } from "@/features/roster/components/week-navigator";
 import { DateUtils } from "@/features/roster/domain/dates";
 import { ShiftUtils } from "@/features/roster/domain/shifts";
 import { useRosterStore } from "@/features/roster/store/roster.store";
-import {
-  canViewPayInformation,
-  useSessionStore,
-} from "@/features/session/session.store";
 
 import { AppHeader } from "@/components/layout/app-header";
 import { Screen } from "@/components/layout/screen";
@@ -40,11 +40,11 @@ const RESTRICTED = LOCALE.labour.restricted;
 
 export const LabourScreen: FC<{ now?: Date }> = ({ now = new Date() }) => {
   const router = useRouter();
-  const role = useSessionStore((s) => s.role);
+  const isManager = useSessionStore(selectIsManager);
   const goBack = () =>
     router.canGoBack() ? router.back() : router.replace("/more");
 
-  if (!canViewPayInformation(role)) {
+  if (!isManager) {
     return (
       <Screen testID="LABOUR.SCREEN">
         <AppHeader title={L.title} onBack={goBack} />

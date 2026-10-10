@@ -10,7 +10,7 @@ import { resetRosterStore } from "@test/roster-test-utils";
 const L = LOCALE.roster.shiftEditor;
 const V = LOCALE.roster.validation;
 
-let mockParams: { date?: string; shiftId?: string } = {};
+let mockParams: { date?: string; shiftId?: string; start?: string } = {};
 const mockBack = jest.fn();
 jest.mock("expo-router", () => ({
   useRouter: () => ({
@@ -30,10 +30,12 @@ async function choose(field: string, value: string | number) {
 }
 
 const MONDAY = "2026-10-05";
+/** The Sunday before the demo week, so every day in it is still ahead. */
+const EDITOR_NOW = new Date(2026, 9, 4, 8);
 
 async function openNew(date = "2026-10-07") {
   mockParams = { date };
-  await render(<ShiftEditorScreen />);
+  await render(<ShiftEditorScreen now={EDITOR_NOW} />);
 }
 
 beforeEach(() => {
@@ -148,7 +150,7 @@ describe("ShiftEditorScreen", () => {
       throw new Error("expected a mock shift");
     }
     mockParams = { shiftId: graceWednesday.id };
-    await render(<ShiftEditorScreen />);
+    await render(<ShiftEditorScreen now={EDITOR_NOW} />);
 
     await choose("SHIFT_EDITOR.FIELD_END", "18:00");
     await fireEvent.press(screen.getByTestId("SHIFT_EDITOR.SAVE_SHIFT"));
@@ -167,5 +169,56 @@ describe("ShiftEditorScreen", () => {
     expect(
       useRosterStore.getState().shifts.find((s) => s.id === graceWednesday.id),
     ).toBeUndefined();
+  });
+
+  it("pre-fills a cover shift from the floor cover chart's start hour", async () => {
+    mockParams = { date: MONDAY, start: "17" };
+    await render(<ShiftEditorScreen now={EDITOR_NOW} />);
+
+    expect(screen.getByTestId("SHIFT_EDITOR.SUMMARY")).toHaveTextContent(
+      /4h shift · 4h paid/,
+    );
+    await choose("SHIFT_EDITOR.FIELD_EMPLOYEE", "emp-06");
+    await fireEvent.press(screen.getByTestId("SHIFT_EDITOR.SAVE_SHIFT"));
+
+    const added = useRosterStore
+      .getState()
+      .shifts.find(
+        (s) => s.employeeId === "emp-06" && new Date(s.startAt).getDate() === 5,
+      );
+    expect(added && new Date(added.startAt).getHours()).toBe(17);
+    expect(added && new Date(added.endAt).getHours()).toBe(21);
+    expect(added?.unpaidBreakMinutes).toBe(0);
+  });
+
+  it("shows the date from the roster instead of a date picker", async () => {
+    await openNew(MONDAY);
+
+    expect(screen.getByTestId("SHIFT_EDITOR.DATE")).toHaveTextContent(
+      /Mon 5 Oct/,
+    );
+    expect(
+      screen.queryByTestId(/^SHIFT_EDITOR\.FIELD_DATE/),
+    ).not.toBeOnTheScreen();
+  });
+
+  it("refuses a new shift that would start in the past", async () => {
+    mockParams = { date: "2026-10-07", start: "9" };
+    await render(<ShiftEditorScreen now={new Date(2026, 9, 7, 12)} />);
+    await choose("SHIFT_EDITOR.FIELD_EMPLOYEE", "emp-06");
+    await fireEvent.press(screen.getByTestId("SHIFT_EDITOR.SAVE_SHIFT"));
+
+    expect(
+      await screen.findByText(LOCALE.roster.validation.startsInPast),
+    ).toBeOnTheScreen();
+  });
+
+  it("starts a shift added later today at the next full hour", async () => {
+    mockParams = { date: "2026-10-07" };
+    await render(<ShiftEditorScreen now={new Date(2026, 9, 7, 13, 20)} />);
+
+    expect(screen.getByTestId("SHIFT_EDITOR.SUMMARY")).toHaveTextContent(
+      /7h shift · 6\.5h paid/,
+    );
   });
 });

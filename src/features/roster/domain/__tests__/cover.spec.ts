@@ -148,3 +148,17 @@ describe("sortShiftsForDay", () => {
     ).toBe("emp-06");
   });
 });
+
+describe("CoverUtils.actionableLowHours", () => {
+  it("drops gaps that are over today, keeps future ones, and has none on a past day", () => {
+    const cover = CoverUtils.hourlyCover(today, NOW);
+    expect(CoverUtils.actionableLowHours(cover, NOW, at(10, 15))).toEqual([11]);
+    expect(CoverUtils.actionableLowHours(cover, NOW, NOW)).toEqual([]);
+    expect(
+      CoverUtils.actionableLowHours(cover, NOW, new Date(2026, 9, 9, 12)),
+    ).toEqual([11]);
+    expect(
+      CoverUtils.actionableLowHours(cover, NOW, new Date(2026, 9, 11, 8)),
+    ).toEqual([]);
+  });
+});

@@ -1,36 +1,45 @@
 import { type TextStyle } from "react-native";
 
-import { eyebrowLetterSpacing, fontFamilies, fontSizes } from "./tokens";
+import {
+  displayLetterSpacing,
+  eyebrowLetterSpacing,
+  fontFamilies,
+  fonts,
+  fontSizes,
+} from "./tokens";
 
 /** Font family names registered in the root layout via `useFonts`. */
 export const fontFamily = fontFamilies;
 
 /**
- * Type scale from the design handoff. Instrument Serif for display text, DM Sans for
- * everything else. Custom fonts on Android ignore `fontWeight`, so each variant sets the
- * weight-specific family instead.
+ * Type scale. DM Serif Display for display text, DM Sans for everything else. Custom fonts on
+ * Android ignore `fontWeight`, so each variant sets the weight-specific family instead.
  */
 export const typography = {
   /** Page titles (38). Serif line heights are generous so descenders never clip. */
   display: {
-    fontFamily: fontFamilies.display,
+    fontFamily: fonts.display,
     fontSize: fontSizes.display,
+    letterSpacing: displayLetterSpacing,
     lineHeight: 44,
   },
   pageTitle: {
-    fontFamily: fontFamilies.display,
+    fontFamily: fonts.display,
     fontSize: fontSizes.display,
+    letterSpacing: displayLetterSpacing,
     lineHeight: 44,
   },
   /** Hero numbers such as today's sales (36–44). */
   hero: {
-    fontFamily: fontFamilies.display,
+    fontFamily: fonts.display,
     fontSize: fontSizes.hero,
+    letterSpacing: displayLetterSpacing,
     lineHeight: 46,
   },
   orderNumber: {
-    fontFamily: fontFamilies.display,
+    fontFamily: fonts.display,
     fontSize: fontSizes.orderNumber,
+    letterSpacing: displayLetterSpacing,
     lineHeight: 38,
   },
   eyebrow: {

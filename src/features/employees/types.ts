@@ -1,8 +1,8 @@
 /** Employee reference data (brief §11 `employees` table). Shared by roster, labour and the planned Employees screen. */
-type EmployeeRole =
+export type EmployeeRole =
   | "STORE_MANAGER"
   | "ASSISTANT_MANAGER"
-  | "SHIFT_RUNNER"
+  | "SHIFT_LEADER"
   | "BEAUTY_ADVISOR"
   | "CASHIER"
   | "STOCK_ASSOCIATE";
@@ -12,7 +12,7 @@ type EmploymentType = "FULL_TIME" | "PART_TIME" | "CASUAL";
 export const ROLE_LABELS: Record<EmployeeRole, string> = {
   STORE_MANAGER: "Store Manager",
   ASSISTANT_MANAGER: "Assistant Manager",
-  SHIFT_RUNNER: "Shift Runner",
+  SHIFT_LEADER: "Shift Leader",
   BEAUTY_ADVISOR: "Beauty Advisor",
   CASHIER: "Cashier",
   STOCK_ASSOCIATE: "Stock Associate",
@@ -31,5 +31,7 @@ export type Employee = {
   id: string;
   name: string;
   role: EmployeeRole;
+  /** Login identifier printed on the staff badge, e.g. "RO1001". */
+  staffId: string;
   storeId: string;
 };

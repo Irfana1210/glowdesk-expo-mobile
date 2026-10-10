@@ -1,3 +1,5 @@
+import { ScrollView } from "react-native";
+
 import { fireEvent, screen } from "@testing-library/react-native";
 
 import { LOCALE } from "@/constants/locale";
@@ -11,9 +13,11 @@ import { createMockInventory } from "@/mocks/inventory";
 import { createMockOrders } from "@/mocks/orders";
 import { DEMO_SALES_SUMMARY } from "@/mocks/sales";
 import { createMockShifts } from "@/mocks/shifts";
+import { spacing } from "@/theme";
 
 import { resetOrdersStore } from "@test/order-test-utils";
 import { renderWithQuery } from "@test/render-with-query";
+import { signInAs } from "@test/session-test-utils";
 
 const L = LOCALE.dashboard;
 
@@ -46,6 +50,7 @@ const NOW = new Date(2026, 9, 10, 16, 40);
 
 beforeEach(() => {
   jest.clearAllMocks();
+  signInAs("manager");
   resetOrdersStore({ orders: createMockOrders(NOW), loadStatus: "ready" });
   useRosterStore.setState({ shifts: createMockShifts(NOW) });
   mockedFetchSales.mockResolvedValue(DEMO_SALES_SUMMARY);
@@ -167,6 +172,31 @@ describe("DashboardScreen", () => {
     expect(
       await screen.findByTestId("DASHBOARD.SALES_TOTAL"),
     ).toHaveTextContent("$18,500");
+  });
+
+  it("scrolls the bell to the attention section, measured from the scroll content", async () => {
+    const scrollTo = jest.spyOn(ScrollView.prototype, "scrollTo");
+    await renderWithQuery(<DashboardScreen now={NOW} />);
+
+    // onLayout y is relative to the parent: the body sits 140 below the title,
+    // and the attention section 260 below the top of the body.
+    await fireEvent(screen.getByTestId("DASHBOARD.BODY"), "layout", {
+      nativeEvent: { layout: { x: 0, y: 140, width: 390, height: 1200 } },
+    });
+    await fireEvent(screen.getByTestId("DASHBOARD.ATTENTION"), "layout", {
+      nativeEvent: { layout: { x: 0, y: 260, width: 390, height: 300 } },
+    });
+    await fireEvent.press(screen.getByTestId("DASHBOARD.NOTIFICATIONS"));
+
+    // Lands just above the section so its title isn't flush with the screen edge.
+    expect(scrollTo).toHaveBeenCalledWith({
+      y: 400 - spacing.md,
+      animated: true,
+    });
+    expect(
+      screen.getByTestId("DASHBOARD.ATTENTION.HIGHLIGHT"),
+    ).toBeOnTheScreen();
+    scrollTo.mockRestore();
   });
 
   it("opens settings from the profile button", async () => {

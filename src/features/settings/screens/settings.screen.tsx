@@ -8,13 +8,22 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useQueryClient } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 
 import { LOCALE } from "@/constants/locale";
 
 import { FormatUtils } from "@/utils/format-utils";
+import { handleError } from "@/utils/handle-api-error";
 
+import { AuthUtils } from "@/features/auth/domain/auth";
+import { AuthService } from "@/features/auth/services/auth.service";
+import {
+  selectSession,
+  useSessionStore,
+} from "@/features/auth/store/session.store";
+import { ROLE_LABELS } from "@/features/employees/types";
 import { useOrdersStore } from "@/features/orders/store/orders.store";
 import { DateUtils } from "@/features/roster/domain/dates";
 import { ShiftUtils } from "@/features/roster/domain/shifts";
@@ -29,8 +38,7 @@ import { InlineBanner } from "@/components/ui/inline-banner";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { SecondaryButton } from "@/components/ui/secondary-button";
 
-import { DEMO_STORE_ID, DEMO_STORE_NAME } from "@/mocks/store";
-import { DEMO_USER } from "@/mocks/user";
+import { DEMO_STORE_NAME } from "@/mocks/store";
 import { colors, radius, spacing } from "@/theme";
 
 import {
@@ -125,6 +133,9 @@ function SwitchRow({
 export const SettingsScreen: FC = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const queryClient = useQueryClient();
+  const session = useSessionStore(selectSession);
+  const clearSession = useSessionStore((s) => s.clear);
   const vibrateOnScanError = usePreferencesStore((s) => s.vibrateOnScanError);
   const notifications = usePreferencesStore((s) => s.notifications);
   const setVibrateOnScanError = usePreferencesStore(
@@ -139,6 +150,9 @@ export const SettingsScreen: FC = () => {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
+  const name = session?.name ?? "";
+  const roleLabel = session ? ROLE_LABELS[session.role] : "";
+  const staffId = session?.staffId ?? "";
   const version = Constants.expoConfig?.version ?? "dev";
   const sdkMajor = Constants.expoConfig?.sdkVersion?.split(".")[0] ?? "57";
   const tradingHours = [
@@ -160,17 +174,26 @@ export const SettingsScreen: FC = () => {
     setBusy(true);
     resetRoster();
     await resetOrders();
-    if (action === "signOut") {
-      resetPreferences();
-    }
-    setBusy(false);
-    setPending(null);
 
     if (action === "signOut") {
+      try {
+        await AuthService.signOut();
+      } catch (error) {
+        // The device still signs out; the server call is best effort in demo mode.
+        handleError(error);
+      }
+      resetPreferences();
+      queryClient.clear();
+      setBusy(false);
+      setPending(null);
       AccessibilityInfo.announceForAccessibility(L.signOut.announcement);
-      router.dismissTo("/dashboard");
+      // The root layout's route guard swaps to the sign-in screen once the session clears.
+      clearSession();
       return;
     }
+
+    setBusy(false);
+    setPending(null);
     setMessage(L.reset.done);
     AccessibilityInfo.announceForAccessibility(L.reset.done);
   };
@@ -187,26 +210,25 @@ export const SettingsScreen: FC = () => {
         <View
           accessible
           accessibilityLabel={L.profile.accessibilityLabel(
-            DEMO_USER.firstName,
-            DEMO_USER.role,
+            name,
+            roleLabel,
+            staffId,
           )}
           style={styles.profile}
+          testID="SETTINGS.PROFILE"
         >
-          <InitialsAvatar
-            initials={DEMO_USER.firstName.slice(0, 2).toUpperCase()}
-            size={56}
-          />
+          <InitialsAvatar initials={AuthUtils.initials(name)} size={56} />
           <View style={styles.flex}>
-            <AppText variant="sectionTitle">{DEMO_USER.firstName}</AppText>
+            <AppText variant="sectionTitle">{name}</AppText>
             <AppText color="textMuted">
-              {L.profile.role(DEMO_USER.role)}
+              {L.profile.summary(roleLabel, staffId)}
             </AppText>
           </View>
         </View>
 
         <Section title={L.store.title}>
           <InfoRow first label={L.store.store} value={DEMO_STORE_NAME} />
-          <InfoRow label={L.store.storeId} value={DEMO_STORE_ID} />
+          <InfoRow label={L.store.storeId} value={session?.storeId ?? ""} />
           <InfoRow label={L.store.tradingHours} value={tradingHours} />
         </Section>
 
@@ -248,7 +270,6 @@ export const SettingsScreen: FC = () => {
             label={L.about.platform}
             value={L.about.platformValue(sdkMajor)}
           />
-          <InfoRow label={L.about.data} value={L.about.dataValue} />
         </Section>
 
         {message ? (

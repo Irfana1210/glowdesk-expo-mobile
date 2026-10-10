@@ -64,12 +64,25 @@ export const swatches = [
 ] as const;
 
 /** Family names as registered with useFonts in the root layout. */
+export const fonts = {
+  /** DM Serif Display has one weight. Never set fontWeight on it, or Android may pick another font. */
+  display: "DMSerifDisplay_400Regular",
+  body: "DMSans_400Regular",
+  bodyMedium: "DMSans_500Medium",
+  bodySemibold: "DMSans_600SemiBold",
+  bodyBold: "DMSans_700Bold",
+} as const;
+
+/** Tracking for display text. */
+export const displayLetterSpacing = -0.5;
+
+/** Weight-named aliases of `fonts`, used by the type scale and component styles. */
 export const fontFamilies = {
-  display: "InstrumentSerif_400Regular",
-  regular: "DMSans_400Regular",
-  medium: "DMSans_500Medium",
-  semibold: "DMSans_600SemiBold",
-  bold: "DMSans_700Bold",
+  display: fonts.display,
+  regular: fonts.body,
+  medium: fonts.bodyMedium,
+  semibold: fonts.bodySemibold,
+  bold: fonts.bodyBold,
 } as const;
 
 export const fontSizes = {

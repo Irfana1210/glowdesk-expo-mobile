@@ -9,6 +9,7 @@ import { DEMO_STORE_ID } from "./store";
 export const MOCK_EMPLOYEES: Array<Employee> = [
   {
     id: "emp-01",
+    staffId: "RO1001",
     storeId: DEMO_STORE_ID,
     name: "Alex Morgan",
     role: "STORE_MANAGER",
@@ -17,14 +18,16 @@ export const MOCK_EMPLOYEES: Array<Employee> = [
   },
   {
     id: "emp-02",
+    staffId: "RO1002",
     storeId: DEMO_STORE_ID,
     name: "Jordan Lee",
-    role: "SHIFT_RUNNER",
+    role: "SHIFT_LEADER",
     employmentType: "FULL_TIME",
     active: true,
   },
   {
     id: "emp-03",
+    staffId: "RO1003",
     storeId: DEMO_STORE_ID,
     name: "Grace Liu",
     role: "BEAUTY_ADVISOR",
@@ -33,6 +36,7 @@ export const MOCK_EMPLOYEES: Array<Employee> = [
   },
   {
     id: "emp-04",
+    staffId: "RO1004",
     storeId: DEMO_STORE_ID,
     name: "Leo Martin",
     role: "BEAUTY_ADVISOR",
@@ -41,6 +45,7 @@ export const MOCK_EMPLOYEES: Array<Employee> = [
   },
   {
     id: "emp-05",
+    staffId: "RO1005",
     storeId: DEMO_STORE_ID,
     name: "Aisha Rahman",
     role: "BEAUTY_ADVISOR",
@@ -49,6 +54,7 @@ export const MOCK_EMPLOYEES: Array<Employee> = [
   },
   {
     id: "emp-06",
+    staffId: "RO1006",
     storeId: DEMO_STORE_ID,
     name: "Tom Becker",
     role: "STOCK_ASSOCIATE",
@@ -58,6 +64,7 @@ export const MOCK_EMPLOYEES: Array<Employee> = [
   // Resigned: kept for history, must not be rostered.
   {
     id: "emp-07",
+    staffId: "RO1007",
     storeId: DEMO_STORE_ID,
     name: "Sam Okafor",
     role: "BEAUTY_ADVISOR",
@@ -67,6 +74,7 @@ export const MOCK_EMPLOYEES: Array<Employee> = [
   // Works at another store: must not be rostered here.
   {
     id: "emp-08",
+    staffId: "RO1008",
     storeId: "store-chadstone",
     name: "Mei Tanaka",
     role: "BEAUTY_ADVISOR",

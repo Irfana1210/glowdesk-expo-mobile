@@ -34,11 +34,11 @@ export namespace FormatUtils {
     return clockParts(date).time;
   }
 
-  /** Short hour labels for charts: "9a", "10", "11", "12p", "1", … */
+  /** Chart axis labels: "9am", "10", "11", "12pm", "1", … Only the first label and noon carry a suffix. */
   export function formatHourShort(hour: number, isFirst = false): string {
     const display = hour % 12 === 0 ? 12 : hour % 12;
     if (isFirst || hour === 12) {
-      return `${display}${hour < 12 ? L.amShort : L.pmShort}`;
+      return `${display}${hour < 12 ? L.am : L.pm}`;
     }
     return String(display);
   }

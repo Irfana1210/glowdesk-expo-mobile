@@ -4,7 +4,6 @@ import {
   AccessibilityInfo,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Switch,
@@ -12,6 +11,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -46,9 +46,14 @@ import { type Shift } from "../types";
 
 const L = LOCALE.roster.shiftEditor;
 
-export const ShiftEditorScreen: FC = () => {
+/** `now` is injectable so tests can pin the clock; the app uses the current time. */
+export const ShiftEditorScreen: FC<{ now?: Date }> = ({ now }) => {
   const router = useRouter();
-  const params = useLocalSearchParams<{ date?: string; shiftId?: string }>();
+  const params = useLocalSearchParams<{
+    date?: string;
+    shiftId?: string;
+    start?: string;
+  }>();
   const shift = useRosterStore((s) =>
     s.shifts.find((x) => x.id === params.shiftId),
   );
@@ -78,16 +83,26 @@ export const ShiftEditorScreen: FC = () => {
       ? params.date
       : DateUtils.toDateKey(new Date());
   return (
-    <ShiftEditorForm initialDate={initialDate} shift={shift} onDone={close} />
+    <ShiftEditorForm
+      initialDate={initialDate}
+      initialStartHour={ShiftFormUtils.parseStartHour(params.start)}
+      now={now ?? new Date()}
+      shift={shift}
+      onDone={close}
+    />
   );
 };
 
 function ShiftEditorForm({
   shift,
   initialDate,
+  initialStartHour,
+  now,
   onDone,
 }: {
   initialDate: string;
+  initialStartHour?: number;
+  now: Date;
   onDone: () => void;
   shift?: Shift;
 }) {
@@ -107,8 +122,9 @@ function ShiftEditorForm({
         employees,
         shifts,
         editingShiftId: shift?.id,
+        now,
       }),
-    [employees, shifts, shift?.id],
+    [employees, shifts, shift?.id, now],
   );
   const {
     control,
@@ -119,7 +135,12 @@ function ShiftEditorForm({
     resolver: zodResolver(schema),
     defaultValues: shift
       ? ShiftFormUtils.toFormValues(shift)
-      : ShiftFormUtils.defaultFormValues(initialDate),
+      : ShiftFormUtils.defaultFormValues(
+          initialDate,
+          initialStartHour,
+          Number(ShiftUtils.STORE_TRADING_HOURS.close.slice(0, 2)),
+          now,
+        ),
     mode: "onSubmit",
     reValidateMode: "onChange",
   });
@@ -138,7 +159,6 @@ function ShiftEditorForm({
     [employees],
   );
   const formDay = DateUtils.fromDateKey(values.date) ?? new Date();
-  const dayChoices = DateUtils.weekDays(DateUtils.startOfWeek(formDay));
   const draft = ShiftFormUtils.toShiftDraft(values);
   const duration = draft ? ShiftUtils.shiftDurationMinutes(draft) : 0;
 
@@ -163,7 +183,7 @@ function ShiftEditorForm({
     if (!next) {
       return;
     }
-    const result = shift ? updateShift(shift.id, next) : addShift(next);
+    const result = shift ? updateShift(shift.id, next) : addShift(next, now);
     if (!result.ok) {
       applyErrors(result.errors);
       return;
@@ -214,52 +234,25 @@ function ShiftEditorForm({
             )}
           />
 
-          <Controller
-            control={control}
-            name="date"
-            render={({ field }) => (
-              <View style={styles.fieldGroup}>
-                <AppText variant="label">{L.dateLabel}</AppText>
-                <View
-                  accessibilityLabel={L.shiftDate}
-                  accessibilityRole="radiogroup"
-                  style={styles.dayRow}
-                >
-                  {dayChoices.map((day) => {
-                    const key = DateUtils.toDateKey(day);
-                    const isSelected = key === field.value;
-                    return (
-                      <Pressable
-                        accessibilityLabel={DateUtils.formatDayLabel(day)}
-                        accessibilityRole="radio"
-                        accessibilityState={{ checked: isSelected }}
-                        key={key}
-                        style={[
-                          styles.dayChip,
-                          isSelected && styles.dayChipSelected,
-                        ]}
-                        testID={`SHIFT_EDITOR.FIELD_DATE.${key}`}
-                        onPress={() => field.onChange(key)}
-                      >
-                        <AppText
-                          maxFontSizeMultiplier={1.2}
-                          variant="supporting"
-                        >
-                          {DateUtils.weekdayShort(day)}
-                        </AppText>
-                        <AppText
-                          maxFontSizeMultiplier={1.2}
-                          variant={isSelected ? "bodyStrong" : "body"}
-                        >
-                          {day.getDate()}
-                        </AppText>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </View>
-            )}
-          />
+          <View
+            accessible
+            accessibilityHint={L.dateFixedHint}
+            accessibilityLabel={`${L.dateLabel}, ${DateUtils.formatDayLabel(formDay)}`}
+            style={styles.fieldGroup}
+            testID="SHIFT_EDITOR.DATE"
+          >
+            <AppText variant="label">{L.dateLabel}</AppText>
+            <View style={styles.dateValue}>
+              <Ionicons
+                color={colors.textMuted}
+                name="calendar-outline"
+                size={18}
+              />
+              <AppText variant="bodyStrong">
+                {DateUtils.formatDayLabel(formDay)}
+              </AppText>
+            </View>
+          </View>
 
           <View style={styles.row}>
             <View style={styles.flex}>
@@ -411,19 +404,14 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { padding: spacing.lg, gap: spacing.lg },
   fieldGroup: { gap: spacing.xs },
-  dayRow: { flexDirection: "row", gap: spacing.xs },
-  dayChip: {
-    flex: 1,
+  dateValue: {
+    flexDirection: "row",
     alignItems: "center",
-    paddingVertical: spacing.sm,
+    gap: spacing.sm,
+    minHeight: 48,
+    paddingHorizontal: spacing.md,
     borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-  },
-  dayChipSelected: {
-    borderColor: colors.accent,
-    backgroundColor: colors.accentSoft,
+    backgroundColor: colors.track,
   },
   row: { flexDirection: "row", gap: spacing.md },
   switchRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },

@@ -8,7 +8,6 @@ import { LabourUtils } from "@/features/labour/domain/labour";
 import { LabourScreen } from "@/features/labour/screens/labour.screen";
 import { DateUtils } from "@/features/roster/domain/dates";
 import { useRosterStore } from "@/features/roster/store/roster.store";
-import { useSessionStore } from "@/features/session/session.store";
 
 import {
   MOCK_PAY_RATES,
@@ -17,6 +16,7 @@ import {
 } from "@/mocks/pay-rates";
 
 import { resetRosterStore, ROSTER_NOW } from "@test/roster-test-utils";
+import { signInAs } from "@test/session-test-utils";
 
 const L = LOCALE.labour.labour;
 
@@ -43,7 +43,7 @@ const expectedSummary = () =>
 beforeEach(() => {
   jest.clearAllMocks();
   resetRosterStore();
-  useSessionStore.setState({ role: "MANAGER" });
+  signInAs("manager");
 });
 
 describe("LabourScreen", () => {
@@ -109,7 +109,7 @@ describe("LabourScreen", () => {
   });
 
   it("hides pay information from team members", async () => {
-    useSessionStore.setState({ role: "TEAM_MEMBER" });
+    signInAs("shiftLeader");
     await render(<LabourScreen now={ROSTER_NOW} />);
 
     expect(screen.getByText(LOCALE.labour.restricted.title)).toBeOnTheScreen();

@@ -1,11 +1,12 @@
 import { type FC } from "react";
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { LOCALE } from "@/constants/locale";
 
 import { FormatUtils } from "@/utils/format-utils";
 
 import { AppText } from "@/components/ui/app-text";
+import { SecondaryButton } from "@/components/ui/secondary-button";
 
 import { colors, fontFamily, spacing, statusPalette } from "@/theme";
 
@@ -19,70 +20,93 @@ function spoken(hour: number): string {
   return FormatUtils.formatHour(hour).replace(/(am|pm)$/, " $1");
 }
 
-function describeCover(cover: Array<HourCover>): string {
-  if (cover.length === 0) {
-    return L.noTradingHours;
-  }
-  const first = cover[0]!;
-  const last = cover[cover.length - 1]!;
-  const lowest = cover.reduce(
-    (min, h) => (h.count < min.count ? h : min),
-    first,
-  );
-  const range = L.range(spoken(first.hour), spoken(last.hour));
-  return lowest.belowMinimum
-    ? L.belowMinimum(
-        range,
-        lowest.count,
-        spoken(lowest.hour),
-        CoverUtils.MIN_FLOOR_COVER,
-      )
-    : L.allDay(range, CoverUtils.MIN_FLOOR_COVER);
-}
+type Props = {
+  /** Below-minimum hours that can still be fixed. Only these respond to taps. */
+  actionableHours: Array<number>;
+  cover: Array<HourCover>;
+  onAddCover: (hour: number) => void;
+};
 
-/** One bar per trading hour, labelled with its headcount. Hours below minimum are flagged in text too. */
-export const FloorCoverChart: FC<{ cover: Array<HourCover> }> = ({ cover }) => {
+/**
+ * One bar per trading hour, labelled with its headcount. Hours below minimum are flagged in
+ * text too. A below-minimum hour that is not over yet can be tapped to add a shift starting
+ * then, and the note offers the same action as a full-size button for the first such hour.
+ */
+export const FloorCoverChart: FC<Props> = ({
+  actionableHours,
+  cover,
+  onAddCover,
+}) => {
   const max = Math.max(
     CoverUtils.MIN_FLOOR_COVER,
     ...cover.map((h) => h.count),
   );
   const low = CoverUtils.hoursBelowMinimum(cover);
+  const firstActionable = actionableHours[0];
 
   return (
     <View style={styles.container}>
-      <View
-        accessible
-        accessibilityLabel={describeCover(cover)}
-        accessibilityRole="image"
-        style={styles.plot}
-        testID="FLOOR_COVER_CHART.COVER"
-      >
-        {cover.map((h, index) => (
-          <View
-            key={h.hour}
-            style={styles.column}
-            testID={`FLOOR_COVER_CHART.COVER.${h.hour}.${h.count}${h.belowMinimum ? ".LOW" : ""}`}
-          >
-            <AppText
-              maxFontSizeMultiplier={1.1}
-              style={[styles.count, h.belowMinimum && styles.countLow]}
-            >
-              {h.count}
-            </AppText>
-            <View style={[styles.barArea, { height: max * BAR_UNIT }]}>
-              <View
-                style={[
-                  styles.bar,
-                  { height: Math.max(2, h.count * BAR_UNIT) },
-                  h.belowMinimum ? styles.barLow : styles.barOk,
+      <View style={styles.plot} testID="FLOOR_COVER_CHART.COVER">
+        {cover.map((h, index) => {
+          const label = FormatUtils.formatHourShort(h.hour, index === 0);
+          const content = (
+            <>
+              <AppText
+                maxFontSizeMultiplier={1.1}
+                style={[styles.count, h.belowMinimum && styles.countLow]}
+              >
+                {h.count}
+              </AppText>
+              <View style={[styles.barArea, { height: max * BAR_UNIT }]}>
+                <View
+                  style={[
+                    styles.bar,
+                    { height: Math.max(2, h.count * BAR_UNIT) },
+                    h.belowMinimum ? styles.barLow : styles.barOk,
+                  ]}
+                />
+              </View>
+              <AppText maxFontSizeMultiplier={1.1} style={styles.hour}>
+                {label}
+              </AppText>
+            </>
+          );
+          const testID = `FLOOR_COVER_CHART.COVER.${h.hour}.${h.count}${h.belowMinimum ? ".LOW" : ""}`;
+
+          if (actionableHours.includes(h.hour)) {
+            return (
+              <Pressable
+                accessibilityHint={L.addCoverHint}
+                accessibilityLabel={L.hourLabelLow(
+                  spoken(h.hour),
+                  h.count,
+                  CoverUtils.MIN_FLOOR_COVER,
+                )}
+                accessibilityRole="button"
+                key={h.hour}
+                style={({ pressed }) => [
+                  styles.column,
+                  pressed && styles.pressed,
                 ]}
-              />
+                testID={testID}
+                onPress={() => onAddCover(h.hour)}
+              >
+                {content}
+              </Pressable>
+            );
+          }
+          return (
+            <View
+              accessible
+              accessibilityLabel={L.hourLabel(spoken(h.hour), h.count)}
+              key={h.hour}
+              style={styles.column}
+              testID={testID}
+            >
+              {content}
             </View>
-            <AppText maxFontSizeMultiplier={1.1} style={styles.hour}>
-              {FormatUtils.formatHourShort(h.hour, index === 0)}
-            </AppText>
-          </View>
-        ))}
+          );
+        })}
       </View>
       <AppText
         accessibilityLiveRegion="polite"
@@ -96,6 +120,15 @@ export const FloorCoverChart: FC<{ cover: Array<HourCover> }> = ({ cover }) => {
             )
           : L.allDayNote(CoverUtils.MIN_FLOOR_COVER)}
       </AppText>
+      {firstActionable === undefined ? null : (
+        <SecondaryButton
+          accessibilityHint={L.addCoverHint}
+          icon="add"
+          label={L.addCover(spoken(firstActionable))}
+          testID="FLOOR_COVER_CHART.ADD_COVER"
+          onPress={() => onAddCover(firstActionable)}
+        />
+      )}
     </View>
   );
 };
@@ -103,7 +136,14 @@ export const FloorCoverChart: FC<{ cover: Array<HourCover> }> = ({ cover }) => {
 const styles = StyleSheet.create({
   container: { gap: spacing.md },
   plot: { flexDirection: "row", gap: 4, alignItems: "flex-end" },
-  column: { flex: 1, alignItems: "center", gap: spacing.xs },
+  column: {
+    flex: 1,
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingVertical: spacing.xs,
+    borderRadius: 6,
+  },
+  pressed: { backgroundColor: statusPalette.overdue.background },
   count: {
     fontFamily: fontFamily.semibold,
     fontSize: 10,

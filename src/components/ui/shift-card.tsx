@@ -5,7 +5,9 @@ import { LOCALE } from "@/constants/locale";
 
 import {
   darkSurface,
+  displayLetterSpacing,
   fontFamily,
+  fonts,
   fontSizes,
   palette,
   radius,
@@ -147,9 +149,10 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   headline: {
-    fontFamily: fontFamily.display,
-    fontSize: 36,
-    lineHeight: 42,
+    fontFamily: fonts.display,
+    letterSpacing: displayLetterSpacing,
+    fontSize: 28,
+    lineHeight: 34,
     color: darkSurface.text,
     flexShrink: 1,
   },

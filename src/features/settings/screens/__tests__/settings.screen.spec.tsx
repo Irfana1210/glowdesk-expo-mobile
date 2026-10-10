@@ -1,10 +1,12 @@
 import { Vibration } from "react-native";
 
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import Storage from "expo-sqlite/kv-store";
 
 import { LOCALE } from "@/constants/locale";
 
+import { AuthService } from "@/features/auth/services/auth.service";
+import { useSessionStore } from "@/features/auth/store/session.store";
 import { useOrdersStore } from "@/features/orders/store/orders.store";
 import { useRosterStore } from "@/features/roster/store/roster.store";
 import {
@@ -15,7 +17,9 @@ import {
 import { SettingsScreen } from "@/features/settings/screens/settings.screen";
 
 import { mockOrders, resetOrdersStore } from "@test/order-test-utils";
+import { renderWithQuery } from "@test/render-with-query";
 import { resetRosterStore } from "@test/roster-test-utils";
+import { signInAs } from "@test/session-test-utils";
 
 const L = LOCALE.settings;
 
@@ -27,6 +31,9 @@ jest.mock("expo-router", () => ({
     replace: jest.fn(),
     dismissTo: mockDismissTo,
   }),
+}));
+jest.mock("@/features/auth/services/auth.service", () => ({
+  AuthService: { signIn: jest.fn(), signOut: jest.fn(() => Promise.resolve()) },
 }));
 jest.mock("@/features/orders/services/orders.service", () => ({
   OrdersService: {
@@ -40,6 +47,7 @@ jest.mock("@/features/orders/services/orders.service", () => ({
 
 beforeEach(() => {
   jest.clearAllMocks();
+  signInAs("manager");
   usePreferencesStore.getState().resetPreferences();
   resetOrdersStore({ orders: mockOrders(), loadStatus: "ready" });
   resetRosterStore();
@@ -47,11 +55,11 @@ beforeEach(() => {
 
 describe("SettingsScreen", () => {
   it("shows the profile, assigned store and app version", async () => {
-    await render(<SettingsScreen />);
+    await renderWithQuery(<SettingsScreen />);
 
     expect(
       screen.getByLabelText(
-        L.profile.accessibilityLabel("Alex", "Store Manager"),
+        L.profile.accessibilityLabel("Alex Morgan", "Store Manager", "RO1001"),
       ),
     ).toBeOnTheScreen();
     expect(
@@ -73,7 +81,7 @@ describe("SettingsScreen", () => {
   });
 
   it("saves notification preferences and says they are not delivered yet", async () => {
-    await render(<SettingsScreen />);
+    await renderWithQuery(<SettingsScreen />);
 
     await fireEvent(
       screen.getByTestId("SETTINGS.PREF_NOTIFY.rosterChanges"),
@@ -95,7 +103,7 @@ describe("SettingsScreen", () => {
 
   it("turns scan-error vibration off for the scanners", async () => {
     const vibrate = jest.spyOn(Vibration, "vibrate");
-    await render(<SettingsScreen />);
+    await renderWithQuery(<SettingsScreen />);
 
     signalScanError();
     expect(vibrate).toHaveBeenCalledTimes(1);
@@ -113,7 +121,7 @@ describe("SettingsScreen", () => {
     useOrdersStore.getState().startPicking("ORD-7846");
     const [first] = useRosterStore.getState().shifts;
     useRosterStore.getState().removeShift(first!.id);
-    await render(<SettingsScreen />);
+    await renderWithQuery(<SettingsScreen />);
 
     await fireEvent.press(screen.getByTestId("SETTINGS.RESET_DEMO_DATA"));
     expect(screen.getByText(L.reset.confirmTitle)).toBeOnTheScreen();
@@ -131,9 +139,9 @@ describe("SettingsScreen", () => {
     expect(useRosterStore.getState().shifts.length).toBeGreaterThan(0);
   });
 
-  it("signs out by clearing device data and preferences, then returns to the dashboard", async () => {
+  it("signs out by clearing device data, preferences and the session", async () => {
     usePreferencesStore.getState().setVibrateOnScanError(false);
-    await render(<SettingsScreen />);
+    await renderWithQuery(<SettingsScreen />);
 
     await fireEvent.press(screen.getByTestId("SETTINGS.SIGN_OUT"));
     expect(screen.getByText(L.signOut.confirmTitle)).toBeOnTheScreen();
@@ -141,16 +149,21 @@ describe("SettingsScreen", () => {
       screen.getByTestId("CONFIRMATION_MODAL.CONFIRM_ACTION"),
     );
 
-    expect(mockDismissTo).toHaveBeenCalledWith("/dashboard");
+    await waitFor(() =>
+      expect(useSessionStore.getState().status).toBe("signedOut"),
+    );
+    expect(AuthService.signOut).toHaveBeenCalledTimes(1);
     expect(usePreferencesStore.getState().vibrateOnScanError).toBe(true);
+    expect(mockDismissTo).not.toHaveBeenCalled();
   });
 
   it("does nothing if sign out is cancelled", async () => {
-    await render(<SettingsScreen />);
+    await renderWithQuery(<SettingsScreen />);
     await fireEvent.press(screen.getByTestId("SETTINGS.SIGN_OUT"));
     await fireEvent.press(
       screen.getByTestId("CONFIRMATION_MODAL.CANCEL_ACTION"),
     );
-    expect(mockDismissTo).not.toHaveBeenCalled();
+    expect(useSessionStore.getState().status).toBe("signedIn");
+    expect(AuthService.signOut).not.toHaveBeenCalled();
   });
 });

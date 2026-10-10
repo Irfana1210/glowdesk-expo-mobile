@@ -31,6 +31,7 @@ const rates: Array<PayRate> = [
 const employees: Array<Employee> = [
   {
     id: "e1",
+    staffId: "RO9001",
     storeId: "store",
     name: "Test Person",
     role: "CASHIER",

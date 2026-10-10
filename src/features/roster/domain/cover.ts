@@ -228,4 +228,29 @@ export namespace CoverUtils {
   export function hoursBelowMinimum(cover: Array<HourCover>): Array<number> {
     return cover.filter((h) => h.belowMinimum).map((h) => h.hour);
   }
+
+  /**
+   * Below-minimum hours a manager can still fix on `day`: every one on a future day, the ones
+   * not yet over today, none on a past day.
+   */
+  export function actionableLowHours(
+    cover: Array<HourCover>,
+    day: Date,
+    now: Date,
+  ): Array<number> {
+    return cover
+      .filter((h) => {
+        if (!h.belowMinimum) {
+          return false;
+        }
+        const slotEnd = new Date(
+          day.getFullYear(),
+          day.getMonth(),
+          day.getDate(),
+          h.hour + 1,
+        );
+        return slotEnd.getTime() > now.getTime();
+      })
+      .map((h) => h.hour);
+  }
 }

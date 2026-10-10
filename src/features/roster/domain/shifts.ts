@@ -20,6 +20,8 @@ export type ShiftValidationContext = {
   /** When editing, the shift being replaced is ignored for overlap checks. */
   editingShiftId?: string;
   employees: Array<Employee>;
+  /** Current time. When given, a new shift (not an edit) may not start before it. */
+  now?: Date;
   shifts: Array<Shift>;
   storeId: string;
 };
@@ -127,6 +129,15 @@ export namespace ShiftUtils {
     }
     if (end === null) {
       errors.endAt = LOCALE.roster.validation.invalidEndTime;
+    }
+
+    if (
+      start !== null &&
+      context.now &&
+      !context.editingShiftId &&
+      start < context.now.getTime()
+    ) {
+      errors.startAt = LOCALE.roster.validation.startsInPast;
     }
 
     if (start !== null && end !== null) {

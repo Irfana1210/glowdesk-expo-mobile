@@ -1,5 +1,11 @@
-import { type FC, useMemo, useRef } from "react";
-import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { type FC, useMemo, useRef, useState } from "react";
+import {
+  Animated,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 
 import { useRouter } from "expo-router";
 
@@ -9,6 +15,12 @@ import { FormatUtils } from "@/utils/format-utils";
 
 import { useNow } from "@/hooks/use-now";
 
+import { AuthUtils } from "@/features/auth/domain/auth";
+import {
+  selectSession,
+  useSessionStore,
+} from "@/features/auth/store/session.store";
+import { ROLE_LABELS } from "@/features/employees/types";
 import { useInventory } from "@/features/inventory/hooks/use-inventory";
 import { ScheduleUtils } from "@/features/orders/domain/schedule";
 import { useEnsureOrdersLoaded } from "@/features/orders/hooks/use-ensure-orders-loaded";
@@ -29,7 +41,6 @@ import { ScreenTitle } from "@/components/ui/screen-title";
 import { ShiftCard } from "@/components/ui/shift-card";
 
 import { DEMO_STORE_ID, DEMO_STORE_SHORT_NAME } from "@/mocks/store";
-import { DEMO_USER } from "@/mocks/user";
 import { colors, fontFamily, radius, spacing } from "@/theme";
 
 import { SalesChart } from "../components/sales-chart";
@@ -49,7 +60,33 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
   const liveNow = useNow();
   const now = fixedNow ?? liveNow;
   const scrollRef = useRef<ScrollView>(null);
+  // onLayout reports y relative to the parent, so the section's offset inside the
+  // scroll content is the body's y plus the section's y within the body.
+  const bodyY = useRef(0);
   const attentionY = useRef(0);
+  // Flashes behind "Needs attention" after the bell scrolls to it, so the tap visibly lands.
+  const [highlight] = useState(() => new Animated.Value(0));
+
+  const showAttention = () => {
+    scrollRef.current?.scrollTo({
+      y: Math.max(0, bodyY.current + attentionY.current - spacing.md),
+      animated: true,
+    });
+    highlight.setValue(0);
+    Animated.sequence([
+      Animated.timing(highlight, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.delay(700),
+      Animated.timing(highlight, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
 
   const salesQuery = useStoreSalesSummary(DEMO_STORE_ID);
   const inventoryQuery = useInventory();
@@ -66,6 +103,8 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
 
   const shifts = useRosterStore((s) => s.shifts);
   const employees = useRosterStore((s) => s.employees);
+  const session = useSessionStore(selectSession);
+  const firstName = session ? AuthUtils.firstName(session.name) : "";
 
   const today = useMemo(
     () => ShiftUtils.shiftsOnDay(shifts, now),
@@ -78,13 +117,13 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
   const shiftCard = useMemo(
     () =>
       ShiftCardUtils.shiftCardModel({
-        myShift: today.find((s) => s.employeeId === DEMO_USER.employeeId),
+        myShift: today.find((s) => s.employeeId === session?.employeeId),
         now,
         staffOnFloor: CoverUtils.staffOnFloor(today, now).length,
         nextBreakAt: upcomingBreak?.startsAt ?? null,
         ordersToAssign: ScheduleUtils.unassignedActiveCount(orders),
       }),
-    [today, now, upcomingBreak, orders],
+    [today, now, upcomingBreak, orders, session?.employeeId],
   );
   const attention = useMemo(
     () =>
@@ -138,35 +177,42 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
                 badge={attention.length}
                 icon="notifications-outline"
                 testID="DASHBOARD.NOTIFICATIONS"
-                onPress={() =>
-                  scrollRef.current?.scrollTo({
-                    y: attentionY.current,
-                    animated: true,
-                  })
-                }
+                onPress={showAttention}
               />
               <IconButton
-                accessibilityLabel={L.profileLabel(DEMO_USER.firstName)}
+                accessibilityLabel={L.profileLabel(firstName)}
                 icon="person-outline"
                 testID="DASHBOARD.PROFILE"
-                text={DEMO_USER.firstName.slice(0, 2).toUpperCase()}
+                text={session ? AuthUtils.initials(session.name) : ""}
                 onPress={() => router.push("/more/settings")}
               />
             </>
           }
-          subtitle={DEMO_USER.role}
-          title={L.greeting(DEMO_USER.firstName)}
+          subtitle={session ? ROLE_LABELS[session.role] : ""}
+          title={L.greeting(firstName)}
         />
 
-        <View style={styles.body}>
+        <View
+          style={styles.body}
+          testID="DASHBOARD.BODY"
+          onLayout={(event) => {
+            bodyY.current = event.nativeEvent.layout.y;
+          }}
+        >
           <ShiftCard testID="DASHBOARD.SHIFT_CARD" {...shiftCard} />
 
           <View
             style={styles.section}
+            testID="DASHBOARD.ATTENTION"
             onLayout={(event) => {
               attentionY.current = event.nativeEvent.layout.y;
             }}
           >
+            <Animated.View
+              pointerEvents="none"
+              style={[styles.highlight, { opacity: highlight }]}
+              testID="DASHBOARD.ATTENTION.HIGHLIGHT"
+            />
             <View style={styles.sectionHeader}>
               <AppText accessibilityRole="header" variant="sectionTitle">
                 {A.title}
@@ -297,14 +343,6 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
               <SalesChart data={salesQuery.data.hourly} />
             </View>
           ) : null}
-
-          <AppText
-            color="textMuted"
-            style={styles.footnote}
-            variant="supporting"
-          >
-            {L.footnote}
-          </AppText>
         </View>
       </ScrollView>
     </Screen>
@@ -372,6 +410,15 @@ const styles = StyleSheet.create({
   content: { paddingBottom: spacing.xxl },
   body: { paddingHorizontal: spacing.xl, gap: spacing.xxl },
   section: { gap: 10 },
+  highlight: {
+    position: "absolute",
+    top: -spacing.sm,
+    bottom: -spacing.sm,
+    left: -spacing.sm,
+    right: -spacing.sm,
+    borderRadius: radius.lg,
+    backgroundColor: colors.accentSoft,
+  },
   sectionHeader: {
     flexDirection: "row",
     alignItems: "baseline",
@@ -411,5 +458,4 @@ const styles = StyleSheet.create({
   },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   gridItem: { flexGrow: 1, flexBasis: "45%" },
-  footnote: { textAlign: "center" },
 });
