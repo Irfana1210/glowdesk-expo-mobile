@@ -1,7 +1,7 @@
 import { fireEvent, screen } from "@testing-library/react-native";
 
 import { InventoryScreen } from "@/features/inventory/screens/inventory.screen";
-import { fetchInventory } from "@/features/inventory/services/inventory.service";
+import { InventoryService } from "@/features/inventory/services/inventory.service";
 
 import { createMockInventory } from "@/mocks/inventory";
 import { MOCK_PRODUCTS } from "@/mocks/products";
@@ -11,9 +11,11 @@ import { renderWithQuery } from "@test/render-with-query";
 const mockPush = jest.fn();
 jest.mock("expo-router", () => ({ useRouter: () => ({ push: mockPush }) }));
 jest.mock("@/features/inventory/services/inventory.service", () => ({
-  fetchInventory: jest.fn(),
+  InventoryService: {
+    fetchInventory: jest.fn(),
+  },
 }));
-const mockedFetch = jest.mocked(fetchInventory);
+const mockedFetch = jest.mocked(InventoryService.fetchInventory);
 
 const rowIds = () =>
   screen.getAllByTestId(/^product-row-/).map((n) => n.props.testID as string);

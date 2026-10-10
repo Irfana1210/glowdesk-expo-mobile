@@ -15,12 +15,14 @@ jest.mock("expo-router", () => ({
   }),
 }));
 jest.mock("@/features/inventory/services/inventory.service", () => ({
-  // Loaded lazily because jest.mock factories cannot use imported bindings.
-  fetchInventory: jest.fn(() =>
-    Promise.resolve(
-      jest.requireActual("@/mocks/inventory").createMockInventory(),
+  InventoryService: {
+    // Loaded lazily because jest.mock factories cannot use imported bindings.
+    fetchInventory: jest.fn(() =>
+      Promise.resolve(
+        jest.requireActual("@/mocks/inventory").createMockInventory(),
+      ),
     ),
-  ),
+  },
 }));
 jest.mock("expo-camera", () => ({
   useCameraPermissions: () => [

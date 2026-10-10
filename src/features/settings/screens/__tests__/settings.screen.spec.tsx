@@ -25,9 +25,13 @@ jest.mock("expo-router", () => ({
   }),
 }));
 jest.mock("@/features/orders/services/orders.service", () => ({
-  fetchOrders: jest.fn(() =>
-    Promise.resolve(jest.requireActual("@test/order-test-utils").mockOrders()),
-  ),
+  OrdersService: {
+    fetchOrders: jest.fn(() =>
+      Promise.resolve(
+        jest.requireActual("@test/order-test-utils").mockOrders(),
+      ),
+    ),
+  },
 }));
 
 beforeEach(() => {

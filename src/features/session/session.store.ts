@@ -7,12 +7,15 @@ import { create } from "zustand";
 
 export type DemoRole = "MANAGER" | "TEAM_MEMBER";
 
-type SessionState = {
+type States = {
   role: DemoRole;
+};
+
+type Actions = {
   setRole: (role: DemoRole) => void;
 };
 
-export const useSessionStore = create<SessionState>()((set) => ({
+export const useSessionStore = create<States & Actions>()((set) => ({
   role: "MANAGER",
   setRole: (role) => set({ role }),
 }));

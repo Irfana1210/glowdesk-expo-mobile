@@ -1,6 +1,8 @@
 /**
  * Live floor-cover rules for the dashboard and roster. Pure functions; `now` is always passed in.
  */
+import { MS_IN_MINUTE } from "@/constants/primitives";
+
 import { FormatUtils } from "@/utils/format-utils";
 
 import { type Shift } from "../types";
@@ -43,7 +45,6 @@ export namespace CoverUtils {
   /** A break starting within this many minutes is flagged so someone can arrange cover. */
   export const BREAK_COVER_NOTICE_MINUTES = 60;
 
-  const MINUTE = 60_000;
   const t = (iso: string) => Date.parse(iso);
 
   /** People rostered at any point in each trading hour of `day`. */
@@ -61,9 +62,9 @@ export namespace CoverUtils {
     for (
       let slot = open.getTime();
       slot < close.getTime();
-      slot += 60 * MINUTE
+      slot += 60 * MS_IN_MINUTE
     ) {
-      const slotEnd = slot + 60 * MINUTE;
+      const slotEnd = slot + 60 * MS_IN_MINUTE;
       const count = shifts.filter(
         (s) => t(s.startAt) < slotEnd && slot < t(s.endAt),
       ).length;
@@ -85,7 +86,7 @@ export namespace CoverUtils {
     const start = t(shift.breakStartAt);
     return Number.isNaN(start)
       ? null
-      : { start, end: start + shift.unpaidBreakMinutes * MINUTE };
+      : { start, end: start + shift.unpaidBreakMinutes * MS_IN_MINUTE };
   }
 
   export function isOnBreak(shift: Shift, now: Date): boolean {
@@ -128,7 +129,7 @@ export namespace CoverUtils {
   export function breakNeedsCover(upcoming: UpcomingBreak, now: Date): boolean {
     return (
       upcoming.startsAt.getTime() - now.getTime() <=
-      BREAK_COVER_NOTICE_MINUTES * MINUTE
+      BREAK_COVER_NOTICE_MINUTES * MS_IN_MINUTE
     );
   }
 
@@ -139,7 +140,7 @@ export namespace CoverUtils {
     if (time < start) {
       return {
         phase: "upcoming",
-        minutesRemaining: Math.ceil((start - time) / MINUTE),
+        minutesRemaining: Math.ceil((start - time) / MS_IN_MINUTE),
         percent: 0,
       };
     }
@@ -149,7 +150,7 @@ export namespace CoverUtils {
     const total = end - start;
     return {
       phase: "active",
-      minutesRemaining: Math.ceil((end - time) / MINUTE),
+      minutesRemaining: Math.ceil((end - time) / MS_IN_MINUTE),
       percent: total > 0 ? ((time - start) / total) * 100 : 0,
     };
   }

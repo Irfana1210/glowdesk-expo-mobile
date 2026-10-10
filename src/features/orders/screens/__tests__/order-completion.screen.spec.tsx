@@ -16,7 +16,9 @@ jest.mock("expo-router", () => ({
   useLocalSearchParams: () => mockParams,
 }));
 jest.mock("@/features/orders/services/orders.service", () => ({
-  fetchOrders: jest.fn().mockResolvedValue([]),
+  OrdersService: {
+    fetchOrders: jest.fn().mockResolvedValue([]),
+  },
 }));
 
 async function renderCompletion(orderId: string) {

@@ -2,13 +2,13 @@
  * Click & Collect timing rules from the design handoff. Pure functions; `now` is passed in.
  * An order is due a fixed pickup window after it is placed. Overdue orders are picked first.
  */
+import { MS_IN_MINUTE } from "@/constants/primitives";
+
 import { type Order } from "@/types/order";
 
 export namespace ScheduleUtils {
   /** Customers are promised their order within two hours of placing it. */
   export const PICKUP_WINDOW_MINUTES = 120;
-
-  const MINUTE = 60_000;
 
   export function isActive(order: Order): boolean {
     return order.status === "NEW" || order.status === "PICKING";
@@ -16,7 +16,7 @@ export namespace ScheduleUtils {
 
   export function dueAt(order: Order): Date {
     return new Date(
-      Date.parse(order.createdAt) + PICKUP_WINDOW_MINUTES * MINUTE,
+      Date.parse(order.createdAt) + PICKUP_WINDOW_MINUTES * MS_IN_MINUTE,
     );
   }
 
@@ -28,7 +28,7 @@ export namespace ScheduleUtils {
   /** Whole minutes past due, or 0 when not overdue. */
   export function minutesOverdue(order: Order, now: Date): number {
     return isOverdue(order, now)
-      ? Math.floor((now.getTime() - dueAt(order).getTime()) / MINUTE)
+      ? Math.floor((now.getTime() - dueAt(order).getTime()) / MS_IN_MINUTE)
       : 0;
   }
 
@@ -39,7 +39,7 @@ export namespace ScheduleUtils {
     }
     return Math.max(
       0,
-      Math.floor((now.getTime() - Date.parse(order.readyAt)) / MINUTE),
+      Math.floor((now.getTime() - Date.parse(order.readyAt)) / MS_IN_MINUTE),
     );
   }
 

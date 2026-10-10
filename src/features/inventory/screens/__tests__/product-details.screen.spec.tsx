@@ -14,12 +14,14 @@ jest.mock("expo-router", () => ({
   useLocalSearchParams: () => mockParams,
 }));
 jest.mock("@/features/inventory/services/inventory.service", () => ({
-  // Loaded lazily because jest.mock factories cannot use imported bindings.
-  fetchInventory: jest.fn(() =>
-    Promise.resolve(
-      jest.requireActual("@/mocks/inventory").createMockInventory(),
+  InventoryService: {
+    // Loaded lazily because jest.mock factories cannot use imported bindings.
+    fetchInventory: jest.fn(() =>
+      Promise.resolve(
+        jest.requireActual("@/mocks/inventory").createMockInventory(),
+      ),
     ),
-  ),
+  },
 }));
 
 async function renderProduct(id: string) {

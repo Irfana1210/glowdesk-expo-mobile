@@ -12,15 +12,18 @@ export type NotificationPreferences = {
   rosterChanges: boolean;
 };
 
-type PreferencesState = {
+type States = {
   notifications: NotificationPreferences;
+  vibrateOnScanError: boolean;
+};
+
+type Actions = {
   resetPreferences: () => void;
   setNotification: (
     key: keyof NotificationPreferences,
     enabled: boolean,
   ) => void;
   setVibrateOnScanError: (enabled: boolean) => void;
-  vibrateOnScanError: boolean;
 };
 
 const DEFAULTS = {
@@ -30,7 +33,7 @@ const DEFAULTS = {
 
 export const PREFERENCES_STORAGE_KEY = STORAGE_KEYS.preferences;
 
-export const usePreferencesStore = create<PreferencesState>()(
+export const usePreferencesStore = create<States & Actions>()(
   persist(
     (set, get) => ({
       ...DEFAULTS,

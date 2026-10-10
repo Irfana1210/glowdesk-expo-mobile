@@ -1,6 +1,6 @@
 import Storage from "expo-sqlite/kv-store";
 
-import { fetchOrders } from "@/features/orders/services/orders.service";
+import { OrdersService } from "@/features/orders/services/orders.service";
 import {
   isPersistedOrder,
   mergeByVersion,
@@ -15,9 +15,11 @@ import { MOCK_PRODUCTS } from "@/mocks/products";
 import { mockOrders, resetOrdersStore, TEST_NOW } from "@test/order-test-utils";
 
 jest.mock("@/features/orders/services/orders.service", () => ({
-  fetchOrders: jest.fn(),
+  OrdersService: {
+    fetchOrders: jest.fn(),
+  },
 }));
-const mockedFetchOrders = jest.mocked(fetchOrders);
+const mockedFetchOrders = jest.mocked(OrdersService.fetchOrders);
 
 beforeEach(async () => {
   jest.clearAllMocks();

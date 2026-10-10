@@ -3,6 +3,8 @@
  * Durations are measured between absolute instants, so overnight shifts and
  * daylight-saving changes are counted in real elapsed time.
  */
+import { MS_IN_MINUTE } from "@/constants/primitives";
+
 import { FormatUtils } from "@/utils/format-utils";
 
 import { type Employee } from "@/features/employees/types";
@@ -35,8 +37,6 @@ export namespace ShiftUtils {
   /** Longer shifts are almost certainly data entry mistakes, for example a wrong "ends next day". */
   export const MAX_SHIFT_MINUTES = 14 * 60;
 
-  const MINUTE = 60_000;
-
   function instant(iso: string): number | null {
     const time = Date.parse(iso);
     return Number.isNaN(time) ? null : time;
@@ -50,7 +50,7 @@ export namespace ShiftUtils {
     if (start === null || end === null) {
       return 0;
     }
-    return Math.max(0, Math.round((end - start) / MINUTE));
+    return Math.max(0, Math.round((end - start) / MS_IN_MINUTE));
   }
 
   /** Paid Hours = Shift Duration − Unpaid Breaks (brief §6, Screen 8), in minutes. Never negative. */
@@ -125,7 +125,7 @@ export namespace ShiftUtils {
     }
 
     if (start !== null && end !== null) {
-      const duration = Math.round((end - start) / MINUTE);
+      const duration = Math.round((end - start) / MS_IN_MINUTE);
       if (duration <= 0) {
         errors.endAt =
           'End time must be after the start time. Turn on "Ends next day" for an overnight shift.';

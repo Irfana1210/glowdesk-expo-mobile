@@ -21,12 +21,15 @@ export type SaveShiftResult =
   | { ok: true; shift: Shift }
   | { errors: ShiftErrors; ok: false };
 
-type RosterState = {
-  addShift: (draft: ShiftDraft) => SaveShiftResult;
+type States = {
   employees: Array<Employee>;
+  shifts: Array<Shift>;
+};
+
+type Actions = {
+  addShift: (draft: ShiftDraft) => SaveShiftResult;
   removeShift: (shiftId: string) => void;
   resetDemoData: () => void;
-  shifts: Array<Shift>;
   updateShift: (shiftId: string, draft: ShiftDraft) => SaveShiftResult;
 };
 
@@ -59,7 +62,7 @@ export function isPersistedShift(value: unknown): value is Shift {
   );
 }
 
-export const useRosterStore = create<RosterState>()(
+export const useRosterStore = create<States & Actions>()(
   persist(
     (set, get) => {
       const context = (editingShiftId?: string) => ({
@@ -130,4 +133,5 @@ export const useRosterStore = create<RosterState>()(
   ),
 );
 
-export const selectActiveEmployees = (state: RosterState) => state.employees;
+export const selectActiveEmployees = (state: States & Actions) =>
+  state.employees;

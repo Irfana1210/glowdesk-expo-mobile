@@ -1,18 +1,17 @@
-import { useQuery } from "@tanstack/react-query";
+import { INVENTORY_CACHE_KEY } from "@/services/cache-keys";
+
+import { useSafeQuery } from "@/hooks/query/use-safe-query";
 
 import { DEMO_STORE_ID } from "@/mocks/store";
+import { StaleTimeMs } from "@/types/enums";
 
-import { fetchInventory } from "../services/inventory.service";
-
-export const inventoryQueryKeys = {
-  list: (storeId: string) => ["inventory", storeId] as const,
-};
+import { InventoryService } from "../services/inventory.service";
 
 /** Stock levels are server state, so they live in TanStack Query (brief §9). */
 export function useInventory(storeId: string = DEMO_STORE_ID) {
-  return useQuery({
-    queryKey: inventoryQueryKeys.list(storeId),
-    queryFn: () => fetchInventory(storeId),
-    staleTime: 60_000,
+  return useSafeQuery({
+    queryKey: [INVENTORY_CACHE_KEY, storeId],
+    queryFn: () => InventoryService.fetchInventory(storeId),
+    staleTime: StaleTimeMs.Inventory,
   });
 }

@@ -15,6 +15,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
+import { successHandler } from "@/utils/success-handler";
+
 import {
   EMPLOYMENT_TYPE_LABELS,
   ROLE_LABELS,
@@ -32,6 +34,7 @@ import { SelectField } from "@/components/ui/select-field";
 
 import { DEMO_STORE_ID } from "@/mocks/store";
 import { colors, radius, spacing } from "@/theme";
+import { MessageType } from "@/types/enums";
 
 import { DateUtils } from "../domain/dates";
 import { ShiftFormUtils, type ShiftFormValues } from "../domain/shift-form";
@@ -164,6 +167,7 @@ function ShiftEditorForm({
     AccessibilityInfo.announceForAccessibility(
       isEditing ? "Shift updated" : "Shift added",
     );
+    successHandler(isEditing ? MessageType.Update : MessageType.Create);
     onDone();
   });
 
@@ -394,6 +398,7 @@ function ShiftEditorForm({
           }
           setConfirmDelete(false);
           AccessibilityInfo.announceForAccessibility("Shift removed");
+          successHandler(MessageType.Delete);
           onDone();
         }}
       />

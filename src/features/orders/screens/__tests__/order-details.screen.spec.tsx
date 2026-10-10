@@ -20,7 +20,9 @@ jest.mock("expo-router", () => ({
   useLocalSearchParams: () => mockParams,
 }));
 jest.mock("@/features/orders/services/orders.service", () => ({
-  fetchOrders: jest.fn().mockResolvedValue([]),
+  OrdersService: {
+    fetchOrders: jest.fn().mockResolvedValue([]),
+  },
 }));
 
 /** Saturday 10 October 2026, 4:40 pm: the moment the Order Details mockup shows. */

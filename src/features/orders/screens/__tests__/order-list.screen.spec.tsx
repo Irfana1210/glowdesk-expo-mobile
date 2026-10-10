@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
 import { OrderListScreen } from "@/features/orders/screens/order-list.screen";
-import { fetchOrders } from "@/features/orders/services/orders.service";
+import { OrdersService } from "@/features/orders/services/orders.service";
 
 import { createMockOrders } from "@/mocks/orders";
 
@@ -13,10 +13,12 @@ jest.mock("expo-router", () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 jest.mock("@/features/orders/services/orders.service", () => ({
-  fetchOrders: jest.fn(),
+  OrdersService: {
+    fetchOrders: jest.fn(),
+  },
 }));
 
-const mockedFetchOrders = jest.mocked(fetchOrders);
+const mockedFetchOrders = jest.mocked(OrdersService.fetchOrders);
 
 /** The moment the mockups show: Saturday 10 October 2026, 4:40 pm. */
 const NOW = new Date(2026, 9, 10, 16, 40);

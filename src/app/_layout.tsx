@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 
 import { DMSans_400Regular } from "@expo-google-fonts/dm-sans/400Regular";
 import { DMSans_500Medium } from "@expo-google-fonts/dm-sans/500Medium";
@@ -15,6 +16,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 
 import { createQueryClient } from "@/utils/query-client/app-query-client";
+import { toastConfig } from "@/utils/toast-config";
 
 import { useAppStateFocusManager } from "@/hooks/query/use-app-state-focus";
 
@@ -73,6 +75,7 @@ export default function RootLayout() {
             <Stack.Screen name="more/settings" />
             <Stack.Screen name="+not-found" />
           </Stack>
+          <Toast config={toastConfig} />
         </SafeAreaProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>

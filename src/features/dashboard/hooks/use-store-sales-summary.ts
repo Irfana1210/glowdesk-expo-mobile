@@ -1,16 +1,16 @@
-import { useQuery } from "@tanstack/react-query";
+import { SALES_SUMMARY_CACHE_KEY } from "@/services/cache-keys";
 
-import { fetchStoreSalesSummary } from "../services/sales.service";
+import { useSafeQuery } from "@/hooks/query/use-safe-query";
 
-export const salesQueryKeys = {
-  summary: (storeId: string) => ["sales", "summary", storeId] as const,
-};
+import { StaleTimeMs } from "@/types/enums";
+
+import { SalesService } from "../services/sales.service";
 
 /** Sales are server state, so they live in TanStack Query rather than Zustand (brief §9). */
 export function useStoreSalesSummary(storeId: string) {
-  return useQuery({
-    queryKey: salesQueryKeys.summary(storeId),
-    queryFn: () => fetchStoreSalesSummary(storeId),
-    staleTime: 60_000,
+  return useSafeQuery({
+    queryKey: [SALES_SUMMARY_CACHE_KEY, storeId],
+    queryFn: () => SalesService.fetchStoreSalesSummary(storeId),
+    staleTime: StaleTimeMs.SalesSummary,
   });
 }

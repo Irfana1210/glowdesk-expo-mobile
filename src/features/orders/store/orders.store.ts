@@ -16,7 +16,7 @@ import {
   PickingUtils,
   type PickResult,
 } from "@/features/orders/domain/picking";
-import { fetchOrders } from "@/features/orders/services/orders.service";
+import { OrdersService } from "@/features/orders/services/orders.service";
 
 import { type Order, type OrderStatus } from "@/types/order";
 
@@ -24,19 +24,22 @@ export type LoadStatus = "idle" | "loading" | "ready" | "error";
 
 export type ActionResult = { ok: true } | { message: string; ok: false };
 
-type OrdersState = {
+type States = {
+  isRefreshing: boolean;
+  loadError: string | null;
+  loadStatus: LoadStatus;
+  orders: Array<Order>;
+};
+
+type Actions = {
   /** Assigns a New or Picking order, or unassigns it when no employee is given. */
   assignOrder: (
     orderId: string,
     employeeId: string | undefined,
   ) => ActionResult;
   cancelOrder: (orderId: string) => ActionResult;
-  isRefreshing: boolean;
-  loadError: string | null;
   loadOrders: () => Promise<void>;
-  loadStatus: LoadStatus;
   markReady: (orderId: string) => ActionResult;
-  orders: Array<Order>;
   refreshOrders: () => Promise<void>;
   resetDemoData: () => Promise<void>;
   scanItem: (orderId: string, barcode: string) => PickResult;
@@ -143,7 +146,7 @@ function waitForHydration(): Promise<void> {
   });
 }
 
-export const useOrdersStore = create<OrdersState>()(
+export const useOrdersStore = create<States & Actions>()(
   persist(
     (set, get) => {
       const replaceOrder = (updated: Order) =>
@@ -182,7 +185,7 @@ export const useOrdersStore = create<OrdersState>()(
           set({ loadStatus: "loading", loadError: null });
           try {
             await waitForHydration();
-            const incoming = await fetchOrders();
+            const incoming = await OrdersService.fetchOrders();
             set({
               orders: sortOrders(mergeByVersion(get().orders, incoming)),
               loadStatus: "ready",
@@ -202,7 +205,7 @@ export const useOrdersStore = create<OrdersState>()(
           }
           set({ isRefreshing: true });
           try {
-            const incoming = await fetchOrders();
+            const incoming = await OrdersService.fetchOrders();
             set({
               orders: sortOrders(mergeByVersion(get().orders, incoming)),
               loadStatus: "ready",
@@ -246,7 +249,7 @@ export const useOrdersStore = create<OrdersState>()(
           set({ orders: [], loadStatus: "loading", loadError: null });
           try {
             set({
-              orders: sortOrders(await fetchOrders()),
+              orders: sortOrders(await OrdersService.fetchOrders()),
               loadStatus: "ready",
             });
           } catch (error) {
@@ -278,5 +281,5 @@ export const useOrdersStore = create<OrdersState>()(
 );
 
 export const selectOrderById =
-  (orderId: string | undefined) => (state: OrdersState) =>
+  (orderId: string | undefined) => (state: States & Actions) =>
     orderId ? state.orders.find((order) => order.id === orderId) : undefined;

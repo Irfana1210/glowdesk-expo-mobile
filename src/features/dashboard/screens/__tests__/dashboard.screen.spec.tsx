@@ -1,8 +1,8 @@
 import { fireEvent, screen } from "@testing-library/react-native";
 
 import { DashboardScreen } from "@/features/dashboard/screens/dashboard.screen";
-import { fetchStoreSalesSummary } from "@/features/dashboard/services/sales.service";
-import { fetchInventory } from "@/features/inventory/services/inventory.service";
+import { SalesService } from "@/features/dashboard/services/sales.service";
+import { InventoryService } from "@/features/inventory/services/inventory.service";
 import { useRosterStore } from "@/features/roster/store/roster.store";
 
 import { createMockInventory } from "@/mocks/inventory";
@@ -19,17 +19,23 @@ jest.mock("expo-router", () => ({
   useRouter: () => ({ navigate: mockNavigate, push: mockPush }),
 }));
 jest.mock("@/features/dashboard/services/sales.service", () => ({
-  fetchStoreSalesSummary: jest.fn(),
+  SalesService: {
+    fetchStoreSalesSummary: jest.fn(),
+  },
 }));
 jest.mock("@/features/inventory/services/inventory.service", () => ({
-  fetchInventory: jest.fn(),
+  InventoryService: {
+    fetchInventory: jest.fn(),
+  },
 }));
 jest.mock("@/features/orders/services/orders.service", () => ({
-  fetchOrders: jest.fn().mockResolvedValue([]),
+  OrdersService: {
+    fetchOrders: jest.fn().mockResolvedValue([]),
+  },
 }));
 
-const mockedFetchSales = jest.mocked(fetchStoreSalesSummary);
-const mockedFetchInventory = jest.mocked(fetchInventory);
+const mockedFetchSales = jest.mocked(SalesService.fetchStoreSalesSummary);
+const mockedFetchInventory = jest.mocked(InventoryService.fetchInventory);
 
 /** Saturday 10 October 2026, 4:40 pm: the moment the Dashboard mockup shows. */
 const NOW = new Date(2026, 9, 10, 16, 40);
