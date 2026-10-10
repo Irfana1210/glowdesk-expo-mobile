@@ -49,7 +49,7 @@ export function ProductDetailsScreen() {
 
   return (
     <Screen testID="product-details-screen">
-      <AppHeader title="Product Details" onBack={goBack} />
+      <AppHeader title="Product details" onBack={goBack} />
       {content}
     </Screen>
   );
@@ -89,7 +89,7 @@ function ProductDetailsContent({ item }: { item: InventoryItem }) {
   return (
     <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + spacing.lg }]}>
       <View style={styles.hero}>
-        <ProductThumbnail seed={product.id} label={product.brand} size={88} />
+        <ProductThumbnail seed={product.id} label={product.brand} swatch={product.swatch} size={88} />
         <AppText variant="supporting" color="textMuted">
           {product.brand}
         </AppText>
