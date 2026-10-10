@@ -9,17 +9,17 @@ import { LOCALE } from "@/constants/locale";
 
 import { type Order, type OrderItem, type OrderStatus } from "@/types/order";
 
-export type ReadinessFailureCode =
+type ReadinessFailureCode =
   | "INVALID_STATUS"
   | "NO_ITEMS"
   | "INVALID_QUANTITY"
   | "ITEMS_NOT_VERIFIED";
 
-export type ReadinessResult =
+type ReadinessResult =
   | { ok: true }
   | { code: ReadinessFailureCode; message: string; ok: false };
 
-export type PickingProgress = {
+type PickingProgress = {
   /** Whole-number percentage, 0 to 100. */
   percent: number;
   /** 0 to 1. Zero when the order has no items. */
@@ -28,7 +28,7 @@ export type PickingProgress = {
   verifiedItems: number;
 };
 
-export type UnitProgress = {
+type UnitProgress = {
   /** Whole-number percentage, 0 to 100. */
   percent: number;
   pickedUnits: number;

@@ -12,7 +12,7 @@ import { ORDER_STATUS_META } from "./order-status-meta";
 
 const L = LOCALE.orders.card;
 
-export type OrderCardModel = {
+type OrderCardModel = {
   accessibilityLabel: string;
   assigneeLabel: string;
   initials: string;

@@ -15,7 +15,7 @@ import {
 import { AppText } from "./app-text";
 import { type IconName } from "./button";
 
-export type AttentionItemProps = {
+type AttentionItemProps = {
   accessibilityHint?: string;
   icon: IconName;
   onPress: () => void;

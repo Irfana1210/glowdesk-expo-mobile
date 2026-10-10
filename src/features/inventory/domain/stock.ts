@@ -13,7 +13,7 @@ export type InventoryFilter = {
   query: string;
 };
 
-export type BarcodeLookupResult =
+type BarcodeLookupResult =
   | { item: InventoryItem; ok: true }
   | { code: "INVALID_BARCODE" | "NOT_FOUND"; message: string; ok: false };
 

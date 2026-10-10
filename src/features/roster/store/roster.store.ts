@@ -19,7 +19,7 @@ import { DEMO_STORE_ID } from "@/mocks/store";
 import { type ShiftErrors, ShiftUtils } from "../domain/shifts";
 import { type Shift, type ShiftDraft } from "../types";
 
-export type SaveShiftResult =
+type SaveShiftResult =
   | { ok: true; shift: Shift }
   | { errors: ShiftErrors; ok: false };
 
@@ -41,7 +41,7 @@ export const ROSTER_STORAGE_KEY = STORAGE_KEYS.roster;
  * v2: the demo team was replaced with the design-handoff cast, so old saved shifts point at
  * different people. They are dropped and the new demo week is used instead.
  */
-export const ROSTER_STORAGE_VERSION = 2;
+const ROSTER_STORAGE_VERSION = 2;
 
 function newShiftId(): string {
   return `shift-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -134,6 +134,3 @@ export const useRosterStore = create<States & Actions>()(
     },
   ),
 );
-
-export const selectActiveEmployees = (state: States & Actions) =>
-  state.employees;

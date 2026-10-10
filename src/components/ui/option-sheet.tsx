@@ -12,7 +12,7 @@ import { AppText } from "./app-text";
 
 const L = LOCALE.components.optionSheet;
 
-export type SheetOption = {
+type SheetOption = {
   description?: string;
   label: string;
   value: string;

@@ -24,7 +24,7 @@ import { type Order, type OrderStatus } from "@/types/order";
 
 export type LoadStatus = "idle" | "loading" | "ready" | "error";
 
-export type ActionResult = { ok: true } | { message: string; ok: false };
+type ActionResult = { ok: true } | { message: string; ok: false };
 
 type States = {
   isRefreshing: boolean;
@@ -53,7 +53,7 @@ export const ORDERS_STORAGE_KEY = STORAGE_KEYS.orders;
  * v2: demo orders were replaced with the design-handoff data set (same IDs, different products).
  * Older saved demo orders are dropped rather than mixed with the new ones.
  */
-export const ORDERS_STORAGE_VERSION = 2;
+const ORDERS_STORAGE_VERSION = 2;
 
 const PRIORITY_RANK = { HIGH: 0, STANDARD: 1 } as const;
 

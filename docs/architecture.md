@@ -1,6 +1,6 @@
 # RetailOS architecture
 
-This document explains how the RetailOS code is organised and how data moves through it. It is for engineers reading or extending the codebase. The original design mockup is [designs.png](designs.png).
+This document explains how the RetailOS code is organised and how data moves through it. It is for engineers reading or extending the codebase. The design handoff is in [DESIGN_HANDOFF.md](DESIGN_HANDOFF.md) with mockups in [screens/](screens/), and the coding standards in [coding-standards.md](coding-standards.md).
 
 ## Principles
 
@@ -14,8 +14,8 @@ This document explains how the RetailOS code is organised and how data moves thr
 ```text
 RetailOS/
 ├── src/
-│   ├── app/                         Expo Router routes (thin files only)
-│   │   ├── _layout.tsx              Root stack, fonts, splash, QueryClient and safe-area providers
+│   ├── app/                         Expo Router routes (thin files only, default-export a screen)
+│   │   ├── _layout.tsx              Root stack, fonts, splash, QueryClient, safe area, toasts
 │   │   ├── index.tsx                Redirects to /dashboard (demo mode, no sign-in)
 │   │   ├── +not-found.tsx
 │   │   ├── (tabs)/                  Bottom tabs: dashboard, orders, roster, inventory, more
@@ -26,57 +26,59 @@ RetailOS/
 │   │
 │   ├── features/
 │   │   ├── orders/
-│   │   │   ├── api/                 Mock orders API with simulated latency
-│   │   │   ├── domain/              orderStateMachine (transitions, canMarkReady), picking (scan rules)
-│   │   │   ├── store/               useOrdersStore (Zustand, persisted)
-│   │   │   ├── hooks/               useEnsureOrdersLoaded (deep-link safe loading)
-│   │   │   ├── components/          OrderCard, OrderItemRow, OrderStatusBadge
-│   │   │   └── screens/             OrderList, OrderDetails, BarcodeScanner, OrderCompletion
+│   │   │   ├── services/            OrdersService (mock, simulated latency)
+│   │   │   ├── domain/              OrderStateMachine, PickingUtils, ScheduleUtils, AssignmentUtils
+│   │   │   ├── store/               orders.store.ts: useOrdersStore (Zustand, persisted)
+│   │   │   ├── hooks/               use-ensure-orders-loaded (deep-link safe loading)
+│   │   │   ├── components/          order-list-card, order-status-badge
+│   │   │   ├── screens/             order-list, order-details, barcode-scanner, order-completion
+│   │   │   └── presentation.ts      OrderPresentationUtils: card and label text, pure
 │   │   ├── dashboard/
-│   │   │   ├── api/                 Mock sales API
-│   │   │   ├── domain/kpis.ts       Achievement %, average transaction value, labour % (safe division)
-│   │   │   ├── hooks/               useStoreSalesSummary (TanStack Query)
-│   │   │   ├── components/          SalesChart, QuickActions
-│   │   │   └── screens/             DashboardScreen
+│   │   │   ├── services/            SalesService (mock)
+│   │   │   ├── domain/              KpiUtils (safe division), AttentionUtils, ShiftCardUtils
+│   │   │   ├── hooks/               use-store-sales-summary (useSafeQuery)
+│   │   │   ├── components/          sales-chart
+│   │   │   └── screens/             dashboard
 │   │   ├── inventory/
-│   │   │   ├── api/                 Mock inventory API
-│   │   │   ├── domain/stock.ts      Stock status, search, filters, barcode lookup
-│   │   │   ├── hooks/               useInventory (TanStack Query)
-│   │   │   ├── components/          ProductCard
-│   │   │   └── screens/             Inventory, ProductDetails, InventoryScan
+│   │   │   ├── services/            InventoryService (mock)
+│   │   │   ├── domain/stock.ts      StockUtils: status, search, filters, barcode lookup
+│   │   │   ├── hooks/               use-inventory (useSafeQuery)
+│   │   │   ├── components/          product-card
+│   │   │   └── screens/             inventory, product-details, inventory-scan
 │   │   ├── roster/
-│   │   │   ├── domain/              dates (Monday weeks, DST-safe), shifts (validation, coverage), shiftForm (Zod)
-│   │   │   ├── store/               useRosterStore (Zustand, persisted)
-│   │   │   ├── components/          ShiftCard, WeekNavigator, WeekDaySelector
-│   │   │   └── screens/             Roster, ShiftEditor
+│   │   │   ├── domain/              DateUtils (Monday weeks, DST-safe), ShiftUtils (validation, coverage),
+│   │   │   │                        CoverUtils (floor cover, breaks), ShiftFormUtils (zod)
+│   │   │   ├── store/               roster.store.ts: useRosterStore (Zustand, persisted)
+│   │   │   ├── components/          week-navigator, week-day-selector, floor-cover-chart
+│   │   │   └── screens/             roster, shift-editor
 │   │   ├── labour/
-│   │   │   ├── domain/labour.ts     Effective-dated pay rates, shift cost, weekly summary
-│   │   │   └── screens/             LabourScreen
+│   │   │   ├── domain/labour.ts     LabourUtils: effective-dated pay rates, shift cost, weekly summary
+│   │   │   └── screens/             labour
 │   │   ├── employees/types.ts       Employee, roles, employment types (shared by roster and labour)
-│   │   ├── settings/                Preferences store, SettingsScreen
-│   │   └── session/                 Demo session role (fixed to Manager; gates pay information)
+│   │   ├── settings/                preferences.store.ts, settings screen
+│   │   └── session/                 session.store.ts: demo role (fixed to Manager; gates pay information)
+│   │   (each folder has sibling __tests__/ with *.spec.ts(x))
 │   │
 │   ├── components/
-│   │   ├── ui/                      Design-system components: AppText, buttons, KPICard, StatusBadge,
-│   │   │                            FilterChips, SearchBar, SelectField, TextField, ProgressBar,
-│   │   │                            Loading/Empty/ErrorState, InlineBanner, ConfirmationModal, ...
-│   │   ├── layout/                  Screen, AppHeader
-│   │   └── scanner/                 BarcodeCamera, ManualBarcodeEntry (used by orders and inventory)
-│   ├── database/storage.ts          On-device persistence (expo-sqlite key-value store) and storage keys
-│   ├── hooks/                       Cross-feature hooks (useAppStateFocusManager)
-│   ├── lib/                         Pure helpers: formatting, barcodes, QueryClient factory
+│   │   ├── ui/                      Design-system components, one kebab-case file each (no barrel)
+│   │   ├── layout/                  screen, app-header
+│   │   └── scanner/                 barcode-camera, manual-barcode-entry (used by orders and inventory)
+│   ├── constants/                   locale.ts (LOCALE copy), primitives.ts (time units, platform flags)
+│   ├── hooks/                       use-now; query/ holds use-safe-query and use-app-state-focus
 │   ├── mocks/                       Fictional store, products, orders, inventory, sales, staff, shifts, pay rates
+│   ├── services/cache-keys/         TanStack Query cache keys
 │   ├── theme/                       Colour, typography and spacing tokens
-│   └── types/                       Shared domain types (orders, products)
+│   ├── types/                       Shared domain types (orders, products) and enums (StaleTimeMs, MessageType)
+│   └── utils/                       FormatUtils, BarcodeUtils, storage (expo-sqlite), query-client,
+│                                    handle-api-error, success-handler, toast-config, ReportingUtils
 │
-├── __tests__/                       Jest tests, mirroring src/ (e.g. __tests__/features/orders/domain/...)
-│   └── utils/                       Shared test helpers, imported as @test/*
-├── docs/
-│   ├── architecture.md              This document
-│   └── designs.png                  Original design mockup
-├── assets/                          App icon and splash images
-├── jest.setup.ts                    Pins the Australia/Melbourne timezone; mocks native-only modules
-└── app.json, package.json, tsconfig.json, eslint.config.js
+├── test/utils/                      Shared test helpers, imported as @test/*
+├── __mocks__/                       Jest manual mocks for native modules (expo-sqlite kv-store)
+├── docs/                            This document, the design handoff and screen mockups
+├── learnings/                       Bugs that passed a correct-looking test suite
+├── scripts/plugins/eslint/          Custom ESLint rules
+├── .github/workflows/checks.yml     CI: typecheck, format, lint, spelling, knip, tests
+└── jest.config.js, jest.setup.ts    Jest config; pins the Australia/Melbourne timezone
 ```
 
 ## Layers and dependencies
@@ -89,9 +91,9 @@ src/app (routes)
         ↓
   features/*/store (Zustand)   features/*/hooks (TanStack Query)
         ↓                              ↓
-  features/*/domain (pure rules)   features/*/api (mock today, Supabase later)
+  features/*/domain (pure rules)   features/*/services (mock today, Supabase later)
         ↓
-  types, lib, theme
+  types, utils, constants, theme
 ```
 
 - Domain modules never import React, stores or storage.
@@ -112,7 +114,7 @@ Every store write goes through the domain rules first, so a store can never hold
 
 ## Persistence
 
-`src/database/storage.ts` provides one JSON storage adapter over `expo-sqlite`'s key-value store, used by all three persisted stores. SQLite is already in the brief's stack for the offline mutation queue (brief §10), so no extra dependency was needed.
+`src/utils/storage.ts` provides one JSON storage adapter over `expo-sqlite`'s key-value store, used by all three persisted stores. SQLite is already in the brief's stack for the offline mutation queue (brief §10), so no extra dependency was needed.
 
 - Saved records are type-checked on load, and malformed ones are dropped rather than trusted.
 - Orders merge by `version` when saved and fetched copies meet, so newer local progress is never overwritten.
@@ -120,19 +122,19 @@ Every store write goes through the domain rules first, so a store can never hold
 
 ## Testing
 
-- Tests live in `__tests__/`, mirroring the `src/` path of the code they cover, and import code through the `@/` alias.
+- Specs live next to the code in a sibling `__tests__/` folder (`*.spec.ts(x)`) and import code through the `@/` alias.
 - Domain functions have unit tests, including zero-value, overnight and daylight-saving cases.
 - Screens have component tests with React Native Testing Library. Expo Router, the camera and SQLite storage are mocked. Mock APIs are replaced per test, so loading, empty and error states are exercised.
 - Jest runs in the Australia/Melbourne timezone, set in `jest.setup.ts`, so date maths is checked the same way on every machine.
 
-Run everything with `npm run check`, which runs the type check, lint and tests.
+Run everything with `npm run check`: format, lint, type check, spelling, knip and tests. CI and the pre-commit hook run the same gates.
 
 ## Moving to a real backend
 
-Each `api/` module is the seam for Supabase. When it arrives:
+Each `services/` namespace is the seam for Supabase. When it arrives:
 
-1. Replace the mock `api/` functions with Supabase queries. Screens do not change.
+1. Replace the mock service functions with Supabase queries. Screens do not change.
 2. Move orders from Zustand to TanStack Query, with mutations for start picking, scan and mark ready.
 3. Enforce the same domain rules on the server, atomically, with version checks.
-4. Add the offline mutation queue to `src/database/` as described in brief §10.
+4. Add the offline mutation queue next to `src/utils/storage.ts` as described in brief §10.
 5. Replace the demo session with Supabase Auth, and protect pay rates with Row Level Security.

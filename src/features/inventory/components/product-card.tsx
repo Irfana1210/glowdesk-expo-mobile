@@ -12,7 +12,7 @@ import { type InventoryItem } from "../types";
 
 const L = LOCALE.inventory.productCard;
 
-export type ProductCardProps = {
+type ProductCardProps = {
   item: InventoryItem;
   onPress: (productId: string) => void;
 };

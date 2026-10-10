@@ -9,7 +9,7 @@ import { BarcodeUtils } from "@/utils/barcode-utils";
 
 import { type Order, type OrderItem } from "@/types/order";
 
-export type PickFailureCode =
+type PickFailureCode =
   | "INVALID_BARCODE"
   | "ORDER_NOT_PICKING"
   | "NOT_IN_ORDER"

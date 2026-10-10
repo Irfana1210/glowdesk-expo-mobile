@@ -9,7 +9,7 @@ import {
   type TypographyVariant,
 } from "@/theme";
 
-export type AppTextProps = {
+type AppTextProps = {
   color?: ColorToken;
   variant?: TypographyVariant;
 } & TextProps;

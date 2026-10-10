@@ -10,7 +10,7 @@ import { type Shift } from "@/features/roster/types";
 
 import { type ShiftCardProps } from "@/components/ui/shift-card";
 
-export type ShiftCardInput = {
+type ShiftCardInput = {
   myShift: Shift | undefined;
   nextBreakAt: Date | null;
   now: Date;

@@ -43,7 +43,7 @@ const L = LOCALE.orders.scanner;
 const C = LOCALE.orders.common;
 
 /** The camera reports the same code many times a second. Ignore repeats inside this window. */
-export const SAME_CODE_COOLDOWN_MS = 2000;
+const SAME_CODE_COOLDOWN_MS = 2000;
 
 type Feedback = { message: string; tone: "success" | "error" };
 

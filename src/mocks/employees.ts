@@ -6,8 +6,6 @@ import { type Employee } from "@/features/employees/types";
 
 import { DEMO_STORE_ID } from "./store";
 
-export const DEMO_EMPLOYEE_ID = "emp-01";
-
 export const MOCK_EMPLOYEES: Array<Employee> = [
   {
     id: "emp-01",

@@ -1,5 +1,5 @@
 /** Employee reference data (brief §11 `employees` table). Shared by roster, labour and the planned Employees screen. */
-export type EmployeeRole =
+type EmployeeRole =
   | "STORE_MANAGER"
   | "ASSISTANT_MANAGER"
   | "SHIFT_RUNNER"
@@ -7,7 +7,7 @@ export type EmployeeRole =
   | "CASHIER"
   | "STOCK_ASSOCIATE";
 
-export type EmploymentType = "FULL_TIME" | "PART_TIME" | "CASUAL";
+type EmploymentType = "FULL_TIME" | "PART_TIME" | "CASUAL";
 
 export const ROLE_LABELS: Record<EmployeeRole, string> = {
   STORE_MANAGER: "Store Manager",

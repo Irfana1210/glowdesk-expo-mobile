@@ -10,7 +10,7 @@ export type OrderStatus =
  * Not in the brief's minimal model, but the Order List screen (§6) needs a
  * priority indicator. Optional so the core contract stays unchanged.
  */
-export type OrderPriority = "STANDARD" | "HIGH";
+type OrderPriority = "STANDARD" | "HIGH";
 
 export type OrderItem = {
   barcode: string;

@@ -13,7 +13,7 @@ import { StatusBadge, type StatusBadgeProps } from "./status-badge";
 
 const L = LOCALE.components.orderCard;
 
-export type OrderCardProps = {
+type OrderCardProps = {
   accessibilityLabel: string;
   /** "Jordan Lee", "Unassigned" or "Packed by Aisha Rahman". */
   assigneeLabel: string;

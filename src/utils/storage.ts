@@ -17,7 +17,5 @@ export const STORAGE_KEYS = {
   preferences: "retailos.preferences",
 } as const;
 
-export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];
-
 /** JSON storage adapter for zustand's persist middleware. */
 export const persistStorage = createJSONStorage(() => Storage);

@@ -36,7 +36,7 @@ import { useOrdersStore } from "../store/orders.store";
 
 const L = LOCALE.orders.list;
 
-export type OrderFilter = "ALL" | Exclude<OrderStatus, "CANCELLED">;
+type OrderFilter = "ALL" | Exclude<OrderStatus, "CANCELLED">;
 
 const FILTERS: Array<{
   emptyLabel: string;
@@ -54,17 +54,14 @@ const FILTERS: Array<{
   },
 ];
 
-export function filterOrders(
-  orders: Array<Order>,
-  filter: OrderFilter,
-): Array<Order> {
+function filterOrders(orders: Array<Order>, filter: OrderFilter): Array<Order> {
   return filter === "ALL"
     ? orders
     : orders.filter((order) => order.status === filter);
 }
 
 /** Matches order number, customer initials or assignee name. */
-export function searchOrders(
+function searchOrders(
   orders: Array<Order>,
   query: string,
   nameOf: (id?: string) => string | undefined,

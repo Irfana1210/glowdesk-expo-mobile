@@ -13,7 +13,7 @@ import { type Employee } from "@/features/employees/types";
 import { type Shift, type ShiftDraft } from "../types";
 import { type DateKey, DateUtils } from "./dates";
 
-export type ShiftField = keyof ShiftDraft;
+type ShiftField = keyof ShiftDraft;
 export type ShiftErrors = Partial<Record<ShiftField | "form", string>>;
 
 export type ShiftValidationContext = {
@@ -29,7 +29,7 @@ export type TradingHours = {
   open: string;
 };
 
-export type CoverageGap = {
+type CoverageGap = {
   end: Date;
   start: Date;
 };

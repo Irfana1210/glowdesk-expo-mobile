@@ -13,7 +13,7 @@ It is an independent portfolio project. All stores, customers, brands and produc
 | Area                                                                                                                                                                                       | Status                                                                    |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
 | Expo SDK 57 project, Expo Router with 5 bottom tabs and a nested order details route                                                                                                       | Implemented                                                               |
-| Design tokens: brief palette, Inter type scale, 4–32 spacing scale                                                                                                                         | Implemented                                                               |
+| Design tokens from the design handoff: DM Sans and Instrument Serif type scale, 4–24 spacing scale                                                                                         | Implemented                                                               |
 | Typed order model and pure state machine (`NEW → PICKING → READY → COLLECTED`, cancellations)                                                                                              | Implemented and unit tested                                               |
 | `canMarkReady` / `markOrderReady`: immutable result, version increment, invalid transitions rejected                                                                                       | Implemented and unit tested                                               |
 | Order list: All / New / Picking / Ready / Collected filters with counts, priority indicator, pull to refresh                                                                               | Implemented and component tested                                          |
@@ -79,16 +79,21 @@ Printing the mock barcodes is the easiest way to test the camera on a phone. Eac
 ## Checks
 
 ```bash
-npm run typecheck   # tsc --noEmit, strict mode
-npm run lint        # expo lint (ESLint flat config)
-npm test            # Jest with jest-expo and React Native Testing Library
-npm run check       # all three
-npx expo-doctor     # Expo SDK dependency health
+npm run typecheck     # tsc --noEmit, strict mode
+npm run lint          # ESLint flat config (standards in docs/coding-standards.md)
+npm run format        # Prettier
+npm run spell         # cspell (en-GB dictionary, Australian spelling)
+npm run knip          # unused files, exports and dependencies
+npm test              # Jest with jest-expo and React Native Testing Library
+npm run check         # everything above; also runs in CI and the husky pre-commit hook
+npx expo-doctor       # Expo SDK dependency health
 ```
 
 ## Architecture
 
 The full folder map, layers, state and persistence design are in [docs/architecture.md](docs/architecture.md).
+Coding standards (naming, services, safe query hooks, LOCALE copy, namespaced utils, testIDs) are in
+[docs/coding-standards.md](docs/coding-standards.md).
 
 ```text
 RetailOS/
@@ -96,14 +101,16 @@ RetailOS/
 │   ├── app/          Expo Router routes (thin files)
 │   ├── features/     orders, dashboard, inventory, roster, labour, employees, settings, session
 │   ├── components/   ui, layout, scanner
-│   ├── database/     On-device persistence (expo-sqlite)
-│   ├── hooks/        Cross-feature hooks
-│   ├── lib/          Pure helpers
+│   ├── constants/    LOCALE copy and primitives
+│   ├── hooks/        Cross-feature hooks, safe query wrapper
 │   ├── mocks/        Fictional data
+│   ├── services/     Query cache keys
 │   ├── theme/        Design tokens
-│   └── types/        Shared domain types
-├── __tests__/        Jest tests, mirroring src/
-├── docs/             Architecture document and design mockup
+│   ├── types/        Shared domain types and enums
+│   └── utils/        Namespaced helpers, storage, query client, toasts
+├── test/utils/       Shared test helpers (specs live next to the code in __tests__/)
+├── docs/             Architecture document, design handoff and screen mockups
+├── learnings/        Bugs that slipped past the tests, and what would have caught them
 └── assets/
 ```
 
@@ -140,4 +147,5 @@ Key decisions:
 
 ## Next milestone
 
-Day 2 of the brief's delivery plan: CI with GitHub Actions (type check, lint, tests), EAS Build configuration, and the architecture docs and decision records. After that: Employees and Sales Analytics.
+Day 2 of the brief's delivery plan: EAS Build configuration and decision records. CI with GitHub Actions
+(`.github/workflows/checks.yml`) is in place. After that: Employees and Sales Analytics.

@@ -44,8 +44,10 @@
     "eslint": "^9.39.5",
     "eslint-config-expo": "~57.0.2",
     "eslint-plugin-custom-eslint-plugins": "file:scripts/plugins/eslint",
+    "eslint-plugin-import": "2.32.0",
     "eslint-plugin-perfectionist": "4.15.1",
     "eslint-plugin-prettier": "5.5.4",
+    "eslint-plugin-react": "7.37.5",
     "eslint-plugin-simple-import-sort": "12.1.1",
     "eslint-plugin-testing-library": "7.13.5",
     "eslint-plugin-unused-imports": "4.3.0",
@@ -65,9 +67,18 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "jest",
-    "check": "npm run typecheck && npm run lint && npm test",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run spell && npm run knip && npm test",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "prepare": "husky",
+    "spell": "cspell --no-progress --no-summary \"src/**\" \"test/**\" \"*.md\" \"docs/*.md\"",
+    "knip": "knip"
   },
-  "private": true
+  "private": true,
+  "lint-staged": {
+    "*": [
+      "prettier --write --ignore-unknown",
+      "cspell --no-must-find-files --no-progress --no-summary"
+    ]
+  }
 }

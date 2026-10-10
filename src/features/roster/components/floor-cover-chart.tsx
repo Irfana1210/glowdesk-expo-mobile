@@ -19,7 +19,7 @@ function spoken(hour: number): string {
   return FormatUtils.formatHour(hour).replace(/(am|pm)$/, " $1");
 }
 
-export function describeCover(cover: Array<HourCover>): string {
+function describeCover(cover: Array<HourCover>): string {
   if (cover.length === 0) {
     return L.noTradingHours;
   }

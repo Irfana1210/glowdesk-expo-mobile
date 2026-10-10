@@ -22,9 +22,9 @@ export type UpcomingBreak = {
   startsAt: Date;
 };
 
-export type ShiftPhase = "upcoming" | "active" | "finished";
+type ShiftPhase = "upcoming" | "active" | "finished";
 
-export type ShiftProgress = {
+type ShiftProgress = {
   /** Minutes until the shift ends (active) or starts (upcoming). Zero when finished. */
   minutesRemaining: number;
   /** Share of the shift elapsed, 0–100. */
@@ -32,9 +32,9 @@ export type ShiftProgress = {
   phase: ShiftPhase;
 };
 
-export type ShiftStateTone = "on" | "warn" | "off";
+type ShiftStateTone = "on" | "warn" | "off";
 
-export type ShiftState = {
+type ShiftState = {
   label: string;
   tone: ShiftStateTone;
 };

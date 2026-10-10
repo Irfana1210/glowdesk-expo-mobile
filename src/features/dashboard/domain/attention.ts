@@ -15,7 +15,7 @@ import { type IconName } from "@/components/ui/button";
 import { type StatusTone } from "@/theme";
 import { type Order } from "@/types/order";
 
-export type AttentionEntry = {
+type AttentionEntry = {
   href: "/orders" | "/roster" | "/inventory";
   icon: IconName;
   key: "orders" | "breakCover" | "stock";
@@ -24,7 +24,7 @@ export type AttentionEntry = {
   tone: StatusTone;
 };
 
-export type AttentionInput = {
+type AttentionInput = {
   breakEmployeeName?: string;
   /** Undefined while inventory is loading or unavailable; the stock item is then left out. */
   inventory?: Array<InventoryItem>;

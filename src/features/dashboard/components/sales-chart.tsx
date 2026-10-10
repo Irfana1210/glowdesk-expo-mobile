@@ -18,7 +18,7 @@ type Props = {
   height?: number;
 };
 
-export type BarKind = "done" | "current" | "upcoming";
+type BarKind = "done" | "current" | "upcoming";
 
 /** The latest hour with sales is "this hour"; hours after it are still to come. */
 export function classifyHours(data: Array<HourlySales>): Array<BarKind> {

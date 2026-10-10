@@ -13,12 +13,12 @@ import { StatusBadge, type StatusBadgeProps } from "./status-badge";
 
 const L = LOCALE.components.productRow;
 
-export type ProductRowTrailing =
+type ProductRowTrailing =
   | { kind: "status"; status: StatusBadgeProps }
   | { kind: "verified" }
   | { kind: "toScan" };
 
-export type ProductRowProps = {
+type ProductRowProps = {
   accessibilityLabel: string;
   brand: string;
   /** Third line, e.g. "SKU LS-1042 · 9300601042118" or "Skincare · SKU LS-1042". */

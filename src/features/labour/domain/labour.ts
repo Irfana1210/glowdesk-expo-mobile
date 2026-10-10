@@ -15,7 +15,7 @@ import { type Shift } from "@/features/roster/types";
 
 import { type PayRate } from "../types";
 
-export type EmployeeLabour = {
+type EmployeeLabour = {
   cost: number;
   employee: Employee | undefined;
   employeeId: string;
@@ -23,13 +23,13 @@ export type EmployeeLabour = {
   shiftCount: number;
 };
 
-export type DayLabour = {
+type DayLabour = {
   cost: number;
   date: Date;
   paidMinutes: number;
 };
 
-export type WeeklyLabourSummary = {
+type WeeklyLabourSummary = {
   budget: number;
   /** Positive when under budget, negative when over. */
   budgetRemaining: number;

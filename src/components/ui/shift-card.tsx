@@ -16,7 +16,7 @@ import { AppText } from "./app-text";
 
 const L = LOCALE.components.shiftCard;
 
-export type ShiftCardStat = {
+type ShiftCardStat = {
   label: string;
   value: string;
 };

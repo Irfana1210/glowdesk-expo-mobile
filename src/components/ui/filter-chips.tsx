@@ -14,7 +14,7 @@ export type FilterOption<T extends string> = {
   value: T;
 };
 
-export type FilterChipsProps<T extends string> = {
+type FilterChipsProps<T extends string> = {
   accessibilityLabel: string;
   onChange: (value: T) => void;
   options: ReadonlyArray<FilterOption<T>>;

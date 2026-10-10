@@ -9,9 +9,10 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { AppText } from "@/components/ui/app-text";
 
 import { colors, radius, spacing } from "@/theme";
+import { ToastTypes } from "@/types/enums";
 
 export const toastConfig: ToastConfig = {
-  Error: ({ text1 }: BaseToastProps) => (
+  [ToastTypes.Error]: ({ text1 }: BaseToastProps) => (
     <View
       accessibilityLiveRegion="assertive"
       accessibilityRole="alert"
@@ -25,7 +26,7 @@ export const toastConfig: ToastConfig = {
     </View>
   ),
 
-  Info: ({ text1 }: BaseToastProps) => (
+  [ToastTypes.Info]: ({ text1 }: BaseToastProps) => (
     <View
       accessibilityLiveRegion="polite"
       style={[styles.toastContainer, styles.infoToast]}
@@ -37,7 +38,7 @@ export const toastConfig: ToastConfig = {
     </View>
   ),
 
-  Success: ({ text1 }: BaseToastProps) => (
+  [ToastTypes.Success]: ({ text1 }: BaseToastProps) => (
     <View
       accessibilityLiveRegion="polite"
       style={[styles.toastContainer, styles.successToast]}

@@ -12,7 +12,7 @@ import {
 
 import { AppText } from "./app-text";
 
-export type TextFieldProps = {
+type TextFieldProps = {
   error?: string | null;
   hint?: string;
   label: string;

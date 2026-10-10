@@ -1,0 +1,39 @@
+{
+  "version": "0.2",
+  "language": "en,en-GB",
+  "ignorePaths": [
+    "node_modules/",
+    "package-lock.json",
+    "package.json",
+    "ios/",
+    "android/",
+    "assets/",
+    "docs/screens/",
+    ".expo/",
+    "coverage/"
+  ],
+  "words": [
+    "Botanica",
+    "Chadstone",
+    "checkmark",
+    "knip",
+    "kori",
+    "KŌRI",
+    "Kōri",
+    "Maison",
+    "MMKV",
+    "Okafor",
+    "parfum",
+    "partialize",
+    "Pressable",
+    "Reassignable",
+    "refetches",
+    "retailos",
+    "RNTL",
+    "skus",
+    "Supabase",
+    "unassigns",
+    "videocam",
+    "worklets"
+  ]
+}

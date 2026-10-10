@@ -5,7 +5,7 @@
  */
 import { create } from "zustand";
 
-export type DemoRole = "MANAGER" | "TEAM_MEMBER";
+type DemoRole = "MANAGER" | "TEAM_MEMBER";
 
 type States = {
   role: DemoRole;

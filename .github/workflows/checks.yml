@@ -1,0 +1,32 @@
+name: checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Type check
+        run: npm run typecheck
+      - name: Format check
+        run: npm run format:check
+      - name: ESLint
+        run: npm run lint
+      - name: Spelling
+        run: npm run spell
+      - name: Unused code
+        run: npm run knip
+      - name: Tests
+        run: npm test -- --ci

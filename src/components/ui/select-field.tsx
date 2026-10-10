@@ -12,13 +12,13 @@ import { AppText } from "./app-text";
 
 const L = LOCALE.components.selectField;
 
-export type SelectOption<T extends string | number> = {
+type SelectOption<T extends string | number> = {
   description?: string;
   label: string;
   value: T;
 };
 
-export type SelectFieldProps<T extends string | number> = {
+type SelectFieldProps<T extends string | number> = {
   error?: string;
   label: string;
   onChange: (value: T) => void;

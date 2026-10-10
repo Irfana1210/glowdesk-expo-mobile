@@ -12,9 +12,9 @@ import { InitialsAvatar } from "./initials-avatar";
 
 const L = LOCALE.components.shiftRow;
 
-export type ShiftStateTone = keyof typeof shiftStateColors;
+type ShiftStateTone = keyof typeof shiftStateColors;
 
-export type ShiftRowProps = {
+type ShiftRowProps = {
   accessibilityLabel: string;
   avatarColor?: string;
   initials: string;

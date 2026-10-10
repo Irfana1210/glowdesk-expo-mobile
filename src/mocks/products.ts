@@ -97,7 +97,7 @@ export const MOCK_PRODUCTS = {
 
 export type MockProductKey = keyof typeof MOCK_PRODUCTS;
 
-export const MOCK_CATALOGUE: Array<Product> = Object.values(MOCK_PRODUCTS);
+const MOCK_CATALOGUE: Array<Product> = Object.values(MOCK_PRODUCTS);
 
 const SWATCH_BY_ID = new Map<string, string | undefined>(
   MOCK_CATALOGUE.map((p) => [p.id, p.swatch]),

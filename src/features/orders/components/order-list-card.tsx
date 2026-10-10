@@ -7,7 +7,7 @@ import { type Order } from "@/types/order";
 import { ORDER_STATUS_META } from "../order-status-meta";
 import { OrderPresentationUtils } from "../presentation";
 
-export type OrderListCardProps = {
+type OrderListCardProps = {
   assigneeName: string | undefined;
   now: Date;
   onPress: (orderId: string) => void;
