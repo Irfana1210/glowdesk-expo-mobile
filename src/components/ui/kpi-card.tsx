@@ -52,7 +52,7 @@ export const KPICard: FC<Props> = ({
       </View>
       <AppText
         style={styles.value}
-        testID={testID ? `${testID}-value` : undefined}
+        testID={testID ? `${testID}.VALUE` : undefined}
       >
         {value}
       </AppText>

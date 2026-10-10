@@ -176,7 +176,7 @@ export const SettingsScreen: FC = () => {
   };
 
   return (
-    <Screen testID="settings-screen">
+    <Screen testID="SETTINGS.SCREEN">
       <AppHeader title={L.screen.title} onBack={goBack} />
       <ScrollView
         contentContainerStyle={[
@@ -215,7 +215,7 @@ export const SettingsScreen: FC = () => {
             first
             description={L.preferences.vibrate.description}
             label={L.preferences.vibrate.label}
-            testID="pref-vibrate"
+            testID="SETTINGS.PREF_VIBRATE"
             value={vibrateOnScanError}
             onChange={setVibrateOnScanError}
           />
@@ -228,7 +228,7 @@ export const SettingsScreen: FC = () => {
               first={index === 0}
               key={row.key}
               label={row.label}
-              testID={`pref-notify-${row.key}`}
+              testID={`SETTINGS.PREF_NOTIFY.${row.key}`}
               value={notifications[row.key]}
               onChange={(value) => setNotification(row.key, value)}
             />
@@ -236,7 +236,7 @@ export const SettingsScreen: FC = () => {
         </Section>
         <AppText
           color="textMuted"
-          testID="notifications-note"
+          testID="SETTINGS.NOTIFICATIONS_NOTE"
           variant="supporting"
         >
           {L.notifications.note}
@@ -254,7 +254,7 @@ export const SettingsScreen: FC = () => {
         {message ? (
           <InlineBanner
             message={message}
-            testID="settings-message"
+            testID="SETTINGS.MESSAGE"
             tone="success"
           />
         ) : null}
@@ -263,7 +263,7 @@ export const SettingsScreen: FC = () => {
           accessibilityHint={L.reset.hint}
           icon="refresh"
           label={L.reset.label}
-          testID="reset-demo-data"
+          testID="SETTINGS.RESET_DEMO_DATA"
           onPress={() => {
             setMessage(null);
             setPending("reset");
@@ -273,7 +273,7 @@ export const SettingsScreen: FC = () => {
           accessibilityHint={L.signOut.hint}
           icon="log-out-outline"
           label={L.signOut.label}
-          testID="sign-out"
+          testID="SETTINGS.SIGN_OUT"
           onPress={() => setPending("signOut")}
         />
       </ScrollView>

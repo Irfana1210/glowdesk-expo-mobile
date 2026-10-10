@@ -31,8 +31,8 @@ const NOW = new Date(2026, 9, 10, 16, 40);
 const orders = () => createMockOrders(NOW);
 const cardIds = () =>
   screen
-    .getAllByTestId(/^order-card-/)
-    .map((node) => node.props.testID.replace("order-card-", ""));
+    .getAllByTestId(/^ORDER_LIST\.CARD\./)
+    .map((node) => node.props.testID.replace("ORDER_LIST.CARD.", ""));
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -45,8 +45,10 @@ describe("OrderListScreen", () => {
   it("loads orders and shows the overdue banner", async () => {
     await render(<OrderListScreen now={NOW} />);
 
-    expect(await screen.findByTestId("order-card-ORD-7841")).toBeOnTheScreen();
-    expect(screen.getByTestId("overdue-banner")).toHaveTextContent(
+    expect(
+      await screen.findByTestId("ORDER_LIST.CARD.ORD-7841"),
+    ).toBeOnTheScreen();
+    expect(screen.getByTestId("ORDER_LIST.OVERDUE_BANNER")).toHaveTextContent(
       L.overdueBanner(3),
       { exact: false },
     );
@@ -55,7 +57,7 @@ describe("OrderListScreen", () => {
 
   it("sorts overdue orders first, most overdue at the top", async () => {
     await render(<OrderListScreen now={NOW} />);
-    await screen.findByTestId("order-list");
+    await screen.findByTestId("ORDER_LIST");
 
     expect(cardIds().slice(0, 4)).toEqual([
       "ORD-7841",
@@ -67,7 +69,7 @@ describe("OrderListScreen", () => {
 
   it("shows the mockup details on each card", async () => {
     await render(<OrderListScreen now={NOW} />);
-    await screen.findByTestId("order-list");
+    await screen.findByTestId("ORDER_LIST");
 
     expect(
       screen.getByLabelText(
@@ -80,7 +82,7 @@ describe("OrderListScreen", () => {
         ),
       ),
     ).toBeOnTheScreen();
-    expect(screen.getByTestId("order-card-ORD-7841")).toHaveTextContent(
+    expect(screen.getByTestId("ORDER_LIST.CARD.ORD-7841")).toHaveTextContent(
       CARD.summary(CARD.itemCount(5), "1:47 pm"),
       { exact: false },
     );
@@ -99,7 +101,7 @@ describe("OrderListScreen", () => {
 
   it("shows counts for every filter and filters by status", async () => {
     await render(<OrderListScreen now={NOW} />);
-    await screen.findByTestId("order-list");
+    await screen.findByTestId("ORDER_LIST");
 
     expect(screen.getByLabelText("All, 20 orders")).toBeOnTheScreen();
     expect(screen.getByLabelText("New, 7 orders")).toBeOnTheScreen();
@@ -107,9 +109,9 @@ describe("OrderListScreen", () => {
     expect(screen.getByLabelText("Ready, 5 orders")).toBeOnTheScreen();
     expect(screen.getByLabelText("Collected, 2 orders")).toBeOnTheScreen();
 
-    await fireEvent.press(screen.getByTestId("filter-READY"));
+    await fireEvent.press(screen.getByTestId("FILTER_CHIPS.OPTION.READY"));
 
-    expect(screen.getByTestId("filter-READY")).toBeSelected();
+    expect(screen.getByTestId("FILTER_CHIPS.OPTION.READY")).toBeSelected();
     expect(cardIds()).toEqual([
       "ORD-7840",
       "ORD-7838",
@@ -134,17 +136,20 @@ describe("OrderListScreen", () => {
 
   it("searches by order number, initials or team member", async () => {
     await render(<OrderListScreen now={NOW} />);
-    await screen.findByTestId("order-list");
+    await screen.findByTestId("ORDER_LIST");
 
-    await fireEvent.press(screen.getByTestId("toggle-search"));
-    await fireEvent.changeText(screen.getByTestId("order-search"), "grace");
+    await fireEvent.press(screen.getByTestId("ORDER_LIST.TOGGLE_SEARCH"));
+    await fireEvent.changeText(
+      screen.getByTestId("ORDER_LIST.SEARCH"),
+      "grace",
+    );
     expect(cardIds()).toEqual(["ORD-7845", "ORD-7844"]);
 
-    await fireEvent.changeText(screen.getByTestId("order-search"), "k.o");
+    await fireEvent.changeText(screen.getByTestId("ORDER_LIST.SEARCH"), "k.o");
     expect(cardIds()).toEqual(["ORD-7842"]);
 
-    await fireEvent.changeText(screen.getByTestId("order-search"), "zzz");
-    expect(screen.getByTestId("empty-state")).toHaveTextContent(
+    await fireEvent.changeText(screen.getByTestId("ORDER_LIST.SEARCH"), "zzz");
+    expect(screen.getByTestId("ORDER_LIST.EMPTY_STATE")).toHaveTextContent(
       L.empty.noMatch("zzz"),
     );
   });
@@ -154,10 +159,10 @@ describe("OrderListScreen", () => {
       orders().filter((o) => o.status === "NEW"),
     );
     await render(<OrderListScreen now={NOW} />);
-    await screen.findByTestId("order-list");
+    await screen.findByTestId("ORDER_LIST");
 
-    await fireEvent.press(screen.getByTestId("filter-COLLECTED"));
-    expect(screen.getByTestId("empty-state")).toHaveTextContent(
+    await fireEvent.press(screen.getByTestId("FILTER_CHIPS.OPTION.COLLECTED"));
+    expect(screen.getByTestId("ORDER_LIST.EMPTY_STATE")).toHaveTextContent(
       L.empty.collected,
     );
   });
@@ -167,9 +172,11 @@ describe("OrderListScreen", () => {
       orders().filter((o) => o.status === "READY"),
     );
     await render(<OrderListScreen now={NOW} />);
-    await screen.findByTestId("order-list");
+    await screen.findByTestId("ORDER_LIST");
 
-    expect(screen.queryByTestId("overdue-banner")).not.toBeOnTheScreen();
+    expect(
+      screen.queryByTestId("ORDER_LIST.OVERDUE_BANNER"),
+    ).not.toBeOnTheScreen();
   });
 
   it("shows an error state and recovers on retry", async () => {
@@ -180,12 +187,16 @@ describe("OrderListScreen", () => {
 
     expect(await screen.findByText(L.loadErrorTitle)).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
-    expect(await screen.findByTestId("order-card-ORD-7841")).toBeOnTheScreen();
+    expect(
+      await screen.findByTestId("ORDER_LIST.CARD.ORD-7841"),
+    ).toBeOnTheScreen();
   });
 
   it("opens order details when a card is pressed", async () => {
     await render(<OrderListScreen now={NOW} />);
-    await fireEvent.press(await screen.findByTestId("order-card-ORD-7841"));
+    await fireEvent.press(
+      await screen.findByTestId("ORDER_LIST.CARD.ORD-7841"),
+    );
     expect(mockPush).toHaveBeenCalledWith({
       pathname: "/orders/[id]",
       params: { id: "ORD-7841" },

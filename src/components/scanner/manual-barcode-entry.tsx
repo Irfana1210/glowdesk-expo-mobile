@@ -54,7 +54,7 @@ export const ManualBarcodeEntry: FC<Props> = ({
         label={label}
         placeholder={L.placeholder}
         returnKeyType="done"
-        testID="manual-barcode"
+        testID="MANUAL_BARCODE_ENTRY.BARCODE"
         value={code}
         onChangeText={setCode}
         onSubmitEditing={submit}
@@ -63,7 +63,7 @@ export const ManualBarcodeEntry: FC<Props> = ({
         disabled={code.trim().length === 0}
         icon="keypad-outline"
         label={submitLabel}
-        testID="manual-submit"
+        testID="MANUAL_BARCODE_ENTRY.SUBMIT"
         onPress={submit}
       />
     </View>

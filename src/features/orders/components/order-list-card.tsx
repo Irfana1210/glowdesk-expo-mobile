@@ -24,7 +24,7 @@ function OrderListCardComponent({
   const model = OrderPresentationUtils.orderCardModel(order, assigneeName, now);
   return (
     <OrderCard
-      testID={`order-card-${order.id}`}
+      testID={`ORDER_LIST.CARD.${order.id}`}
       {...model}
       status={ORDER_STATUS_META[order.status]}
       onPress={() => onPress(order.id)}

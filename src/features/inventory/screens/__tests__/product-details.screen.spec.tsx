@@ -40,7 +40,9 @@ describe("ProductDetailsScreen", () => {
     expect(
       await screen.findByText("Soft Focus Blush · Rosewood"),
     ).toBeOnTheScreen();
-    expect(screen.getByTestId("available-quantity")).toHaveTextContent("3");
+    expect(
+      screen.getByTestId("PRODUCT_DETAILS.AVAILABLE_QUANTITY"),
+    ).toHaveTextContent("3");
     expect(
       screen.getByLabelText(L.rowLabel(L.fields.sku, "VL-2210")),
     ).toBeOnTheScreen();
@@ -50,10 +52,9 @@ describe("ProductDetailsScreen", () => {
     expect(
       screen.getByLabelText(L.rowLabel(L.fields.price, "$42.00")),
     ).toBeOnTheScreen();
-    expect(screen.getByTestId("stock-message")).toHaveTextContent(
-      L.stockMessage.lowStock(3, 5),
-      { exact: false },
-    );
+    expect(
+      screen.getByTestId("PRODUCT_DETAILS.STOCK_MESSAGE"),
+    ).toHaveTextContent(L.stockMessage.lowStock(3, 5), { exact: false });
   });
 
   it("explains out of stock items", async () => {
@@ -63,10 +64,9 @@ describe("ProductDetailsScreen", () => {
         `Status: ${LOCALE.inventory.stockStatus.outOfStock}`,
       ),
     ).toBeOnTheScreen();
-    expect(screen.getByTestId("stock-message")).toHaveTextContent(
-      L.stockMessage.outOfStock,
-      { exact: false },
-    );
+    expect(
+      screen.getByTestId("PRODUCT_DETAILS.STOCK_MESSAGE"),
+    ).toHaveTextContent(L.stockMessage.outOfStock, { exact: false });
   });
 
   it("shows not found for an unknown product", async () => {

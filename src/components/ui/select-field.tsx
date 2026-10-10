@@ -64,7 +64,7 @@ export function SelectField<T extends string | number>({
       {error ? (
         <AppText
           color="error"
-          testID={testID ? `${testID}-error` : undefined}
+          testID={testID ? `${testID}.ERROR` : undefined}
           variant="supporting"
         >
           {error}
@@ -132,7 +132,7 @@ export function SelectField<T extends string | number>({
                     accessibilityState={{ selected: isSelected }}
                     style={[styles.option, isSelected && styles.optionSelected]}
                     testID={
-                      testID ? `${testID}-option-${item.value}` : undefined
+                      testID ? `${testID}.OPTION.${item.value}` : undefined
                     }
                     onPress={() => {
                       onChange(item.value);

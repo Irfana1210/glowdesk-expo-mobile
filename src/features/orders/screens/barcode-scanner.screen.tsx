@@ -78,7 +78,7 @@ export const BarcodeScannerScreen: FC = () => {
   }, [router]);
 
   return (
-    <Screen edges={["top", "left", "right"]} testID="scanner-screen">
+    <Screen edges={["top", "left", "right"]} testID="BARCODE_SCANNER.SCREEN">
       <AppHeader
         title={
           order
@@ -191,7 +191,7 @@ function ScannerContent({
         {feedback ? (
           <InlineBanner
             message={feedback.message}
-            testID="scan-feedback"
+            testID="BARCODE_SCANNER.SCAN_FEEDBACK"
             tone={feedback.tone}
           />
         ) : null}
@@ -207,7 +207,7 @@ function ScannerContent({
             <PrimaryButton
               icon="checkmark-done-outline"
               label={L.reviewAndComplete}
-              testID="review-complete"
+              testID="BARCODE_SCANNER.REVIEW_COMPLETE"
               onPress={() =>
                 router.replace({
                   pathname: "/orders/complete",
@@ -245,7 +245,7 @@ function ScannerContent({
                   disabled={!__DEV__}
                   key={item.id}
                   style={styles.remainingRow}
-                  testID={`remaining-${item.id}`}
+                  testID={`BARCODE_SCANNER.REMAINING.${item.id}`}
                   onPress={() => setManualCode(item.barcode)}
                 >
                   <Ionicons

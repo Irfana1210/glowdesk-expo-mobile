@@ -54,7 +54,7 @@ export function FilterChips<T extends string>({
               styles.chip,
               isSelected ? styles.chipSelected : styles.chipIdle,
             ]}
-            testID={`filter-${option.value}`}
+            testID={`FILTER_CHIPS.OPTION.${option.value}`}
             onPress={() => onChange(option.value)}
           >
             <AppText

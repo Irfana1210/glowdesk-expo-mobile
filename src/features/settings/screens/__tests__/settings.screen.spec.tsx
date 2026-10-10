@@ -76,7 +76,7 @@ describe("SettingsScreen", () => {
     await render(<SettingsScreen />);
 
     await fireEvent(
-      screen.getByTestId("pref-notify-rosterChanges"),
+      screen.getByTestId("SETTINGS.PREF_NOTIFY.rosterChanges"),
       "valueChange",
       true,
     );
@@ -88,7 +88,7 @@ describe("SettingsScreen", () => {
       (await Storage.getItem(PREFERENCES_STORAGE_KEY)) ?? "{}",
     );
     expect(saved.state.notifications.rosterChanges).toBe(true);
-    expect(screen.getByTestId("notifications-note")).toHaveTextContent(
+    expect(screen.getByTestId("SETTINGS.NOTIFICATIONS_NOTE")).toHaveTextContent(
       L.notifications.note,
     );
   });
@@ -100,7 +100,11 @@ describe("SettingsScreen", () => {
     signalScanError();
     expect(vibrate).toHaveBeenCalledTimes(1);
 
-    await fireEvent(screen.getByTestId("pref-vibrate"), "valueChange", false);
+    await fireEvent(
+      screen.getByTestId("SETTINGS.PREF_VIBRATE"),
+      "valueChange",
+      false,
+    );
     signalScanError();
     expect(vibrate).toHaveBeenCalledTimes(1);
   });
@@ -111,11 +115,13 @@ describe("SettingsScreen", () => {
     useRosterStore.getState().removeShift(first!.id);
     await render(<SettingsScreen />);
 
-    await fireEvent.press(screen.getByTestId("reset-demo-data"));
+    await fireEvent.press(screen.getByTestId("SETTINGS.RESET_DEMO_DATA"));
     expect(screen.getByText(L.reset.confirmTitle)).toBeOnTheScreen();
-    await fireEvent.press(screen.getByTestId("confirm-action"));
+    await fireEvent.press(
+      screen.getByTestId("CONFIRMATION_MODAL.CONFIRM_ACTION"),
+    );
 
-    expect(await screen.findByTestId("settings-message")).toHaveTextContent(
+    expect(await screen.findByTestId("SETTINGS.MESSAGE")).toHaveTextContent(
       L.reset.done,
       { exact: false },
     );
@@ -129,9 +135,11 @@ describe("SettingsScreen", () => {
     usePreferencesStore.getState().setVibrateOnScanError(false);
     await render(<SettingsScreen />);
 
-    await fireEvent.press(screen.getByTestId("sign-out"));
+    await fireEvent.press(screen.getByTestId("SETTINGS.SIGN_OUT"));
     expect(screen.getByText(L.signOut.confirmTitle)).toBeOnTheScreen();
-    await fireEvent.press(screen.getByTestId("confirm-action"));
+    await fireEvent.press(
+      screen.getByTestId("CONFIRMATION_MODAL.CONFIRM_ACTION"),
+    );
 
     expect(mockDismissTo).toHaveBeenCalledWith("/dashboard");
     expect(usePreferencesStore.getState().vibrateOnScanError).toBe(true);
@@ -139,8 +147,10 @@ describe("SettingsScreen", () => {
 
   it("does nothing if sign out is cancelled", async () => {
     await render(<SettingsScreen />);
-    await fireEvent.press(screen.getByTestId("sign-out"));
-    await fireEvent.press(screen.getByTestId("cancel-action"));
+    await fireEvent.press(screen.getByTestId("SETTINGS.SIGN_OUT"));
+    await fireEvent.press(
+      screen.getByTestId("CONFIRMATION_MODAL.CANCEL_ACTION"),
+    );
     expect(mockDismissTo).not.toHaveBeenCalled();
   });
 });

@@ -21,7 +21,7 @@ export const EmptyState: FC<Props> = ({
   message,
   icon = "file-tray-outline",
   action,
-  testID = "empty-state",
+  testID = "EMPTY_STATE",
 }) => {
   return (
     <View style={styles.container} testID={testID}>

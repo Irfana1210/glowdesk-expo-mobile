@@ -62,7 +62,7 @@ export const ProductDetailsScreen: FC = () => {
   } else content = <ProductDetailsContent item={item} />;
 
   return (
-    <Screen testID="product-details-screen">
+    <Screen testID="PRODUCT_DETAILS.SCREEN">
       <AppHeader title={L.title} onBack={goBack} />
       {content}
     </Screen>
@@ -154,7 +154,10 @@ function ProductDetailsContent({ item }: { item: InventoryItem }) {
             <AppText color="textMuted" variant="supporting">
               {L.available}
             </AppText>
-            <AppText testID="available-quantity" variant="pageTitle">
+            <AppText
+              testID="PRODUCT_DETAILS.AVAILABLE_QUANTITY"
+              variant="pageTitle"
+            >
               {item.availableQuantity}
             </AppText>
           </View>
@@ -162,7 +165,7 @@ function ProductDetailsContent({ item }: { item: InventoryItem }) {
         </View>
         <InlineBanner
           message={message.message}
-          testID="stock-message"
+          testID="PRODUCT_DETAILS.STOCK_MESSAGE"
           tone={message.tone}
         />
       </View>

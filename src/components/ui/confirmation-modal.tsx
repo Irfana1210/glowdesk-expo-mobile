@@ -52,7 +52,7 @@ export const ConfirmationModal: FC<Props> = ({
         <View
           accessibilityViewIsModal
           style={styles.card}
-          testID="confirmation-modal"
+          testID="CONFIRMATION_MODAL"
         >
           <AppText accessibilityRole="header" variant="sectionTitle">
             {title}
@@ -63,13 +63,13 @@ export const ConfirmationModal: FC<Props> = ({
               icon={destructive ? "warning-outline" : undefined}
               label={confirmLabel}
               loading={loading}
-              testID="confirm-action"
+              testID="CONFIRMATION_MODAL.CONFIRM_ACTION"
               onPress={onConfirm}
             />
             <SecondaryButton
               disabled={loading}
               label={cancelLabel}
-              testID="cancel-action"
+              testID="CONFIRMATION_MODAL.CANCEL_ACTION"
               onPress={onCancel}
             />
           </View>

@@ -55,13 +55,13 @@ export const FloorCoverChart: FC<{ cover: Array<HourCover> }> = ({ cover }) => {
         accessibilityLabel={describeCover(cover)}
         accessibilityRole="image"
         style={styles.plot}
-        testID="floor-cover"
+        testID="FLOOR_COVER_CHART.COVER"
       >
         {cover.map((h, index) => (
           <View
             key={h.hour}
             style={styles.column}
-            testID={`cover-${h.hour}-${h.count}${h.belowMinimum ? "-low" : ""}`}
+            testID={`FLOOR_COVER_CHART.COVER.${h.hour}.${h.count}${h.belowMinimum ? ".LOW" : ""}`}
           >
             <AppText
               maxFontSizeMultiplier={1.1}
@@ -87,7 +87,7 @@ export const FloorCoverChart: FC<{ cover: Array<HourCover> }> = ({ cover }) => {
       <AppText
         accessibilityLiveRegion="polite"
         style={[styles.note, low.length > 0 && styles.noteLow]}
-        testID="cover-note"
+        testID="FLOOR_COVER_CHART.NOTE"
       >
         {low.length > 0
           ? L.belowMinimumNote(

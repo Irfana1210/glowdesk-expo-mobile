@@ -171,7 +171,11 @@ export const OrderListScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
       <FlatList
         ItemSeparatorComponent={Separator}
         ListEmptyComponent={
-          <AppText color="textMuted" style={styles.empty} testID="empty-state">
+          <AppText
+            color="textMuted"
+            style={styles.empty}
+            testID="ORDER_LIST.EMPTY_STATE"
+          >
             {emptyLabel}
           </AppText>
         }
@@ -195,20 +199,20 @@ export const OrderListScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
           />
         }
         renderItem={renderItem}
-        testID="order-list"
+        testID="ORDER_LIST"
       />
     );
   }
 
   return (
-    <Screen testID="order-list-screen">
+    <Screen testID="ORDER_LIST.SCREEN">
       <ScreenTitle
         eyebrow={L.eyebrow}
         right={
           <IconButton
             accessibilityLabel={searchOpen ? L.closeSearch : L.openSearch}
             icon={searchOpen ? "close" : "search"}
-            testID="toggle-search"
+            testID="ORDER_LIST.TOGGLE_SEARCH"
             onPress={() => {
               if (searchOpen) {
                 setQuery("");
@@ -224,7 +228,7 @@ export const OrderListScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
           <SearchBar
             accessibilityLabel={L.searchAccessibilityLabel}
             placeholder={L.searchPlaceholder}
-            testID="order-search"
+            testID="ORDER_LIST.SEARCH"
             value={query}
             onChangeText={setQuery}
           />
@@ -235,7 +239,7 @@ export const OrderListScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
             accessibilityLabel={L.overdueBannerAccessibilityLabel(overdueCount)}
             accessibilityRole="alert"
             style={styles.overdue}
-            testID="overdue-banner"
+            testID="ORDER_LIST.OVERDUE_BANNER"
           >
             <Ionicons
               color={statusPalette.overdue.text}

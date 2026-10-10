@@ -35,8 +35,11 @@ jest.mock("expo-camera", () => ({
 }));
 
 async function enter(code: string) {
-  await fireEvent.changeText(await screen.findByTestId("manual-barcode"), code);
-  await fireEvent.press(screen.getByTestId("manual-submit"));
+  await fireEvent.changeText(
+    await screen.findByTestId("MANUAL_BARCODE_ENTRY.BARCODE"),
+    code,
+  );
+  await fireEvent.press(screen.getByTestId("MANUAL_BARCODE_ENTRY.SUBMIT"));
 }
 
 beforeEach(() => jest.clearAllMocks());
@@ -54,7 +57,7 @@ describe("InventoryScanScreen", () => {
   it("explains an unknown barcode and stays on the scanner", async () => {
     await renderWithQuery(<InventoryScanScreen />);
     await enter("9999999999994");
-    expect(screen.getByTestId("lookup-error")).toHaveTextContent(
+    expect(screen.getByTestId("INVENTORY_SCAN.LOOKUP_ERROR")).toHaveTextContent(
       LOCALE.inventory.barcodeLookup.notFound("9999999999994"),
       { exact: false },
     );

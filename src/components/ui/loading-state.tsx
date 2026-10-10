@@ -28,7 +28,7 @@ export const LoadingState: FC<{ message?: string }> = ({
       accessibilityLiveRegion="polite"
       accessibilityRole="progressbar"
       style={styles.container}
-      testID="loading-state"
+      testID="LOADING_STATE"
     >
       <ActivityIndicator color={colors.accent} size="large" />
       <AppText color="textMuted">{message}</AppText>

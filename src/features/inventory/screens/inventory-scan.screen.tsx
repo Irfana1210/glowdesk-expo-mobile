@@ -112,7 +112,11 @@ export const InventoryScanScreen: FC = () => {
         >
           <BarcodeCamera onScan={handleCameraScan} />
           {error ? (
-            <InlineBanner message={error} testID="lookup-error" tone="error" />
+            <InlineBanner
+              message={error}
+              testID="INVENTORY_SCAN.LOOKUP_ERROR"
+              tone="error"
+            />
           ) : null}
           <ManualBarcodeEntry submitLabel={L.submitLabel} onSubmit={lookup} />
         </ScrollView>
@@ -120,7 +124,7 @@ export const InventoryScanScreen: FC = () => {
     );
 
   return (
-    <Screen testID="inventory-scan-screen">
+    <Screen testID="INVENTORY_SCAN.SCREEN">
       <AppHeader title={L.title} onBack={close} />
       {content}
     </Screen>

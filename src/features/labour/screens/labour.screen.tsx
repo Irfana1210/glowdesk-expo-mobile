@@ -46,7 +46,7 @@ export const LabourScreen: FC<{ now?: Date }> = ({ now = new Date() }) => {
 
   if (!canViewPayInformation(role)) {
     return (
-      <Screen testID="labour-screen">
+      <Screen testID="LABOUR.SCREEN">
         <AppHeader title={L.title} onBack={goBack} />
         <EmptyState
           icon="lock-closed-outline"
@@ -83,7 +83,7 @@ function LabourContent({ now, onBack }: { now: Date; onBack: () => void }) {
   const overBudget = summary.budgetRemaining < 0;
 
   return (
-    <Screen testID="labour-screen">
+    <Screen testID="LABOUR.SCREEN">
       <AppHeader title={L.title} onBack={onBack} />
       <WeekNavigator now={now} weekStart={weekStart} onChange={setWeekStart} />
       <ScrollView
@@ -94,14 +94,14 @@ function LabourContent({ now, onBack }: { now: Date; onBack: () => void }) {
       >
         <InlineBanner
           message={L.disclaimer}
-          testID="labour-disclaimer"
+          testID="LABOUR.DISCLAIMER"
           tone="info"
         />
 
         {summary.missingRateEmployeeIds.length > 0 ? (
           <InlineBanner
             message={L.missingRates(summary.missingRateEmployeeIds.length)}
-            testID="missing-rates"
+            testID="LABOUR.MISSING_RATES"
             tone="error"
           />
         ) : null}
@@ -114,7 +114,7 @@ function LabourContent({ now, onBack }: { now: Date; onBack: () => void }) {
             supporting={L.paid(
               ShiftUtils.formatHours(summary.totalPaidMinutes),
             )}
-            testID="labour-cost"
+            testID="LABOUR.COST"
             value={FormatUtils.formatCurrency(summary.totalCost)}
           />
           <KPICard
@@ -130,7 +130,7 @@ function LabourContent({ now, onBack }: { now: Date; onBack: () => void }) {
                     FormatUtils.formatCurrency(summary.budgetRemaining),
                   )
             }
-            testID="labour-budget"
+            testID="LABOUR.BUDGET"
             value={FormatUtils.formatCurrency(summary.budget)}
           />
           <KPICard
@@ -145,7 +145,7 @@ function LabourContent({ now, onBack }: { now: Date; onBack: () => void }) {
             supporting={L.forecast(
               FormatUtils.formatCurrency(summary.forecastSales),
             )}
-            testID="labour-percent"
+            testID="LABOUR.PERCENT"
             value={FormatUtils.formatPercent(summary.labourPercent, 1)}
           />
         </View>
@@ -201,7 +201,7 @@ function LabourContent({ now, onBack }: { now: Date; onBack: () => void }) {
                 )}
                 key={row.employeeId}
                 style={styles.employeeRow}
-                testID={`employee-cost-${row.employeeId}`}
+                testID={`LABOUR.EMPLOYEE_COST.${row.employeeId}`}
               >
                 <View style={styles.flex}>
                   <AppText variant="bodyStrong">
@@ -227,7 +227,7 @@ function LabourContent({ now, onBack }: { now: Date; onBack: () => void }) {
           accessibilityHint={L.adjustShiftsHint}
           icon="calendar-outline"
           label={L.adjustShifts}
-          testID="adjust-shifts"
+          testID="LABOUR.ADJUST_SHIFTS"
           onPress={() => router.navigate("/roster")}
         />
       </ScrollView>

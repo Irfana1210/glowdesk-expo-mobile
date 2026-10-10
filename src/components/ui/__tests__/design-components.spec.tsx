@@ -44,9 +44,9 @@ describe("FilterChips", () => {
         onChange={onChange}
       />,
     );
-    expect(screen.getByTestId("filter-ALL")).toBeSelected();
-    expect(screen.getByTestId("filter-NEW")).not.toBeSelected();
-    await fireEvent.press(screen.getByTestId("filter-NEW"));
+    expect(screen.getByTestId("FILTER_CHIPS.OPTION.ALL")).toBeSelected();
+    expect(screen.getByTestId("FILTER_CHIPS.OPTION.NEW")).not.toBeSelected();
+    await fireEvent.press(screen.getByTestId("FILTER_CHIPS.OPTION.NEW"));
     expect(onChange).toHaveBeenCalledWith("NEW");
   });
 });

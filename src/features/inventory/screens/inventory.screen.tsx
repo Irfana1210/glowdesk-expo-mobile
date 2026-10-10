@@ -112,7 +112,7 @@ export const InventoryScreen: FC = () => {
             <AppText
               color="textMuted"
               style={styles.emptyText}
-              testID="empty-state"
+              testID="INVENTORY.EMPTY_STATE"
             >
               {emptyMessage}
             </AppText>
@@ -138,7 +138,7 @@ export const InventoryScreen: FC = () => {
                 L.summary.products,
               )}
               style={[styles.tile, styles.tileNeutral]}
-              testID="summary-products"
+              testID="INVENTORY.SUMMARY_PRODUCTS"
             >
               <AppText style={styles.tileValue}>{counts.products}</AppText>
               <AppText style={styles.tileLabel}>{L.summary.products}</AppText>
@@ -146,7 +146,7 @@ export const InventoryScreen: FC = () => {
             <SummaryToggle
               label={L.summary.lowStock}
               selected={filter.lowStockOnly}
-              testID="summary-low"
+              testID="INVENTORY.SUMMARY_LOW"
               tone="lowStock"
               value={counts.low}
               onPress={toggleLowStock}
@@ -154,7 +154,7 @@ export const InventoryScreen: FC = () => {
             <SummaryToggle
               label={L.summary.outOfStock}
               selected={filter.lowStockOnly}
-              testID="summary-out"
+              testID="INVENTORY.SUMMARY_OUT"
               tone="outOfStock"
               value={counts.out}
               onPress={toggleLowStock}
@@ -176,19 +176,19 @@ export const InventoryScreen: FC = () => {
           />
         }
         renderItem={renderItem}
-        testID="inventory-list"
+        testID="INVENTORY.LIST"
       />
     );
   }
 
   return (
-    <Screen testID="inventory-screen">
+    <Screen testID="INVENTORY.SCREEN">
       <ScreenTitle eyebrow={L.eyebrow} title={L.title} />
       <View style={styles.searchRow}>
         <SearchBar
           accessibilityLabel={L.searchLabel}
           placeholder={L.searchPlaceholder}
-          testID="inventory-search"
+          testID="INVENTORY.SEARCH"
           value={filter.query}
           onChangeText={(query) => setFilter((f) => ({ ...f, query }))}
         />
@@ -199,7 +199,7 @@ export const InventoryScreen: FC = () => {
             styles.scanButton,
             pressed && styles.pressed,
           ]}
-          testID="inventory-scan"
+          testID="INVENTORY.SCAN"
           onPress={() => router.push("/inventory/scan")}
         >
           <Ionicons color={colors.textOnDark} name="scan-outline" size={22} />

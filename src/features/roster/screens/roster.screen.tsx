@@ -119,7 +119,7 @@ export const RosterScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
     });
 
   return (
-    <Screen testID="roster-screen">
+    <Screen testID="ROSTER.SCREEN">
       <ScreenTitle
         eyebrow={L.eyebrow}
         right={
@@ -128,7 +128,7 @@ export const RosterScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
               accessibilityLabel={L.previousWeek}
               accessibilityRole="button"
               style={styles.navButton}
-              testID="previous-week"
+              testID="ROSTER.PREVIOUS_WEEK"
               onPress={() => goToWeek(DateUtils.addDays(weekStart, -7))}
             >
               <Ionicons color={colors.text} name="chevron-back" size={20} />
@@ -144,7 +144,7 @@ export const RosterScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
               accessibilityRole="button"
               disabled={isCurrentWeek}
               style={styles.weekLabel}
-              testID="week-range"
+              testID="ROSTER.WEEK_RANGE"
               onPress={() => goToWeek(DateUtils.startOfWeek(now))}
             >
               <AppText style={styles.weekText}>
@@ -158,7 +158,7 @@ export const RosterScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
               accessibilityLabel={L.nextWeek}
               accessibilityRole="button"
               style={styles.navButton}
-              testID="next-week"
+              testID="ROSTER.NEXT_WEEK"
               onPress={() => goToWeek(DateUtils.addDays(weekStart, 7))}
             >
               <Ionicons color={colors.text} name="chevron-forward" size={20} />
@@ -187,7 +187,11 @@ export const RosterScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
             >
               {L.floorCoverTitle(DateUtils.formatDayLabel(selected))}
             </AppText>
-            <AppText color="textMuted" testID="day-totals" variant="supporting">
+            <AppText
+              color="textMuted"
+              testID="ROSTER.DAY_TOTALS"
+              variant="supporting"
+            >
               {L.dayTotals(
                 ShiftUtils.staffCount(dayShifts),
                 ShiftUtils.formatHours(
@@ -222,7 +226,7 @@ export const RosterScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
         <AppText
           color="textMuted"
           style={styles.note}
-          testID="week-total"
+          testID="ROSTER.WEEK_TOTAL"
           variant="supporting"
         >
           {L.weekTotal(ShiftUtils.formatHours(weekTotal).replace("h", " h"))}
@@ -233,7 +237,7 @@ export const RosterScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
         <PrimaryButton
           icon="add"
           label={L.addShift}
-          testID="add-shift"
+          testID="ROSTER.ADD_SHIFT"
           onPress={addShift}
         />
       </View>
@@ -302,7 +306,7 @@ function RosterRow({
       role={role}
       stateLabel={state?.label}
       stateTone={state?.tone}
-      testID={`shift-row-${shift.id}`}
+      testID={`ROSTER.SHIFT_ROW.${shift.id}`}
       time={time}
       onEdit={() => onEdit(shift.id)}
     />

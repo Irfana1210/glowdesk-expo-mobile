@@ -116,7 +116,7 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
   };
 
   return (
-    <Screen testID="dashboard-screen">
+    <Screen testID="DASHBOARD.SCREEN">
       <ScrollView
         contentContainerStyle={styles.content}
         ref={scrollRef}
@@ -137,7 +137,7 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
                 accessibilityLabel={L.notificationsLabel(attention.length)}
                 badge={attention.length}
                 icon="notifications-outline"
-                testID="notifications"
+                testID="DASHBOARD.NOTIFICATIONS"
                 onPress={() =>
                   scrollRef.current?.scrollTo({
                     y: attentionY.current,
@@ -148,7 +148,7 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
               <IconButton
                 accessibilityLabel={L.profileLabel(DEMO_USER.firstName)}
                 icon="person-outline"
-                testID="profile"
+                testID="DASHBOARD.PROFILE"
                 text={DEMO_USER.firstName.slice(0, 2).toUpperCase()}
                 onPress={() => router.push("/more/settings")}
               />
@@ -159,7 +159,7 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
         />
 
         <View style={styles.body}>
-          <ShiftCard testID="shift-card" {...shiftCard} />
+          <ShiftCard testID="DASHBOARD.SHIFT_CARD" {...shiftCard} />
 
           <View
             style={styles.section}
@@ -176,7 +176,7 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
               </AppText>
             </View>
             {attention.length === 0 ? (
-              <AppText color="textMuted" testID="attention-empty">
+              <AppText color="textMuted" testID="DASHBOARD.ATTENTION_EMPTY">
                 {A.empty}
               </AppText>
             ) : (
@@ -185,7 +185,7 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
                   icon={item.icon}
                   key={item.key}
                   subtitle={item.subtitle}
-                  testID={`attention-${item.key}`}
+                  testID={`DASHBOARD.ATTENTION.${item.key}`}
                   title={item.title}
                   tone={item.tone}
                   onPress={() => router.navigate(item.href)}
@@ -228,7 +228,7 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
                         ) ?? now,
                       ),
                     )}
-                    testID="kpi-transactions"
+                    testID="DASHBOARD.KPI_TRANSACTIONS"
                     value={kpis.transactions.toLocaleString("en-AU")}
                   />
                   <KPICard
@@ -245,7 +245,7 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
                     label={K.averageTransaction.label}
                     style={styles.gridItem}
                     supporting={K.averageTransaction.supporting}
-                    testID="kpi-atv"
+                    testID="DASHBOARD.KPI_ATV"
                     value={
                       kpis.averageTransactionValue === null
                         ? K.noValue
@@ -271,7 +271,7 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
                     supporting={K.labour.ofSales(
                       FormatUtils.formatCurrency(kpis.labourSpend),
                     )}
-                    testID="kpi-labour"
+                    testID="DASHBOARD.KPI_LABOUR"
                     value={FormatUtils.formatPercent(kpis.labourPercent, 1)}
                   />
                 </>
@@ -285,7 +285,7 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
                     ? K.clickAndCollect.readyToCollect(orderCounts.ready)
                     : K.clickAndCollect.loading
                 }
-                testID="kpi-orders"
+                testID="DASHBOARD.KPI_ORDERS"
                 value={ordersReady ? String(orderCounts.pending) : K.noValue}
                 onPress={() => router.navigate("/orders")}
               />
@@ -326,7 +326,7 @@ function SalesHero({ kpis }: { kpis: DashboardKpis }) {
     achievement === null ? 0 : Math.min(100, Math.max(0, achievement));
 
   return (
-    <View style={styles.card} testID="sales-summary">
+    <View style={styles.card} testID="DASHBOARD.SALES_SUMMARY">
       <AppText color="textMuted" style={styles.small}>
         {H.label}
       </AppText>
@@ -336,7 +336,7 @@ function SalesHero({ kpis }: { kpis: DashboardKpis }) {
             FormatUtils.formatCurrency(kpis.sales),
           )}
           style={styles.heroValue}
-          testID="sales-total"
+          testID="DASHBOARD.SALES_TOTAL"
           variant="hero"
         >
           {FormatUtils.formatCurrency(kpis.sales)}

@@ -54,7 +54,7 @@ export const BarcodeCamera: FC<Props> = ({ onScan }) => {
     return (
       <View
         style={[styles.frame, styles.centered, styles.message]}
-        testID="camera-permission"
+        testID="BARCODE_CAMERA.PERMISSION"
       >
         <Ionicons color={colors.accent} name="camera-outline" size={32} />
         <AppText style={styles.center} variant="cardTitle">
@@ -84,7 +84,7 @@ export const BarcodeCamera: FC<Props> = ({ onScan }) => {
     return (
       <View
         style={[styles.frame, styles.centered, styles.message]}
-        testID="camera-error"
+        testID="BARCODE_CAMERA.ERROR"
       >
         <Ionicons color={colors.accent} name="videocam-off-outline" size={32} />
         <AppText style={styles.center} variant="cardTitle">

@@ -78,7 +78,7 @@ export const SalesChart: FC<Props> = ({ data, height = 92 }) => {
         <AppText accessibilityRole="header" variant="cardTitle">
           {L.title}
         </AppText>
-        <AppText color="textMuted" testID="sales-chart-empty">
+        <AppText color="textMuted" testID="SALES_CHART.EMPTY">
           {L.empty}
         </AppText>
       </View>
@@ -90,7 +90,7 @@ export const SalesChart: FC<Props> = ({ data, height = 92 }) => {
   const peak = peakHour(data);
 
   return (
-    <View style={styles.container} testID="sales-chart">
+    <View style={styles.container} testID="SALES_CHART">
       <View style={styles.header}>
         <AppText accessibilityRole="header" variant="cardTitle">
           {L.title}
@@ -98,7 +98,7 @@ export const SalesChart: FC<Props> = ({ data, height = 92 }) => {
         {peak ? (
           <AppText
             color="textMuted"
-            testID="sales-chart-peak"
+            testID="SALES_CHART.PEAK"
             variant="supporting"
           >
             {L.peak(
@@ -121,7 +121,7 @@ export const SalesChart: FC<Props> = ({ data, height = 92 }) => {
             <View
               key={point.hour}
               style={styles.column}
-              testID={`sales-bar-${point.hour}-${kind}`}
+              testID={`SALES_CHART.BAR.${point.hour}.${kind}`}
             >
               <View style={[styles.barArea, { height }]}>
                 <View

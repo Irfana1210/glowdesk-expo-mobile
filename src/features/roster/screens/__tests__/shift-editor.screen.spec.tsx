@@ -26,7 +26,7 @@ const shiftsOf = (employeeId: string) =>
 
 async function choose(field: string, value: string | number) {
   await fireEvent.press(screen.getByTestId(field));
-  await fireEvent.press(screen.getByTestId(`${field}-option-${value}`));
+  await fireEvent.press(screen.getByTestId(`${field}.OPTION.${value}`));
 }
 
 const MONDAY = "2026-10-05";
@@ -44,13 +44,13 @@ beforeEach(() => {
 describe("ShiftEditorScreen", () => {
   it("adds a valid shift", async () => {
     await openNew(MONDAY); // Tom Becker is free on Monday
-    await choose("field-employee", "emp-06");
+    await choose("SHIFT_EDITOR.FIELD_EMPLOYEE", "emp-06");
 
-    expect(screen.getByTestId("shift-summary")).toHaveTextContent(
+    expect(screen.getByTestId("SHIFT_EDITOR.SUMMARY")).toHaveTextContent(
       L.summaryHours("8h", "7.5h"),
       { exact: false },
     );
-    await fireEvent.press(screen.getByTestId("save-shift"));
+    await fireEvent.press(screen.getByTestId("SHIFT_EDITOR.SAVE_SHIFT"));
 
     expect(
       shiftsOf("emp-06").some((s) => new Date(s.startAt).getDate() === 5),
@@ -60,22 +60,24 @@ describe("ShiftEditorScreen", () => {
 
   it("shows validation errors before saving when no employee is chosen", async () => {
     await openNew();
-    await fireEvent.press(screen.getByTestId("save-shift"));
+    await fireEvent.press(screen.getByTestId("SHIFT_EDITOR.SAVE_SHIFT"));
 
-    expect(await screen.findByTestId("field-employee-error")).toHaveTextContent(
-      LOCALE.roster.shiftForm.chooseEmployee,
-    );
-    expect(screen.getByTestId("form-errors")).toBeOnTheScreen();
+    expect(
+      await screen.findByTestId("SHIFT_EDITOR.FIELD_EMPLOYEE.ERROR"),
+    ).toHaveTextContent(LOCALE.roster.shiftForm.chooseEmployee);
+    expect(screen.getByTestId("SHIFT_EDITOR.FORM_ERRORS")).toBeOnTheScreen();
     expect(mockBack).not.toHaveBeenCalled();
   });
 
   it("detects an overlapping shift", async () => {
     const before = useRosterStore.getState().shifts.length;
     await openNew();
-    await choose("field-employee", "emp-03"); // Grace works 1pm–9pm on Wednesday
-    await fireEvent.press(screen.getByTestId("save-shift"));
+    await choose("SHIFT_EDITOR.FIELD_EMPLOYEE", "emp-03"); // Grace works 1pm–9pm on Wednesday
+    await fireEvent.press(screen.getByTestId("SHIFT_EDITOR.SAVE_SHIFT"));
 
-    expect(await screen.findByTestId("form-errors")).toHaveTextContent(
+    expect(
+      await screen.findByTestId("SHIFT_EDITOR.FORM_ERRORS"),
+    ).toHaveTextContent(
       V.alreadyWorks("Grace Liu", "1:00 pm – 9:00 pm", "Wed 7 Oct"),
       { exact: false },
     );
@@ -84,21 +86,25 @@ describe("ShiftEditorScreen", () => {
 
   it('requires "Ends next day" for an overnight shift, then saves it', async () => {
     await openNew(MONDAY);
-    await choose("field-employee", "emp-06");
-    await choose("field-start", "22:00");
-    await choose("field-end", "06:00");
-    await fireEvent.press(screen.getByTestId("save-shift"));
+    await choose("SHIFT_EDITOR.FIELD_EMPLOYEE", "emp-06");
+    await choose("SHIFT_EDITOR.FIELD_START", "22:00");
+    await choose("SHIFT_EDITOR.FIELD_END", "06:00");
+    await fireEvent.press(screen.getByTestId("SHIFT_EDITOR.SAVE_SHIFT"));
 
-    expect(await screen.findByTestId("field-end-error")).toHaveTextContent(
-      V.endBeforeStart,
+    expect(
+      await screen.findByTestId("SHIFT_EDITOR.FIELD_END_ERROR"),
+    ).toHaveTextContent(V.endBeforeStart);
+
+    await fireEvent(
+      screen.getByTestId("SHIFT_EDITOR.FIELD_NEXT_DAY"),
+      "valueChange",
+      true,
     );
-
-    await fireEvent(screen.getByTestId("field-next-day"), "valueChange", true);
-    expect(screen.getByTestId("shift-summary")).toHaveTextContent(
+    expect(screen.getByTestId("SHIFT_EDITOR.SUMMARY")).toHaveTextContent(
       L.endsOn("Tue 6 Oct"),
       { exact: false },
     );
-    await fireEvent.press(screen.getByTestId("save-shift"));
+    await fireEvent.press(screen.getByTestId("SHIFT_EDITOR.SAVE_SHIFT"));
 
     const overnight = shiftsOf("emp-06").find(
       (s) => new Date(s.startAt).getDate() === 5,
@@ -108,29 +114,29 @@ describe("ShiftEditorScreen", () => {
 
   it("rejects a break as long as the shift", async () => {
     await openNew(MONDAY);
-    await choose("field-employee", "emp-06");
-    await choose("field-start", "09:00");
-    await choose("field-end", "09:30");
-    await choose("field-break", 30);
-    await fireEvent.press(screen.getByTestId("save-shift"));
+    await choose("SHIFT_EDITOR.FIELD_EMPLOYEE", "emp-06");
+    await choose("SHIFT_EDITOR.FIELD_START", "09:00");
+    await choose("SHIFT_EDITOR.FIELD_END", "09:30");
+    await choose("SHIFT_EDITOR.FIELD_BREAK", 30);
+    await fireEvent.press(screen.getByTestId("SHIFT_EDITOR.SAVE_SHIFT"));
 
-    expect(await screen.findByTestId("field-break-error")).toHaveTextContent(
-      V.breakTooLong,
-    );
+    expect(
+      await screen.findByTestId("SHIFT_EDITOR.FIELD_BREAK.ERROR"),
+    ).toHaveTextContent(V.breakTooLong);
   });
 
   it("only offers active employees from this store", async () => {
     await openNew();
-    await fireEvent.press(screen.getByTestId("field-employee"));
+    await fireEvent.press(screen.getByTestId("SHIFT_EDITOR.FIELD_EMPLOYEE"));
 
     expect(
-      screen.getByTestId("field-employee-option-emp-01"),
+      screen.getByTestId("SHIFT_EDITOR.FIELD_EMPLOYEE.OPTION.emp-01"),
     ).toBeOnTheScreen();
     expect(
-      screen.queryByTestId("field-employee-option-emp-07"),
+      screen.queryByTestId("SHIFT_EDITOR.FIELD_EMPLOYEE.OPTION.emp-07"),
     ).not.toBeOnTheScreen(); // inactive
     expect(
-      screen.queryByTestId("field-employee-option-emp-08"),
+      screen.queryByTestId("SHIFT_EDITOR.FIELD_EMPLOYEE.OPTION.emp-08"),
     ).not.toBeOnTheScreen(); // other store
   });
 
@@ -144,8 +150,8 @@ describe("ShiftEditorScreen", () => {
     mockParams = { shiftId: graceWednesday.id };
     await render(<ShiftEditorScreen />);
 
-    await choose("field-end", "18:00");
-    await fireEvent.press(screen.getByTestId("save-shift"));
+    await choose("SHIFT_EDITOR.FIELD_END", "18:00");
+    await fireEvent.press(screen.getByTestId("SHIFT_EDITOR.SAVE_SHIFT"));
     expect(
       new Date(
         useRosterStore
@@ -154,8 +160,10 @@ describe("ShiftEditorScreen", () => {
       ).getHours(),
     ).toBe(18);
 
-    await fireEvent.press(screen.getByTestId("delete-shift"));
-    await fireEvent.press(screen.getByTestId("confirm-action"));
+    await fireEvent.press(screen.getByTestId("SHIFT_EDITOR.DELETE_SHIFT"));
+    await fireEvent.press(
+      screen.getByTestId("CONFIRMATION_MODAL.CONFIRM_ACTION"),
+    );
     expect(
       useRosterStore.getState().shifts.find((s) => s.id === graceWednesday.id),
     ).toBeUndefined();

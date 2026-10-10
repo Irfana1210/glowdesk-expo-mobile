@@ -35,11 +35,11 @@ describe("SalesChart", () => {
   it("shows the peak hour like the mockup", async () => {
     await render(<SalesChart data={hourly} />);
     expect(peakHour(hourly)?.hour).toBe(13);
-    expect(screen.getByTestId("sales-chart-peak")).toHaveTextContent(
+    expect(screen.getByTestId("SALES_CHART.PEAK")).toHaveTextContent(
       L.peak("1 pm", "$3,310"),
     );
-    expect(screen.getByTestId("sales-bar-16-current")).toBeOnTheScreen();
-    expect(screen.getByTestId("sales-bar-20-upcoming")).toBeOnTheScreen();
+    expect(screen.getByTestId("SALES_CHART.BAR.16.current")).toBeOnTheScreen();
+    expect(screen.getByTestId("SALES_CHART.BAR.20.upcoming")).toBeOnTheScreen();
   });
 
   it("describes the whole chart in one sentence for screen readers", async () => {
@@ -53,6 +53,6 @@ describe("SalesChart", () => {
 
   it("shows a message when nothing has sold yet", async () => {
     await render(<SalesChart data={hourly.map((h) => ({ ...h, sales: 0 }))} />);
-    expect(screen.getByTestId("sales-chart-empty")).toBeOnTheScreen();
+    expect(screen.getByTestId("SALES_CHART.EMPTY")).toBeOnTheScreen();
   });
 });

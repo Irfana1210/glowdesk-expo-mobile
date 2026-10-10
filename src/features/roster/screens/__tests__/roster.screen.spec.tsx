@@ -29,15 +29,19 @@ describe("RosterScreen", () => {
   it("shows the week, selects today and totals the week", async () => {
     await render(<RosterScreen now={NOW} />);
 
-    expect(screen.getByTestId("week-range")).toHaveTextContent("5 – 11 Oct");
-    expect(screen.getByTestId("day-2026-10-10")).toBeSelected();
+    expect(screen.getByTestId("ROSTER.WEEK_RANGE")).toHaveTextContent(
+      "5 – 11 Oct",
+    );
+    expect(
+      screen.getByTestId("WEEK_DAY_SELECTOR.DAY.2026-10-10"),
+    ).toBeSelected();
     expect(
       screen.getByLabelText(
         LOCALE.roster.weekDaySelector.day("Sat 10 Oct", true),
       ),
     ).toBeOnTheScreen();
     // The designed Saturday plus the weekday pattern: 191.5 paid hours.
-    expect(screen.getByTestId("week-total")).toHaveTextContent(
+    expect(screen.getByTestId("ROSTER.WEEK_TOTAL")).toHaveTextContent(
       L.weekTotal("191.5 h"),
     );
   });
@@ -45,12 +49,16 @@ describe("RosterScreen", () => {
   it("shows floor cover for today like the mockup", async () => {
     await render(<RosterScreen now={NOW} />);
 
-    expect(screen.getByTestId("day-totals")).toHaveTextContent(
+    expect(screen.getByTestId("ROSTER.DAY_TOTALS")).toHaveTextContent(
       L.dayTotals(6, "37.5 h"),
     );
-    expect(screen.getByTestId("cover-11-2-low")).toBeOnTheScreen();
-    expect(screen.getByTestId("cover-13-4")).toBeOnTheScreen();
-    expect(screen.getByTestId("cover-note")).toHaveTextContent(
+    expect(
+      screen.getByTestId("FLOOR_COVER_CHART.COVER.11.2.LOW"),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByTestId("FLOOR_COVER_CHART.COVER.13.4"),
+    ).toBeOnTheScreen();
+    expect(screen.getByTestId("FLOOR_COVER_CHART.NOTE")).toHaveTextContent(
       FLOOR.belowMinimumNote(3, "11 am"),
     );
     expect(
@@ -64,9 +72,9 @@ describe("RosterScreen", () => {
     await render(<RosterScreen now={NOW} />);
 
     const rows = screen
-      .getAllByTestId(/^shift-row-/)
+      .getAllByTestId(/^ROSTER\.SHIFT_ROW\./)
       .map((n) => n.props.testID as string)
-      .filter((id) => !id.endsWith("-edit"));
+      .filter((id) => !id.endsWith(".EDIT"));
     expect(rows).toHaveLength(6);
     expect(
       screen.getByLabelText(
@@ -101,17 +109,19 @@ describe("RosterScreen", () => {
         ].join(", "),
       ),
     ).toBeOnTheScreen();
-    expect(rows.indexOf("shift-row-" + todayShiftId("emp-06"))).toBe(5);
+    expect(rows.indexOf("ROSTER.SHIFT_ROW." + todayShiftId("emp-06"))).toBe(5);
   });
 
   it("shows another day without live states and flags its cover", async () => {
     await render(<RosterScreen now={NOW} />);
-    await fireEvent.press(screen.getByTestId("day-2026-10-11"));
+    await fireEvent.press(
+      screen.getByTestId("WEEK_DAY_SELECTOR.DAY.2026-10-11"),
+    );
 
     expect(
       screen.queryByText(COVER.onTheFloor, { exact: false }),
     ).not.toBeOnTheScreen();
-    expect(screen.getByTestId("cover-note")).toHaveTextContent(
+    expect(screen.getByTestId("FLOOR_COVER_CHART.NOTE")).toHaveTextContent(
       FLOOR.belowMinimumNote(3, ""),
       { exact: false },
     );
@@ -124,7 +134,9 @@ describe("RosterScreen", () => {
 
   it("marks overnight shifts", async () => {
     await render(<RosterScreen now={NOW} />);
-    await fireEvent.press(screen.getByTestId("day-2026-10-08"));
+    await fireEvent.press(
+      screen.getByTestId("WEEK_DAY_SELECTOR.DAY.2026-10-08"),
+    );
 
     expect(
       screen.getByLabelText(
@@ -142,23 +154,29 @@ describe("RosterScreen", () => {
   it("navigates weeks, shows an empty day and returns to this week", async () => {
     await render(<RosterScreen now={NOW} />);
 
-    await fireEvent.press(screen.getByTestId("next-week"));
-    expect(screen.getByTestId("week-range")).toHaveTextContent(/^12 – 18 Oct/);
+    await fireEvent.press(screen.getByTestId("ROSTER.NEXT_WEEK"));
+    expect(screen.getByTestId("ROSTER.WEEK_RANGE")).toHaveTextContent(
+      /^12 – 18 Oct/,
+    );
     expect(screen.getByText(L.thisWeek)).toBeOnTheScreen();
     expect(screen.getByText(L.noShiftsTitle)).toBeOnTheScreen();
-    expect(screen.getByTestId("week-total")).toHaveTextContent(
+    expect(screen.getByTestId("ROSTER.WEEK_TOTAL")).toHaveTextContent(
       L.weekTotal("0 h"),
     );
 
-    await fireEvent.press(screen.getByTestId("week-range"));
-    expect(screen.getByTestId("week-range")).toHaveTextContent("5 – 11 Oct");
-    expect(screen.getByTestId("day-2026-10-10")).toBeSelected();
+    await fireEvent.press(screen.getByTestId("ROSTER.WEEK_RANGE"));
+    expect(screen.getByTestId("ROSTER.WEEK_RANGE")).toHaveTextContent(
+      "5 – 11 Oct",
+    );
+    expect(
+      screen.getByTestId("WEEK_DAY_SELECTOR.DAY.2026-10-10"),
+    ).toBeSelected();
   });
 
   it("opens the editor to add or edit a shift", async () => {
     await render(<RosterScreen now={NOW} />);
 
-    await fireEvent.press(screen.getByTestId("add-shift"));
+    await fireEvent.press(screen.getByTestId("ROSTER.ADD_SHIFT"));
     expect(mockPush).toHaveBeenCalledWith({
       pathname: "/roster/shift",
       params: { date: "2026-10-10" },

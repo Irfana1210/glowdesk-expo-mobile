@@ -46,9 +46,9 @@ describe("OrderCompletionScreen", () => {
       ),
     ).toBeOnTheScreen();
 
-    await fireEvent.press(screen.getByTestId("confirm-ready"));
+    await fireEvent.press(screen.getByTestId("ORDER_COMPLETION.CONFIRM_READY"));
 
-    expect(screen.getByTestId("completion-title")).toHaveTextContent(
+    expect(screen.getByTestId("ORDER_COMPLETION.TITLE")).toHaveTextContent(
       L.readyTitle,
     );
     expect(screen.getByLabelText("Status: Ready")).toBeOnTheScreen();
@@ -58,28 +58,30 @@ describe("OrderCompletionScreen", () => {
       ),
     ).toBeOnTheScreen();
 
-    await fireEvent.press(screen.getByTestId("back-to-orders"));
+    await fireEvent.press(
+      screen.getByTestId("ORDER_COMPLETION.BACK_TO_ORDERS"),
+    );
     expect(mockDismissTo).toHaveBeenCalledWith("/orders");
   });
 
   it("shows an error and disables confirmation for an incomplete order", async () => {
     await renderCompletion("ORD-7841");
 
-    expect(screen.getByTestId("completion-error")).toHaveTextContent(
+    expect(screen.getByTestId("ORDER_COMPLETION.ERROR")).toHaveTextContent(
       L.cannotMarkReady(LOCALE.orders.stateMachine.itemsNotVerified(3)),
       { exact: false },
     );
-    expect(screen.getByTestId("confirm-ready")).toBeDisabled();
+    expect(screen.getByTestId("ORDER_COMPLETION.CONFIRM_READY")).toBeDisabled();
     expect(screen.getByLabelText("Status: Picking")).toBeOnTheScreen();
   });
 
   it("shows an invalid transition error for an order that is not picking", async () => {
     await renderCompletion("ORD-7846");
 
-    expect(screen.getByTestId("completion-error")).toHaveTextContent(
+    expect(screen.getByTestId("ORDER_COMPLETION.ERROR")).toHaveTextContent(
       L.cannotMarkReady(LOCALE.orders.stateMachine.invalidStatus("NEW")),
       { exact: false },
     );
-    expect(screen.getByTestId("confirm-ready")).toBeDisabled();
+    expect(screen.getByTestId("ORDER_COMPLETION.CONFIRM_READY")).toBeDisabled();
   });
 });

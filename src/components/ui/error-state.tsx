@@ -29,7 +29,7 @@ export const ErrorState: FC<Props> = ({
       }
       icon="alert-circle-outline"
       message={message}
-      testID="error-state"
+      testID="ERROR_STATE"
       title={title}
     />
   );

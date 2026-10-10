@@ -51,7 +51,7 @@ describe("LabourScreen", () => {
     await render(<LabourScreen now={ROSTER_NOW} />);
     const summary = expectedSummary();
 
-    expect(screen.getByTestId("labour-cost-value")).toHaveTextContent(
+    expect(screen.getByTestId("LABOUR.COST.VALUE")).toHaveTextContent(
       FormatUtils.formatCurrency(summary.totalCost),
     );
     expect(screen.getByText(L.paid("202.5h"))).toBeOnTheScreen();
@@ -60,7 +60,7 @@ describe("LabourScreen", () => {
         L.budgetRemaining(FormatUtils.formatCurrency(summary.budgetRemaining)),
       ),
     ).toBeOnTheScreen();
-    expect(screen.getByTestId("labour-disclaimer")).toHaveTextContent(
+    expect(screen.getByTestId("LABOUR.DISCLAIMER")).toHaveTextContent(
       L.disclaimer,
       { exact: false },
     );
@@ -89,22 +89,22 @@ describe("LabourScreen", () => {
 
     const after = expectedSummary().totalCost;
     expect(after).toBeLessThan(before);
-    expect(screen.getByTestId("labour-cost-value")).toHaveTextContent(
+    expect(screen.getByTestId("LABOUR.COST.VALUE")).toHaveTextContent(
       FormatUtils.formatCurrency(after),
     );
   });
 
   it("shows an empty week without dividing by zero", async () => {
     await render(<LabourScreen now={ROSTER_NOW} />);
-    await fireEvent.press(screen.getByTestId("next-week"));
+    await fireEvent.press(screen.getByTestId("WEEK_NAVIGATOR.NEXT_WEEK"));
 
-    expect(screen.getByTestId("labour-cost-value")).toHaveTextContent("$0");
+    expect(screen.getByTestId("LABOUR.COST.VALUE")).toHaveTextContent("$0");
     expect(screen.getByText(L.noShifts)).toBeOnTheScreen();
   });
 
   it("links to the roster to adjust shifts", async () => {
     await render(<LabourScreen now={ROSTER_NOW} />);
-    await fireEvent.press(screen.getByTestId("adjust-shifts"));
+    await fireEvent.press(screen.getByTestId("LABOUR.ADJUST_SHIFTS"));
     expect(mockNavigate).toHaveBeenCalledWith("/roster");
   });
 
@@ -113,7 +113,7 @@ describe("LabourScreen", () => {
     await render(<LabourScreen now={ROSTER_NOW} />);
 
     expect(screen.getByText(LOCALE.labour.restricted.title)).toBeOnTheScreen();
-    expect(screen.queryByTestId("labour-cost")).not.toBeOnTheScreen();
+    expect(screen.queryByTestId("LABOUR.COST")).not.toBeOnTheScreen();
     expect(screen.queryByText(/Alex Morgan/)).not.toBeOnTheScreen();
   });
 });

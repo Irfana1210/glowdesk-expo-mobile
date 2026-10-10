@@ -38,7 +38,7 @@ function ProductCardComponent({ item, onPress }: ProductCardProps) {
       seed={product.id}
       size="large"
       swatch={product.swatch}
-      testID={`product-row-${product.id}`}
+      testID={`PRODUCT_CARD.ROW.${product.id}`}
       trailing={{ kind: "status", status }}
       onPress={() => onPress(product.id)}
     />

@@ -21,22 +21,27 @@ type MenuItem = {
   description: string;
   href?: Href;
   icon: IconName;
+  /** Stable testID segment, independent of the copy. */
+  id: string;
   label: string;
 };
 
 const MENU: Array<MenuItem> = [
   {
     ...L.labour,
+    id: "LABOUR",
     icon: "wallet-outline",
     href: "/more/labour",
   },
   {
     ...L.salesAnalytics,
+    id: "SALES_ANALYTICS",
     icon: "stats-chart-outline",
   },
-  { ...L.employees, icon: "people-outline" },
+  { ...L.employees, icon: "people-outline", id: "EMPLOYEES" },
   {
     ...L.settings,
+    id: "SETTINGS",
     icon: "settings-outline",
     href: "/more/settings",
   },
@@ -47,7 +52,7 @@ export default function MoreTab() {
   const version = Constants.expoConfig?.version ?? "dev";
 
   return (
-    <Screen testID="more-screen">
+    <Screen testID="MORE.SCREEN">
       <AppHeader subtitle={L.version(version)} title={L.title} />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.menu}>
@@ -65,7 +70,7 @@ export default function MoreTab() {
                   index > 0 && styles.rowDivider,
                   pressed && styles.pressed,
                 ]}
-                testID={`menu-${item.label}`}
+                testID={`MORE.MENU.${item.id}`}
                 onPress={() => item.href && router.push(item.href)}
               >
                 <View style={styles.icon}>

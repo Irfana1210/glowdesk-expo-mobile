@@ -22,7 +22,9 @@ jest.mock("@/features/inventory/services/inventory.service", () => ({
 const mockedFetch = jest.mocked(InventoryService.fetchInventory);
 
 const rowIds = () =>
-  screen.getAllByTestId(/^product-row-/).map((n) => n.props.testID as string);
+  screen
+    .getAllByTestId(/^PRODUCT_CARD\.ROW\./)
+    .map((n) => n.props.testID as string);
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -33,13 +35,13 @@ describe("InventoryScreen", () => {
   it("shows the stock summary and every product with its status", async () => {
     await renderWithQuery(<InventoryScreen />);
 
-    expect(await screen.findByTestId("summary-products")).toHaveTextContent(
-      new RegExp(`7.*${L.list.summary.products}`),
-    );
-    expect(screen.getByTestId("summary-low")).toHaveTextContent(
+    expect(
+      await screen.findByTestId("INVENTORY.SUMMARY_PRODUCTS"),
+    ).toHaveTextContent(new RegExp(`7.*${L.list.summary.products}`));
+    expect(screen.getByTestId("INVENTORY.SUMMARY_LOW")).toHaveTextContent(
       new RegExp(`3.*${L.list.summary.lowStock}`),
     );
-    expect(screen.getByTestId("summary-out")).toHaveTextContent(
+    expect(screen.getByTestId("INVENTORY.SUMMARY_OUT")).toHaveTextContent(
       new RegExp(`1.*${L.list.summary.outOfStock}`),
     );
     expect(rowIds()).toHaveLength(7);
@@ -80,54 +82,54 @@ describe("InventoryScreen", () => {
 
   it("filters by category", async () => {
     await renderWithQuery(<InventoryScreen />);
-    await screen.findByTestId("inventory-list");
+    await screen.findByTestId("INVENTORY.LIST");
 
-    await fireEvent.press(screen.getByTestId("filter-HAIRCARE"));
+    await fireEvent.press(screen.getByTestId("FILTER_CHIPS.OPTION.HAIRCARE"));
 
-    expect(screen.getByTestId("filter-HAIRCARE")).toBeSelected();
-    expect(rowIds()).toEqual(["product-row-prod-kr-0555"]);
+    expect(screen.getByTestId("FILTER_CHIPS.OPTION.HAIRCARE")).toBeSelected();
+    expect(rowIds()).toEqual(["PRODUCT_CARD.ROW.prod-kr-0555"]);
   });
 
   it("searches by name, SKU and barcode", async () => {
     await renderWithQuery(<InventoryScreen />);
-    await screen.findByTestId("inventory-list");
+    await screen.findByTestId("INVENTORY.LIST");
 
-    await fireEvent.changeText(screen.getByTestId("inventory-search"), "cloud");
-    expect(rowIds()).toEqual(["product-row-prod-pp-0917"]);
+    await fireEvent.changeText(screen.getByTestId("INVENTORY.SEARCH"), "cloud");
+    expect(rowIds()).toEqual(["PRODUCT_CARD.ROW.prod-pp-0917"]);
 
-    await fireEvent.changeText(screen.getByTestId("inventory-search"), "mi-07");
-    expect(rowIds()).toEqual(["product-row-prod-mi-0730"]);
+    await fireEvent.changeText(screen.getByTestId("INVENTORY.SEARCH"), "mi-07");
+    expect(rowIds()).toEqual(["PRODUCT_CARD.ROW.prod-mi-0730"]);
 
     await fireEvent.changeText(
-      screen.getByTestId("inventory-search"),
+      screen.getByTestId("INVENTORY.SEARCH"),
       MOCK_PRODUCTS.saltwaterToner.barcode,
     );
-    expect(rowIds()).toEqual(["product-row-prod-sw-0381"]);
+    expect(rowIds()).toEqual(["PRODUCT_CARD.ROW.prod-sw-0381"]);
   });
 
   it("narrows to products needing restock from the summary tiles, and back", async () => {
     await renderWithQuery(<InventoryScreen />);
-    await screen.findByTestId("inventory-list");
+    await screen.findByTestId("INVENTORY.LIST");
 
-    await fireEvent.press(screen.getByTestId("summary-low"));
-    expect(screen.getByTestId("summary-low")).toBeSelected();
-    expect(screen.getByTestId("summary-out")).toBeSelected();
+    await fireEvent.press(screen.getByTestId("INVENTORY.SUMMARY_LOW"));
+    expect(screen.getByTestId("INVENTORY.SUMMARY_LOW")).toBeSelected();
+    expect(screen.getByTestId("INVENTORY.SUMMARY_OUT")).toBeSelected();
     expect(rowIds()).toHaveLength(4);
 
-    await fireEvent.press(screen.getByTestId("summary-out"));
-    expect(screen.getByTestId("summary-low")).not.toBeSelected();
+    await fireEvent.press(screen.getByTestId("INVENTORY.SUMMARY_OUT"));
+    expect(screen.getByTestId("INVENTORY.SUMMARY_LOW")).not.toBeSelected();
     expect(rowIds()).toHaveLength(7);
   });
 
   it("shows an empty message with a way to clear filters", async () => {
     await renderWithQuery(<InventoryScreen />);
-    await screen.findByTestId("inventory-list");
+    await screen.findByTestId("INVENTORY.LIST");
 
     await fireEvent.changeText(
-      screen.getByTestId("inventory-search"),
+      screen.getByTestId("INVENTORY.SEARCH"),
       "no such product",
     );
-    expect(screen.getByTestId("empty-state")).toHaveTextContent(
+    expect(screen.getByTestId("INVENTORY.EMPTY_STATE")).toHaveTextContent(
       L.list.empty.noMatch("no such product"),
     );
 
@@ -135,7 +137,7 @@ describe("InventoryScreen", () => {
       screen.getByRole("button", { name: L.list.clearFilters }),
     );
     expect(rowIds()).toHaveLength(7);
-    expect(screen.getByTestId("inventory-search").props.value).toBe("");
+    expect(screen.getByTestId("INVENTORY.SEARCH").props.value).toBe("");
   });
 
   it("shows an error state and retries", async () => {
@@ -146,20 +148,20 @@ describe("InventoryScreen", () => {
 
     expect(await screen.findByText(L.list.errorTitle)).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
-    expect(await screen.findByTestId("inventory-list")).toBeOnTheScreen();
+    expect(await screen.findByTestId("INVENTORY.LIST")).toBeOnTheScreen();
   });
 
   it("opens product details and the scanner", async () => {
     await renderWithQuery(<InventoryScreen />);
     await fireEvent.press(
-      await screen.findByTestId("product-row-prod-mi-0730"),
+      await screen.findByTestId("PRODUCT_CARD.ROW.prod-mi-0730"),
     );
     expect(mockPush).toHaveBeenCalledWith({
       pathname: "/inventory/[id]",
       params: { id: "prod-mi-0730" },
     });
 
-    await fireEvent.press(screen.getByTestId("inventory-scan"));
+    await fireEvent.press(screen.getByTestId("INVENTORY.SCAN"));
     expect(mockPush).toHaveBeenCalledWith("/inventory/scan");
   });
 });

@@ -84,7 +84,7 @@ function ShiftRowComponent({
         accessibilityRole="button"
         hitSlop={{ left: 4, right: 4 }}
         style={styles.edit}
-        testID={testID ? `${testID}-edit` : undefined}
+        testID={testID ? `${testID}.EDIT` : undefined}
         onPress={onEdit}
       >
         <Ionicons color={colors.textMuted} name="create-outline" size={20} />

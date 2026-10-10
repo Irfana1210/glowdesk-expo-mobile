@@ -43,7 +43,7 @@ export const OrderCompletionScreen: FC = () => {
   }, [router]);
 
   return (
-    <Screen edges={["top", "left", "right"]} testID="completion-screen">
+    <Screen edges={["top", "left", "right"]} testID="ORDER_COMPLETION.SCREEN">
       <AppHeader title={L.title} onBack={goBack} />
       {order ? (
         <CompletionContent order={order} onBack={goBack} />
@@ -126,7 +126,7 @@ function CompletionContent({
           <AppText
             accessibilityRole="header"
             style={styles.center}
-            testID="completion-title"
+            testID="ORDER_COMPLETION.TITLE"
             variant="pageTitle"
           >
             {isComplete ? L.readyTitle : L.confirmTitle}
@@ -166,14 +166,14 @@ function CompletionContent({
         {!isComplete && !readiness.ok ? (
           <InlineBanner
             message={L.cannotMarkReady(readiness.message)}
-            testID="completion-error"
+            testID="ORDER_COMPLETION.ERROR"
             tone="error"
           />
         ) : null}
         {error ? (
           <InlineBanner
             message={error}
-            testID="completion-action-error"
+            testID="ORDER_COMPLETION.ACTION_ERROR"
             tone="error"
           />
         ) : null}
@@ -189,7 +189,7 @@ function CompletionContent({
           <PrimaryButton
             icon="bag-handle-outline"
             label={C.backToOrders}
-            testID="back-to-orders"
+            testID="ORDER_COMPLETION.BACK_TO_ORDERS"
             onPress={() => router.dismissTo("/orders")}
           />
         ) : (
@@ -201,7 +201,7 @@ function CompletionContent({
               disabled={!readiness.ok}
               icon="checkmark-done-outline"
               label={L.confirmReady}
-              testID="confirm-ready"
+              testID="ORDER_COMPLETION.CONFIRM_READY"
               onPress={confirm}
             />
             <SecondaryButton label={C.backToOrder} onPress={onBack} />

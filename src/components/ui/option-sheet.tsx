@@ -89,7 +89,7 @@ export const OptionSheet: FC<Props> = ({
                   accessibilityRole="button"
                   accessibilityState={{ selected: isSelected }}
                   style={[styles.option, isSelected && styles.optionSelected]}
-                  testID={testID ? `${testID}-option-${item.value}` : undefined}
+                  testID={testID ? `${testID}.OPTION.${item.value}` : undefined}
                   onPress={() => onSelect(item.value)}
                 >
                   <View style={styles.flex}>

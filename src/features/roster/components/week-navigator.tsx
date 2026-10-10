@@ -30,7 +30,7 @@ export const WeekNavigator: FC<Props> = ({ weekStart, now, onChange }) => {
         accessibilityLabel={L.previousWeek}
         accessibilityRole="button"
         style={styles.button}
-        testID="previous-week"
+        testID="WEEK_NAVIGATOR.PREVIOUS_WEEK"
         onPress={() => onChange(DateUtils.addDays(weekStart, -7))}
       >
         <Ionicons color={colors.text} name="chevron-back" size={22} />
@@ -38,7 +38,7 @@ export const WeekNavigator: FC<Props> = ({ weekStart, now, onChange }) => {
       <View style={styles.label}>
         <AppText
           accessibilityRole="header"
-          testID="week-range"
+          testID="WEEK_NAVIGATOR.RANGE"
           variant="cardTitle"
         >
           {DateUtils.formatWeekRange(weekStart)}
@@ -59,7 +59,7 @@ export const WeekNavigator: FC<Props> = ({ weekStart, now, onChange }) => {
         accessibilityLabel={L.nextWeek}
         accessibilityRole="button"
         style={styles.button}
-        testID="next-week"
+        testID="WEEK_NAVIGATOR.NEXT_WEEK"
         onPress={() => onChange(DateUtils.addDays(weekStart, 7))}
       >
         <Ionicons color={colors.text} name="chevron-forward" size={22} />

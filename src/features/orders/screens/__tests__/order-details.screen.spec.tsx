@@ -56,14 +56,14 @@ describe("OrderDetailsScreen", () => {
     ).toHaveTextContent(L.orderNumber("7841"));
     expect(screen.getByLabelText("Status: Picking")).toBeOnTheScreen();
     expect(screen.getByText(L.customer("J.L."))).toBeOnTheScreen();
-    expect(screen.getByTestId("order-timing")).toHaveTextContent(
+    expect(screen.getByTestId("ORDER_DETAILS.TIMING")).toHaveTextContent(
       L.placed("1:47 pm") + L.due("3:47 pm"),
     );
-    expect(screen.getByTestId("overdue-pill")).toHaveTextContent(
+    expect(screen.getByTestId("ORDER_DETAILS.OVERDUE_PILL")).toHaveTextContent(
       L.overdue("53 min"),
       { exact: false },
     );
-    expect(screen.getByTestId("assignee")).toHaveTextContent(
+    expect(screen.getByTestId("ORDER_DETAILS.ASSIGNEE")).toHaveTextContent(
       `${L.assignedToPrefix}Jordan Lee`,
     );
     expect(
@@ -77,24 +77,27 @@ describe("OrderDetailsScreen", () => {
     await renderOrder("ORD-7841");
 
     expect(screen.getByText(L.productsHeading(5))).toBeOnTheScreen();
-    expect(screen.getAllByTestId(/^order-item-/)).toHaveLength(5);
-    expect(screen.getByTestId("order-item-ORD-7841-L1")).toHaveTextContent(
-      L.productDetail("LS-1042", "9300601042118"),
-      { exact: false },
-    );
-    expect(screen.getByTestId("order-item-ORD-7841-L1")).toHaveTextContent(
+    expect(screen.getAllByTestId(/^ORDER_DETAILS\.ITEM\./)).toHaveLength(5);
+    expect(
+      screen.getByTestId("ORDER_DETAILS.ITEM.ORD-7841-L1"),
+    ).toHaveTextContent(L.productDetail("LS-1042", "9300601042118"), {
+      exact: false,
+    });
+    expect(
+      screen.getByTestId("ORDER_DETAILS.ITEM.ORD-7841-L1"),
+    ).toHaveTextContent(
       /LUMEN SKIN.*Dewy Barrier Cream 50ml.*1 \/ 1.*Verified/,
     );
-    expect(screen.getByTestId("order-item-ORD-7841-L2")).toHaveTextContent(
-      /0 \/ 2.*To scan/,
-    );
+    expect(
+      screen.getByTestId("ORDER_DETAILS.ITEM.ORD-7841-L2"),
+    ).toHaveTextContent(/0 \/ 2.*To scan/);
   });
 
   it("keeps Mark ready disabled until every unit is verified, and says why", async () => {
     await renderOrder("ORD-7841");
 
-    expect(screen.getByTestId("mark-ready")).toBeDisabled();
-    expect(screen.getByTestId("ready-helper")).toHaveTextContent(
+    expect(screen.getByTestId("ORDER_DETAILS.MARK_READY")).toBeDisabled();
+    expect(screen.getByTestId("ORDER_DETAILS.READY_HELPER")).toHaveTextContent(
       L.scanMoreUnits(4),
     );
   });
@@ -102,13 +105,13 @@ describe("OrderDetailsScreen", () => {
   it("opens the scanner, or manual entry with Type code", async () => {
     await renderOrder("ORD-7841");
 
-    await fireEvent.press(screen.getByTestId("scan-product"));
+    await fireEvent.press(screen.getByTestId("ORDER_DETAILS.SCAN_PRODUCT"));
     expect(mockPush).toHaveBeenCalledWith({
       pathname: "/orders/scan",
       params: { orderId: "ORD-7841" },
     });
 
-    await fireEvent.press(screen.getByTestId("type-code"));
+    await fireEvent.press(screen.getByTestId("ORDER_DETAILS.TYPE_CODE"));
     expect(mockPush).toHaveBeenLastCalledWith({
       pathname: "/orders/scan",
       params: { orderId: "ORD-7841", manual: "1" },
@@ -118,13 +121,15 @@ describe("OrderDetailsScreen", () => {
   it("sends a fully verified order to the completion check", async () => {
     await renderOrder("ORD-7842");
 
-    expect(screen.getByTestId("mark-ready")).toBeEnabled();
-    expect(screen.queryByTestId("scan-product")).not.toBeOnTheScreen();
-    expect(screen.getByTestId("ready-helper")).toHaveTextContent(
+    expect(screen.getByTestId("ORDER_DETAILS.MARK_READY")).toBeEnabled();
+    expect(
+      screen.queryByTestId("ORDER_DETAILS.SCAN_PRODUCT"),
+    ).not.toBeOnTheScreen();
+    expect(screen.getByTestId("ORDER_DETAILS.READY_HELPER")).toHaveTextContent(
       L.allUnitsVerified,
     );
 
-    await fireEvent.press(screen.getByTestId("mark-ready"));
+    await fireEvent.press(screen.getByTestId("ORDER_DETAILS.MARK_READY"));
     expect(mockPush).toHaveBeenCalledWith({
       pathname: "/orders/complete",
       params: { orderId: "ORD-7842" },
@@ -134,24 +139,30 @@ describe("OrderDetailsScreen", () => {
 
   it("starts picking a New order", async () => {
     await renderOrder("ORD-7846");
-    expect(screen.getByTestId("assignee")).toHaveTextContent(L.notAssigned);
+    expect(screen.getByTestId("ORDER_DETAILS.ASSIGNEE")).toHaveTextContent(
+      L.notAssigned,
+    );
 
-    await fireEvent.press(screen.getByTestId("start-picking"));
+    await fireEvent.press(screen.getByTestId("ORDER_DETAILS.START_PICKING"));
 
     expect(screen.getByLabelText("Status: Picking")).toBeOnTheScreen();
-    expect(screen.queryByTestId("start-picking")).not.toBeOnTheScreen();
+    expect(
+      screen.queryByTestId("ORDER_DETAILS.START_PICKING"),
+    ).not.toBeOnTheScreen();
   });
 
   it("reassigns the order to another team member", async () => {
     await renderOrder("ORD-7841");
 
-    await fireEvent.press(screen.getByTestId("reassign"));
+    await fireEvent.press(screen.getByTestId("ORDER_DETAILS.REASSIGN"));
     expect(
-      screen.queryByTestId("assign-sheet-option-emp-07"),
+      screen.queryByTestId("ORDER_DETAILS.ASSIGN_SHEET.OPTION.emp-07"),
     ).not.toBeOnTheScreen(); // inactive
-    await fireEvent.press(screen.getByTestId("assign-sheet-option-emp-03"));
+    await fireEvent.press(
+      screen.getByTestId("ORDER_DETAILS.ASSIGN_SHEET.OPTION.emp-03"),
+    );
 
-    expect(screen.getByTestId("assignee")).toHaveTextContent(
+    expect(screen.getByTestId("ORDER_DETAILS.ASSIGNEE")).toHaveTextContent(
       `${L.assignedToPrefix}Grace Liu`,
     );
     expect(orderOf("ORD-7841")?.assigneeId).toBe("emp-03");
@@ -160,24 +171,34 @@ describe("OrderDetailsScreen", () => {
   it("cancels an order after confirmation", async () => {
     await renderOrder("ORD-7846");
 
-    await fireEvent.press(screen.getByTestId("more-actions"));
+    await fireEvent.press(screen.getByTestId("ORDER_DETAILS.MORE_ACTIONS"));
     expect(screen.getByText(L.cancel.title("7846"))).toBeOnTheScreen();
-    await fireEvent.press(screen.getByTestId("confirm-action"));
+    await fireEvent.press(
+      screen.getByTestId("CONFIRMATION_MODAL.CONFIRM_ACTION"),
+    );
 
     expect(orderOf("ORD-7846")?.status).toBe("CANCELLED");
     expect(screen.getByLabelText("Status: Cancelled")).toBeOnTheScreen();
-    expect(screen.queryByTestId("more-actions")).not.toBeOnTheScreen();
+    expect(
+      screen.queryByTestId("ORDER_DETAILS.MORE_ACTIONS"),
+    ).not.toBeOnTheScreen();
   });
 
   it("hides actions that do not apply to a Ready order", async () => {
     await renderOrder("ORD-7840");
 
-    expect(screen.queryByTestId("more-actions")).not.toBeOnTheScreen();
-    expect(screen.queryByTestId("reassign")).not.toBeOnTheScreen();
-    expect(screen.getByTestId("assignee")).toHaveTextContent(
+    expect(
+      screen.queryByTestId("ORDER_DETAILS.MORE_ACTIONS"),
+    ).not.toBeOnTheScreen();
+    expect(
+      screen.queryByTestId("ORDER_DETAILS.REASSIGN"),
+    ).not.toBeOnTheScreen();
+    expect(screen.getByTestId("ORDER_DETAILS.ASSIGNEE")).toHaveTextContent(
       `${L.packedByPrefix}Aisha Rahman`,
     );
-    expect(screen.queryByTestId("overdue-pill")).not.toBeOnTheScreen();
+    expect(
+      screen.queryByTestId("ORDER_DETAILS.OVERDUE_PILL"),
+    ).not.toBeOnTheScreen();
   });
 
   it("shows not found for an unknown order id", async () => {

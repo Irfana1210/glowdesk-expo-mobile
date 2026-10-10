@@ -63,8 +63,11 @@ async function renderScanner(orderId: string) {
 }
 
 async function typeBarcode(code: string) {
-  await fireEvent.changeText(screen.getByTestId("manual-barcode"), code);
-  await fireEvent.press(screen.getByTestId("manual-submit"));
+  await fireEvent.changeText(
+    screen.getByTestId("MANUAL_BARCODE_ENTRY.BARCODE"),
+    code,
+  );
+  await fireEvent.press(screen.getByTestId("MANUAL_BARCODE_ENTRY.SUBMIT"));
 }
 
 beforeEach(() => {
@@ -79,12 +82,13 @@ describe("BarcodeScannerScreen", () => {
 
     await typeBarcode(P.velourBlush.barcode);
 
-    expect(screen.getByTestId("scan-feedback")).toHaveTextContent(
-      L.verified(P.velourBlush.name, 1, 2),
-      { exact: false },
-    );
+    expect(
+      screen.getByTestId("BARCODE_SCANNER.SCAN_FEEDBACK"),
+    ).toHaveTextContent(L.verified(P.velourBlush.name, 1, 2), { exact: false });
     expect(pickedQuantity("ORD-7841", P.velourBlush.sku)).toBe(1);
-    expect(screen.getByTestId("manual-barcode").props.value).toBe("");
+    expect(screen.getByTestId("MANUAL_BARCODE_ENTRY.BARCODE").props.value).toBe(
+      "",
+    );
   });
 
   it("rejects a product that is not in the order", async () => {
@@ -92,10 +96,11 @@ describe("BarcodeScannerScreen", () => {
 
     await typeBarcode(P.irisParfum.barcode);
 
-    expect(screen.getByTestId("scan-feedback")).toHaveTextContent(
-      PICKING.notInOrder(P.irisParfum.barcode),
-      { exact: false },
-    );
+    expect(
+      screen.getByTestId("BARCODE_SCANNER.SCAN_FEEDBACK"),
+    ).toHaveTextContent(PICKING.notInOrder(P.irisParfum.barcode), {
+      exact: false,
+    });
     expect(screen.getByRole("alert")).toBeOnTheScreen();
   });
 
@@ -104,10 +109,11 @@ describe("BarcodeScannerScreen", () => {
 
     await typeBarcode(P.lumenCream.barcode);
 
-    expect(screen.getByTestId("scan-feedback")).toHaveTextContent(
-      PICKING.alreadyPicked(P.lumenCream.name, 1, 1),
-      { exact: false },
-    );
+    expect(
+      screen.getByTestId("BARCODE_SCANNER.SCAN_FEEDBACK"),
+    ).toHaveTextContent(PICKING.alreadyPicked(P.lumenCream.name, 1, 1), {
+      exact: false,
+    });
     expect(pickedQuantity("ORD-7841", P.lumenCream.sku)).toBe(1);
   });
 
@@ -116,10 +122,9 @@ describe("BarcodeScannerScreen", () => {
 
     await typeBarcode("12ab");
 
-    expect(screen.getByTestId("scan-feedback")).toHaveTextContent(
-      PICKING.invalidBarcode,
-      { exact: false },
-    );
+    expect(
+      screen.getByTestId("BARCODE_SCANNER.SCAN_FEEDBACK"),
+    ).toHaveTextContent(PICKING.invalidBarcode, { exact: false });
   });
 
   it("ignores the same code repeated by the camera within the cooldown", async () => {
@@ -151,7 +156,9 @@ describe("BarcodeScannerScreen", () => {
     await typeBarcode(P.lumenCream.barcode);
 
     expect(mockCameraProps.onBarcodeScanned).toBeUndefined();
-    await fireEvent.press(screen.getByTestId("review-complete"));
+    await fireEvent.press(
+      screen.getByTestId("BARCODE_SCANNER.REVIEW_COMPLETE"),
+    );
     expect(mockReplace).toHaveBeenCalledWith({
       pathname: "/orders/complete",
       params: { orderId: "ORD-7843" },
@@ -162,7 +169,7 @@ describe("BarcodeScannerScreen", () => {
     mockPermission = { granted: false, canAskAgain: false, status: "denied" };
     await renderScanner("ORD-7841");
 
-    expect(screen.getByTestId("camera-permission")).toBeOnTheScreen();
+    expect(screen.getByTestId("BARCODE_CAMERA.PERMISSION")).toBeOnTheScreen();
     expect(
       screen.getByRole("button", { name: "Open Settings" }),
     ).toBeOnTheScreen();
@@ -175,7 +182,9 @@ describe("BarcodeScannerScreen", () => {
     await renderScanner("ORD-7846");
 
     expect(screen.getByText(L.notStarted)).toBeOnTheScreen();
-    expect(screen.queryByTestId("manual-barcode")).not.toBeOnTheScreen();
+    expect(
+      screen.queryByTestId("MANUAL_BARCODE_ENTRY.BARCODE"),
+    ).not.toBeOnTheScreen();
   });
 
   it("focuses manual entry when opened with Type code", async () => {
@@ -183,6 +192,8 @@ describe("BarcodeScannerScreen", () => {
     resetOrdersStore({ orders: mockOrders(), loadStatus: "ready" });
     await render(<BarcodeScannerScreen />);
 
-    expect(screen.getByTestId("manual-barcode").props.autoFocus).toBe(true);
+    expect(
+      screen.getByTestId("MANUAL_BARCODE_ENTRY.BARCODE").props.autoFocus,
+    ).toBe(true);
   });
 });

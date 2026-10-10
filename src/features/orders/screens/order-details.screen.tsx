@@ -94,7 +94,7 @@ export const OrderDetailsScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
   const canCancel = order ? ScheduleUtils.isActive(order) : false;
 
   return (
-    <Screen edges={["top", "left", "right"]} testID="order-details-screen">
+    <Screen edges={["top", "left", "right"]} testID="ORDER_DETAILS.SCREEN">
       <AppHeader
         right={
           canCancel ? (
@@ -102,7 +102,7 @@ export const OrderDetailsScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
               accessibilityLabel={L.moreActions}
               accessibilityRole="button"
               style={styles.iconButton}
-              testID="more-actions"
+              testID="ORDER_DETAILS.MORE_ACTIONS"
               onPress={() => setConfirmCancel(true)}
             >
               <Ionicons
@@ -220,7 +220,7 @@ function OrderDetailsContent({
         {feedback ? (
           <InlineBanner
             message={feedback.message}
-            testID="order-feedback"
+            testID="ORDER_DETAILS.FEEDBACK"
             tone={feedback.tone}
           />
         ) : null}
@@ -253,7 +253,7 @@ function OrderDetailsContent({
               </AppText>
               <AppText
                 color="textMuted"
-                testID="order-timing"
+                testID="ORDER_DETAILS.TIMING"
                 variant="supporting"
               >
                 {L.placed(OrderPresentationUtils.placedLabel(order, now))}
@@ -265,7 +265,7 @@ function OrderDetailsContent({
               </AppText>
             </View>
             {overdue ? (
-              <View style={styles.overdue} testID="overdue-pill">
+              <View style={styles.overdue} testID="ORDER_DETAILS.OVERDUE_PILL">
                 <Ionicons
                   color={colors.errorText}
                   name="alert-circle-outline"
@@ -283,7 +283,10 @@ function OrderDetailsContent({
           </View>
 
           <View style={styles.assignRow}>
-            <AppText style={[styles.flex, styles.small]} testID="assignee">
+            <AppText
+              style={[styles.flex, styles.small]}
+              testID="ORDER_DETAILS.ASSIGNEE"
+            >
               {assignee ? (
                 <>
                   <AppText color="textMuted" style={styles.small}>
@@ -310,7 +313,7 @@ function OrderDetailsContent({
                 }
                 accessibilityRole="button"
                 style={styles.textButton}
-                testID="reassign"
+                testID="ORDER_DETAILS.REASSIGN"
                 onPress={() => setAssigning(true)}
               >
                 <AppText style={styles.textButtonLabel}>
@@ -367,7 +370,7 @@ function OrderDetailsContent({
                 quantity={`${item.pickedQuantity} / ${item.requiredQuantity}`}
                 seed={item.productId}
                 swatch={productSwatch(item.productId)}
-                testID={`order-item-${item.id}`}
+                testID={`ORDER_DETAILS.ITEM.${item.id}`}
                 trailing={verified ? { kind: "verified" } : { kind: "toScan" }}
               />
             );
@@ -394,7 +397,7 @@ function OrderDetailsContent({
       <OptionSheet
         options={staffOptions}
         selected={order.assigneeId}
-        testID="assign-sheet"
+        testID="ORDER_DETAILS.ASSIGN_SHEET"
         title={assignee ? L.reassignOrderTitle : L.assignOrderTitle}
         visible={assigning}
         onClose={() => setAssigning(false)}
@@ -443,7 +446,7 @@ function Footer({
           accessibilityHint={L.footer.startPickingHint}
           icon="play-outline"
           label={L.footer.startPicking}
-          testID="start-picking"
+          testID="ORDER_DETAILS.START_PICKING"
           onPress={onStartPicking}
         />
       );
@@ -454,13 +457,13 @@ function Footer({
             accessibilityHint={L.footer.markReadyHint}
             icon="checkmark-done-outline"
             label={L.footer.markReady}
-            testID="mark-ready"
+            testID="ORDER_DETAILS.MARK_READY"
             onPress={onMarkReady}
           />
           <AppText
             color="textMuted"
             style={styles.hint}
-            testID="ready-helper"
+            testID="ORDER_DETAILS.READY_HELPER"
             variant="supporting"
           >
             {readyHint}
@@ -472,7 +475,7 @@ function Footer({
             accessibilityHint={L.footer.scanProductHint}
             icon="barcode-outline"
             label={L.footer.scanProduct}
-            testID="scan-product"
+            testID="ORDER_DETAILS.SCAN_PRODUCT"
             onPress={onScan}
           />
           <View style={styles.footerRow}>
@@ -482,20 +485,20 @@ function Footer({
               icon="checkmark-done-outline"
               label={L.footer.markReady}
               style={styles.flex}
-              testID="mark-ready"
+              testID="ORDER_DETAILS.MARK_READY"
             />
             <SecondaryButton
               accessibilityHint={L.footer.typeCodeHint}
               icon="keypad-outline"
               label={L.footer.typeCode}
-              testID="type-code"
+              testID="ORDER_DETAILS.TYPE_CODE"
               onPress={onTypeCode}
             />
           </View>
           <AppText
             color="textMuted"
             style={styles.hint}
-            testID="ready-helper"
+            testID="ORDER_DETAILS.READY_HELPER"
             variant="supporting"
           >
             {readyHint}

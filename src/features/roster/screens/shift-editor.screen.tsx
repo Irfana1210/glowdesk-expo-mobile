@@ -61,7 +61,7 @@ export const ShiftEditorScreen: FC = () => {
 
   if (params.shiftId && !shift) {
     return (
-      <Screen testID="shift-editor-screen">
+      <Screen testID="SHIFT_EDITOR.SCREEN">
         <AppHeader title={L.editTitle} onBack={close} />
         <ErrorState
           message={L.notFoundMessage}
@@ -180,7 +180,7 @@ function ShiftEditorForm({
     .filter(Boolean);
 
   return (
-    <Screen testID="shift-editor-screen">
+    <Screen testID="SHIFT_EDITOR.SCREEN">
       <AppHeader title={isEditing ? L.editTitle : L.addTitle} onBack={onDone} />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -193,7 +193,7 @@ function ShiftEditorForm({
           {isSubmitted && errorMessages.length > 0 ? (
             <InlineBanner
               message={errors.root?.message ?? L.fixFields}
-              testID="form-errors"
+              testID="SHIFT_EDITOR.FORM_ERRORS"
               tone="error"
             />
           ) : null}
@@ -207,7 +207,7 @@ function ShiftEditorForm({
                 label={L.employeeLabel}
                 options={employeeOptions}
                 placeholder={L.employeePlaceholder}
-                testID="field-employee"
+                testID="SHIFT_EDITOR.FIELD_EMPLOYEE"
                 value={field.value || undefined}
                 onChange={field.onChange}
               />
@@ -238,7 +238,7 @@ function ShiftEditorForm({
                           styles.dayChip,
                           isSelected && styles.dayChipSelected,
                         ]}
-                        testID={`field-date-${key}`}
+                        testID={`SHIFT_EDITOR.FIELD_DATE.${key}`}
                         onPress={() => field.onChange(key)}
                       >
                         <AppText
@@ -271,7 +271,7 @@ function ShiftEditorForm({
                     error={fieldState.error?.message}
                     label={L.startTimeLabel}
                     options={ShiftFormUtils.TIME_OPTIONS}
-                    testID="field-start"
+                    testID="SHIFT_EDITOR.FIELD_START"
                     value={field.value}
                     onChange={field.onChange}
                   />
@@ -286,7 +286,7 @@ function ShiftEditorForm({
                   <SelectField
                     label={L.endTimeLabel}
                     options={ShiftFormUtils.TIME_OPTIONS}
-                    testID="field-end"
+                    testID="SHIFT_EDITOR.FIELD_END"
                     value={field.value}
                     onChange={field.onChange}
                   />
@@ -297,7 +297,7 @@ function ShiftEditorForm({
           {errors.endTime?.message ? (
             <AppText
               color="error"
-              testID="field-end-error"
+              testID="SHIFT_EDITOR.FIELD_END_ERROR"
               variant="supporting"
             >
               {errors.endTime.message}
@@ -317,7 +317,7 @@ function ShiftEditorForm({
                 </View>
                 <Switch
                   accessibilityLabel={L.endsNextDay}
-                  testID="field-next-day"
+                  testID="SHIFT_EDITOR.FIELD_NEXT_DAY"
                   trackColor={{ true: colors.accent, false: colors.border }}
                   value={field.value}
                   onValueChange={field.onChange}
@@ -334,14 +334,14 @@ function ShiftEditorForm({
                 error={fieldState.error?.message}
                 label={L.unpaidBreakLabel}
                 options={ShiftFormUtils.BREAK_OPTIONS}
-                testID="field-break"
+                testID="SHIFT_EDITOR.FIELD_BREAK"
                 value={field.value}
                 onChange={field.onChange}
               />
             )}
           />
 
-          <View accessible style={styles.summary} testID="shift-summary">
+          <View accessible style={styles.summary} testID="SHIFT_EDITOR.SUMMARY">
             <AppText variant="cardTitle">{L.summaryTitle}</AppText>
             <AppText color="textMuted">
               {draft && duration > 0
@@ -372,14 +372,14 @@ function ShiftEditorForm({
           <PrimaryButton
             icon="checkmark"
             label={isEditing ? L.saveChanges : L.addShift}
-            testID="save-shift"
+            testID="SHIFT_EDITOR.SAVE_SHIFT"
             onPress={onSave}
           />
           {isEditing ? (
             <SecondaryButton
               icon="trash-outline"
               label={L.removeShift}
-              testID="delete-shift"
+              testID="SHIFT_EDITOR.DELETE_SHIFT"
               onPress={() => setConfirmDelete(true)}
             />
           ) : null}

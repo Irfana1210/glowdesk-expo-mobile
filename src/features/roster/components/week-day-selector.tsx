@@ -42,7 +42,7 @@ export const WeekDaySelector: FC<Props> = ({
             accessibilityState={{ selected: isSelected }}
             key={DateUtils.toDateKey(date)}
             style={[styles.day, isSelected ? styles.selected : styles.idle]}
-            testID={`day-${DateUtils.toDateKey(date)}`}
+            testID={`WEEK_DAY_SELECTOR.DAY.${DateUtils.toDateKey(date)}`}
             onPress={() => onSelect(date)}
           >
             <AppText
