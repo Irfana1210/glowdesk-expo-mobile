@@ -2,9 +2,7 @@
  * Semantic colour roles mapped onto the design tokens. Screens use these names,
  * never raw hex values, so a token change restyles the whole app.
  */
-import { palette, statusPalette } from './tokens';
-
-export { palette };
+import { palette, statusPalette } from "./tokens";
 
 export const colors = {
   background: palette.background,
@@ -23,7 +21,7 @@ export const colors = {
   accentSoft: palette.blush,
   /** Selected chips, day picker and the dark shift card. */
   inverse: palette.text,
-  avatar: '#F3EEF4',
+  avatar: "#F3EEF4",
   success: palette.success,
   successDark: palette.successDark,
   successSoft: statusPalette.ready.background,
@@ -34,8 +32,8 @@ export const colors = {
   warningText: statusPalette.lowStock.text,
   infoSoft: statusPalette.picking.background,
   neutralSoft: palette.track,
-  disabled: '#CFC8D0',
-  overlay: 'rgba(34, 32, 36, 0.4)',
+  disabled: "#CFC8D0",
+  overlay: "rgba(34, 32, 36, 0.4)",
 } as const;
 
 export type ColorToken = keyof typeof colors;

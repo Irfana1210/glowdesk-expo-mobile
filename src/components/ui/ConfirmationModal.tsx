@@ -1,68 +1,84 @@
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { type FC } from "react";
+import { Modal, Pressable, StyleSheet, View } from "react-native";
 
-import { colors, radius, spacing } from '@/theme';
+import { colors, radius, spacing } from "@/theme";
 
-import { AppText } from './AppText';
-import { PrimaryButton } from './PrimaryButton';
-import { SecondaryButton } from './SecondaryButton';
+import { AppText } from "./AppText";
+import { PrimaryButton } from "./PrimaryButton";
+import { SecondaryButton } from "./SecondaryButton";
 
-export interface ConfirmationModalProps {
-  visible: boolean;
-  title: string;
-  message: string;
-  confirmLabel: string;
+type Props = {
   cancelLabel?: string;
+  confirmLabel: string;
   destructive?: boolean;
   loading?: boolean;
-  onConfirm: () => void;
+  message: string;
   onCancel: () => void;
-}
+  onConfirm: () => void;
+  title: string;
+  visible: boolean;
+};
 
-export function ConfirmationModal({
+export const ConfirmationModal: FC<Props> = ({
   visible,
   title,
   message,
   confirmLabel,
-  cancelLabel = 'Cancel',
+  cancelLabel = "Cancel",
   destructive = false,
   loading = false,
   onConfirm,
   onCancel,
-}: ConfirmationModalProps) {
+}) => {
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel} statusBarTranslucent>
+    <Modal
+      statusBarTranslucent
+      transparent
+      animationType="fade"
+      visible={visible}
+      onRequestClose={onCancel}
+    >
       <View style={styles.backdrop}>
         <Pressable
+          accessibilityLabel="Dismiss"
+          accessibilityRole="button"
           style={StyleSheet.absoluteFill}
           onPress={onCancel}
-          accessibilityRole="button"
-          accessibilityLabel="Dismiss"
         />
-        <View style={styles.card} accessibilityViewIsModal testID="confirmation-modal">
-          <AppText variant="sectionTitle" accessibilityRole="header">
+        <View
+          accessibilityViewIsModal
+          style={styles.card}
+          testID="confirmation-modal"
+        >
+          <AppText accessibilityRole="header" variant="sectionTitle">
             {title}
           </AppText>
           <AppText color="textMuted">{message}</AppText>
           <View style={styles.actions}>
             <PrimaryButton
-              testID="confirm-action"
+              icon={destructive ? "warning-outline" : undefined}
               label={confirmLabel}
-              onPress={onConfirm}
               loading={loading}
-              icon={destructive ? 'warning-outline' : undefined}
+              testID="confirm-action"
+              onPress={onConfirm}
             />
-            <SecondaryButton testID="cancel-action" label={cancelLabel} onPress={onCancel} disabled={loading} />
+            <SecondaryButton
+              disabled={loading}
+              label={cancelLabel}
+              testID="cancel-action"
+              onPress={onCancel}
+            />
           </View>
         </View>
       </View>
     </Modal>
   );
-}
+};
 
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     padding: spacing.xl,
     backgroundColor: colors.overlay,
   },

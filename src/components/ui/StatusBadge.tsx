@@ -1,42 +1,62 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { StyleSheet, View } from 'react-native';
+import { type FC } from "react";
+import { StyleSheet, View } from "react-native";
 
-import { fontFamily, radius, spacing, statusPalette, type StatusTone } from '@/theme';
+import Ionicons from "@expo/vector-icons/Ionicons";
 
-import { AppText } from './AppText';
-import type { IconName } from './Button';
+import {
+  fontFamily,
+  radius,
+  spacing,
+  statusPalette,
+  type StatusTone,
+} from "@/theme";
 
-export interface StatusBadgeProps {
-  label: string;
+import { AppText } from "./AppText";
+import { type IconName } from "./Button";
+
+export type StatusBadgeProps = {
   icon: IconName;
-  tone: StatusTone;
+  label: string;
   /** `small` is used inside dense rows such as inventory. */
-  size?: 'default' | 'small';
-}
+  size?: "default" | "small";
+  tone: StatusTone;
+};
 
 /** Pill showing a status as icon plus text, so colour is never the only signal. */
-export function StatusBadge({ label, icon, tone, size = 'default' }: StatusBadgeProps) {
+export const StatusBadge: FC<StatusBadgeProps> = ({
+  label,
+  icon,
+  tone,
+  size = "default",
+}) => {
   const { background, text } = statusPalette[tone];
-  const small = size === 'small';
+  const small = size === "small";
   return (
     <View
-      style={[styles.badge, small && styles.small, { backgroundColor: background }]}
       accessible
       accessibilityLabel={`Status: ${label}`}
+      style={[
+        styles.badge,
+        small && styles.small,
+        { backgroundColor: background },
+      ]}
     >
-      <Ionicons name={icon} size={small ? 11 : 12} color={text} />
-      <AppText style={[styles.text, small && styles.smallText, { color: text }]} maxFontSizeMultiplier={1.3}>
+      <Ionicons color={text} name={icon} size={small ? 11 : 12} />
+      <AppText
+        maxFontSizeMultiplier={1.3}
+        style={[styles.text, small && styles.smallText, { color: text }]}
+      >
         {label}
       </AppText>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
     gap: spacing.xs,
     paddingHorizontal: 10,
     paddingVertical: spacing.xs,

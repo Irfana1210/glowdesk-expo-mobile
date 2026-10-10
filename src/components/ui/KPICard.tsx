@@ -1,27 +1,35 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { type FC } from "react";
+import {
+  Pressable,
+  type StyleProp,
+  StyleSheet,
+  View,
+  type ViewStyle,
+} from "react-native";
 
-import { colors, fontFamily, fontSizes, spacing } from '@/theme';
+import Ionicons from "@expo/vector-icons/Ionicons";
 
-import { AppText } from './AppText';
-import type { IconName } from './Button';
+import { colors, fontFamily, fontSizes, spacing } from "@/theme";
 
-export interface KPICardProps {
-  label: string;
-  value: string;
-  supporting?: string;
-  /** Optional. The dashboard tiles in the design have no icon. */
-  icon?: IconName;
+import { AppText } from "./AppText";
+import { type IconName } from "./Button";
+
+type Props = {
+  accessibilityHint?: string;
   /** Spoken instead of the visible text, for example to expand "—" into "not available". */
   accessibilityLabel?: string;
+  /** Optional. The dashboard tiles in the design have no icon. */
+  icon?: IconName;
+  label: string;
   onPress?: () => void;
-  accessibilityHint?: string;
   style?: StyleProp<ViewStyle>;
+  supporting?: string;
   testID?: string;
-}
+  value: string;
+};
 
 /** Small white tile: label, large value, supporting line. */
-export function KPICard({
+export const KPICard: FC<Props> = ({
   label,
   value,
   supporting,
@@ -31,21 +39,25 @@ export function KPICard({
   accessibilityHint,
   style,
   testID,
-}: KPICardProps) {
-  const spoken = accessibilityLabel ?? [label, value, supporting].filter(Boolean).join(', ');
+}) => {
+  const spoken =
+    accessibilityLabel ?? [label, value, supporting].filter(Boolean).join(", ");
   const content = (
     <>
       <View style={styles.top}>
-        <AppText variant="supporting" color="textMuted" style={styles.label}>
+        <AppText color="textMuted" style={styles.label} variant="supporting">
           {label}
         </AppText>
-        {icon ? <Ionicons name={icon} size={16} color={colors.accent} /> : null}
+        {icon ? <Ionicons color={colors.accent} name={icon} size={16} /> : null}
       </View>
-      <AppText style={styles.value} testID={testID ? `${testID}-value` : undefined}>
+      <AppText
+        style={styles.value}
+        testID={testID ? `${testID}-value` : undefined}
+      >
         {value}
       </AppText>
       {supporting ? (
-        <AppText variant="supporting" color="textMuted">
+        <AppText color="textMuted" variant="supporting">
           {supporting}
         </AppText>
       ) : null}
@@ -55,23 +67,28 @@ export function KPICard({
   if (onPress) {
     return (
       <Pressable
+        accessibilityHint={accessibilityHint}
+        accessibilityLabel={spoken}
+        accessibilityRole="button"
+        style={({ pressed }) => [styles.card, pressed && styles.pressed, style]}
         testID={testID}
         onPress={onPress}
-        accessibilityRole="button"
-        accessibilityLabel={spoken}
-        accessibilityHint={accessibilityHint}
-        style={({ pressed }) => [styles.card, pressed && styles.pressed, style]}
       >
         {content}
       </Pressable>
     );
   }
   return (
-    <View testID={testID} accessible accessibilityLabel={spoken} style={[styles.card, style]}>
+    <View
+      accessible
+      accessibilityLabel={spoken}
+      style={[styles.card, style]}
+      testID={testID}
+    >
       {content}
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   card: {
@@ -83,8 +100,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   pressed: { opacity: 0.8 },
-  top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
+  top: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
   label: { flex: 1 },
-  value: { fontFamily: fontFamily.semibold, fontSize: fontSizes.kpi, lineHeight: 28, color: colors.text },
+  value: {
+    fontFamily: fontFamily.semibold,
+    fontSize: fontSizes.kpi,
+    lineHeight: 28,
+    color: colors.text,
+  },
 });
-

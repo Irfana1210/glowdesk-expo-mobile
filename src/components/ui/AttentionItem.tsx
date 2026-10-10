@@ -1,52 +1,69 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { type FC } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
 
-import { colors, fontFamily, radius, spacing, statusPalette, type StatusTone } from '@/theme';
+import Ionicons from "@expo/vector-icons/Ionicons";
 
-import { AppText } from './AppText';
-import type { IconName } from './Button';
+import {
+  colors,
+  fontFamily,
+  radius,
+  spacing,
+  statusPalette,
+  type StatusTone,
+} from "@/theme";
 
-export interface AttentionItemProps {
-  title: string;
-  subtitle: string;
+import { AppText } from "./AppText";
+import { type IconName } from "./Button";
+
+export type AttentionItemProps = {
+  accessibilityHint?: string;
   icon: IconName;
+  onPress: () => void;
+  subtitle: string;
+  testID?: string;
+  title: string;
   /** Tints the icon tile. The title text carries the meaning, not the colour. */
   tone: StatusTone;
-  onPress: () => void;
-  accessibilityHint?: string;
-  testID?: string;
-}
+};
 
 /** One row in the dashboard's "Needs attention" list. */
-export function AttentionItem({ title, subtitle, icon, tone, onPress, accessibilityHint, testID }: AttentionItemProps) {
+export const AttentionItem: FC<AttentionItemProps> = ({
+  title,
+  subtitle,
+  icon,
+  tone,
+  onPress,
+  accessibilityHint,
+  testID,
+}) => {
   const palette = statusPalette[tone];
   return (
     <Pressable
+      accessibilityHint={accessibilityHint}
+      accessibilityLabel={`${title}. ${subtitle}`}
+      accessibilityRole="button"
+      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
       testID={testID}
       onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`${title}. ${subtitle}`}
-      accessibilityHint={accessibilityHint}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
     >
       <View style={[styles.icon, { backgroundColor: palette.background }]}>
-        <Ionicons name={icon} size={20} color={palette.text} />
+        <Ionicons color={palette.text} name={icon} size={20} />
       </View>
       <View style={styles.body}>
         <AppText style={styles.title}>{title}</AppText>
-        <AppText variant="supporting" color="textMuted">
+        <AppText color="textMuted" variant="supporting">
           {subtitle}
         </AppText>
       </View>
-      <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+      <Ionicons color={colors.textMuted} name="chevron-forward" size={18} />
     </Pressable>
   );
-}
+};
 
 const styles = StyleSheet.create({
   row: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.md,
     minHeight: 64,
     paddingVertical: spacing.md,
@@ -57,7 +74,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   pressed: { opacity: 0.85 },
-  icon: { width: 40, height: 40, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
+  icon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.sm,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   body: { flex: 1, gap: 2 },
-  title: { fontFamily: fontFamily.semibold, fontSize: 14, lineHeight: 19, color: colors.text },
+  title: {
+    fontFamily: fontFamily.semibold,
+    fontSize: 14,
+    lineHeight: 19,
+    color: colors.text,
+  },
 });

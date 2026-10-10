@@ -1,55 +1,70 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { type FC } from "react";
+import { Pressable, StyleSheet, TextInput, View } from "react-native";
 
-import { colors, fontFamily, maxFontScale, radius, spacing, touchTarget } from '@/theme';
+import Ionicons from "@expo/vector-icons/Ionicons";
 
-export interface SearchBarProps {
-  value: string;
+import {
+  colors,
+  fontFamily,
+  maxFontScale,
+  radius,
+  spacing,
+  touchTarget,
+} from "@/theme";
+
+type Props = {
+  accessibilityLabel: string;
   onChangeText: (text: string) => void;
   placeholder: string;
-  accessibilityLabel: string;
   testID?: string;
-}
+  value: string;
+};
 
-export function SearchBar({ value, onChangeText, placeholder, accessibilityLabel, testID }: SearchBarProps) {
+export const SearchBar: FC<Props> = ({
+  value,
+  onChangeText,
+  placeholder,
+  accessibilityLabel,
+  testID,
+}) => {
   return (
     <View style={styles.container}>
-      <Ionicons name="search" size={18} color={colors.textMuted} />
+      <Ionicons color={colors.textMuted} name="search" size={18} />
       <TextInput
+        accessibilityLabel={accessibilityLabel}
+        accessibilityRole="search"
+        autoCapitalize="none"
+        autoCorrect={false}
+        clearButtonMode="never"
+        maxFontSizeMultiplier={maxFontScale}
+        placeholder={placeholder}
+        placeholderTextColor={colors.textMuted}
+        returnKeyType="search"
+        style={styles.input}
         testID={testID}
         value={value}
         onChangeText={onChangeText}
-        placeholder={placeholder}
-        placeholderTextColor={colors.textMuted}
-        accessibilityLabel={accessibilityLabel}
-        accessibilityRole="search"
-        returnKeyType="search"
-        autoCorrect={false}
-        autoCapitalize="none"
-        clearButtonMode="never"
-        maxFontSizeMultiplier={maxFontScale}
-        style={styles.input}
       />
       {value.length > 0 ? (
         <Pressable
-          onPress={() => onChangeText('')}
-          accessibilityRole="button"
           accessibilityLabel="Clear search"
+          accessibilityRole="button"
           hitSlop={8}
           style={styles.clear}
+          onPress={() => onChangeText("")}
         >
-          <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+          <Ionicons color={colors.textMuted} name="close-circle" size={18} />
         </Pressable>
       ) : null}
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.sm,
     minHeight: touchTarget,
     paddingHorizontal: spacing.md,
@@ -58,6 +73,12 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.surface,
   },
-  input: { flex: 1, color: colors.text, fontFamily: fontFamily.regular, fontSize: 15, paddingVertical: spacing.sm },
+  input: {
+    flex: 1,
+    color: colors.text,
+    fontFamily: fontFamily.regular,
+    fontSize: 15,
+    paddingVertical: spacing.sm,
+  },
   clear: { padding: spacing.xs },
 });

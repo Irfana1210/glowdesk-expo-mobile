@@ -1,38 +1,59 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, StyleSheet, View, type ListRenderItem } from 'react-native';
+import { type FC, useCallback, useMemo, useState } from "react";
+import {
+  FlatList,
+  type ListRenderItem,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  View,
+} from "react-native";
 
-import { Screen } from '@/components/layout/Screen';
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useRouter } from "expo-router";
+
+import { Screen } from "@/components/layout/Screen";
 import {
   AppText,
   ErrorState,
   FilterChips,
+  type FilterOption,
   LoadingState,
   ScreenTitle,
   SearchBar,
   SecondaryButton,
-  type FilterOption,
-} from '@/components/ui';
-import { colors, fontFamily, radius, spacing, statusPalette } from '@/theme';
-import { CATEGORY_LABELS, PRODUCT_CATEGORIES, type ProductCategory } from '@/types/product';
+} from "@/components/ui";
 
-import { ProductCard } from '../components/ProductCard';
-import { EMPTY_FILTER, filterInventory, itemStockStatus, type InventoryFilter } from '../domain/stock';
-import { useInventory } from '../hooks/useInventory';
-import type { InventoryItem } from '../types';
+import { colors, fontFamily, radius, spacing, statusPalette } from "@/theme";
+import {
+  CATEGORY_LABELS,
+  PRODUCT_CATEGORIES,
+  type ProductCategory,
+} from "@/types/product";
 
-type CategoryFilter = ProductCategory | 'ALL';
+import { ProductCard } from "../components/ProductCard";
+import {
+  EMPTY_FILTER,
+  filterInventory,
+  type InventoryFilter,
+  itemStockStatus,
+} from "../domain/stock";
+import { useInventory } from "../hooks/useInventory";
+import { type InventoryItem } from "../types";
 
-const CATEGORY_OPTIONS: FilterOption<CategoryFilter>[] = [
-  { value: 'ALL', label: 'All' },
-  ...PRODUCT_CATEGORIES.map((category) => ({ value: category, label: CATEGORY_LABELS[category] })),
+type CategoryFilter = ProductCategory | "ALL";
+
+const CATEGORY_OPTIONS: Array<FilterOption<CategoryFilter>> = [
+  { value: "ALL", label: "All" },
+  ...PRODUCT_CATEGORIES.map((category) => ({
+    value: category,
+    label: CATEGORY_LABELS[category],
+  })),
 ];
 
 const keyExtractor = (item: InventoryItem) => item.product.id;
 const Separator = () => <View style={styles.separator} />;
 
-export function InventoryScreen() {
+export const InventoryScreen: FC = () => {
   const router = useRouter();
   const inventory = useInventory();
   const items = useMemo(() => inventory.data ?? [], [inventory.data]);
@@ -41,15 +62,19 @@ export function InventoryScreen() {
   const counts = useMemo(
     () => ({
       products: items.length,
-      low: items.filter((i) => itemStockStatus(i) === 'LOW_STOCK').length,
-      out: items.filter((i) => itemStockStatus(i) === 'OUT_OF_STOCK').length,
+      low: items.filter((i) => itemStockStatus(i) === "LOW_STOCK").length,
+      out: items.filter((i) => itemStockStatus(i) === "OUT_OF_STOCK").length,
     }),
     [items],
   );
-  const visible = useMemo(() => filterInventory(items, filter), [items, filter]);
+  const visible = useMemo(
+    () => filterInventory(items, filter),
+    [items, filter],
+  );
 
   const openProduct = useCallback(
-    (productId: string) => router.push({ pathname: '/inventory/[id]', params: { id: productId } }),
+    (productId: string) =>
+      router.push({ pathname: "/inventory/[id]", params: { id: productId } }),
     [router],
   );
   const renderItem = useCallback<ListRenderItem<InventoryItem>>(
@@ -57,8 +82,10 @@ export function InventoryScreen() {
     [openProduct],
   );
 
-  const hasFilters = filter.query.length > 0 || filter.category !== 'ALL' || filter.lowStockOnly;
-  const toggleLowStock = () => setFilter((f) => ({ ...f, lowStockOnly: !f.lowStockOnly }));
+  const hasFilters =
+    filter.query.length > 0 || filter.category !== "ALL" || filter.lowStockOnly;
+  const toggleLowStock = () =>
+    setFilter((f) => ({ ...f, lowStockOnly: !f.lowStockOnly }));
 
   let body;
   if (inventory.isPending) {
@@ -66,8 +93,8 @@ export function InventoryScreen() {
   } else if (inventory.isError) {
     body = (
       <ErrorState
-        title="Couldn't load inventory"
         message={inventory.error.message}
+        title="Couldn't load inventory"
         onRetry={() => void inventory.refetch()}
       />
     );
@@ -75,61 +102,78 @@ export function InventoryScreen() {
     const emptyMessage = filter.query
       ? `No products match "${filter.query}".`
       : filter.lowStockOnly
-        ? 'Nothing is low or out of stock.'
-        : 'No products in this category yet.';
+        ? "Nothing is low or out of stock."
+        : "No products in this category yet.";
     body = (
       <FlatList
-        testID="inventory-list"
-        data={visible}
-        keyExtractor={keyExtractor}
-        renderItem={renderItem}
         ItemSeparatorComponent={Separator}
-        contentContainerStyle={styles.listContent}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        initialNumToRender={12}
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <AppText
+              color="textMuted"
+              style={styles.emptyText}
+              testID="empty-state"
+            >
+              {emptyMessage}
+            </AppText>
+            {hasFilters ? (
+              <SecondaryButton
+                icon="close"
+                label="Clear filters"
+                onPress={() => setFilter(EMPTY_FILTER)}
+              />
+            ) : null}
+          </View>
+        }
         ListHeaderComponent={
-          <View style={styles.summary} accessibilityRole="toolbar" accessibilityLabel="Stock summary">
-            <View style={[styles.tile, styles.tileNeutral]} accessible accessibilityLabel={`${counts.products} products`} testID="summary-products">
+          <View
+            accessibilityLabel="Stock summary"
+            accessibilityRole="toolbar"
+            style={styles.summary}
+          >
+            <View
+              accessible
+              accessibilityLabel={`${counts.products} products`}
+              style={[styles.tile, styles.tileNeutral]}
+              testID="summary-products"
+            >
               <AppText style={styles.tileValue}>{counts.products}</AppText>
               <AppText style={styles.tileLabel}>products</AppText>
             </View>
             <SummaryToggle
-              testID="summary-low"
-              value={counts.low}
               label="low stock"
-              tone="lowStock"
               selected={filter.lowStockOnly}
+              testID="summary-low"
+              tone="lowStock"
+              value={counts.low}
               onPress={toggleLowStock}
             />
             <SummaryToggle
-              testID="summary-out"
-              value={counts.out}
               label="out of stock"
-              tone="outOfStock"
               selected={filter.lowStockOnly}
+              testID="summary-out"
+              tone="outOfStock"
+              value={counts.out}
               onPress={toggleLowStock}
             />
           </View>
         }
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <AppText color="textMuted" style={styles.emptyText} testID="empty-state">
-              {emptyMessage}
-            </AppText>
-            {hasFilters ? (
-              <SecondaryButton label="Clear filters" icon="close" onPress={() => setFilter(EMPTY_FILTER)} />
-            ) : null}
-          </View>
-        }
+        contentContainerStyle={styles.listContent}
+        data={visible}
+        initialNumToRender={12}
+        keyExtractor={keyExtractor}
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
-            refreshing={inventory.isRefetching}
-            onRefresh={() => void inventory.refetch()}
-            tintColor={colors.accent}
             colors={[colors.accent]}
+            refreshing={inventory.isRefetching}
+            tintColor={colors.accent}
+            onRefresh={() => void inventory.refetch()}
           />
         }
+        renderItem={renderItem}
+        testID="inventory-list"
       />
     );
   }
@@ -139,87 +183,132 @@ export function InventoryScreen() {
       <ScreenTitle eyebrow="Stock on hand" title="Inventory" />
       <View style={styles.searchRow}>
         <SearchBar
+          accessibilityLabel="Search inventory by product, SKU or barcode"
+          placeholder="Product, SKU or barcode"
           testID="inventory-search"
           value={filter.query}
           onChangeText={(query) => setFilter((f) => ({ ...f, query }))}
-          placeholder="Product, SKU or barcode"
-          accessibilityLabel="Search inventory by product, SKU or barcode"
         />
         <Pressable
-          testID="inventory-scan"
-          onPress={() => router.push('/inventory/scan')}
-          accessibilityRole="button"
           accessibilityLabel="Scan a barcode"
-          style={({ pressed }) => [styles.scanButton, pressed && styles.pressed]}
+          accessibilityRole="button"
+          style={({ pressed }) => [
+            styles.scanButton,
+            pressed && styles.pressed,
+          ]}
+          testID="inventory-scan"
+          onPress={() => router.push("/inventory/scan")}
         >
-          <Ionicons name="scan-outline" size={22} color={colors.textOnDark} />
+          <Ionicons color={colors.textOnDark} name="scan-outline" size={22} />
         </Pressable>
       </View>
       <View style={styles.chips}>
         <FilterChips
+          accessibilityLabel="Filter by category"
           options={CATEGORY_OPTIONS}
           selected={filter.category}
           onChange={(category) => setFilter((f) => ({ ...f, category }))}
-          accessibilityLabel="Filter by category"
         />
       </View>
       {body}
     </Screen>
   );
-}
+};
 
-interface SummaryToggleProps {
-  testID: string;
-  value: number;
+type SummaryToggleProps = {
   label: string;
-  tone: 'lowStock' | 'outOfStock';
-  selected: boolean;
   onPress: () => void;
-}
+  selected: boolean;
+  testID: string;
+  tone: "lowStock" | "outOfStock";
+  value: number;
+};
 
 /** Tinted count tile. Pressing it narrows the list to products that need restocking. */
-function SummaryToggle({ testID, value, label, tone, selected, onPress }: SummaryToggleProps) {
+function SummaryToggle({
+  testID,
+  value,
+  label,
+  tone,
+  selected,
+  onPress,
+}: SummaryToggleProps) {
   const palette = statusPalette[tone];
   return (
     <Pressable
-      testID={testID}
-      onPress={onPress}
+      accessibilityHint={
+        selected
+          ? "Shows all products again"
+          : "Shows only products that need restocking"
+      }
+      accessibilityLabel={`${value} ${label}`}
       accessibilityRole="button"
       accessibilityState={{ selected }}
-      accessibilityLabel={`${value} ${label}`}
-      accessibilityHint={selected ? 'Shows all products again' : 'Shows only products that need restocking'}
       style={({ pressed }) => [
         styles.tile,
         { backgroundColor: palette.background },
         selected && { borderColor: palette.text },
         pressed && styles.pressed,
       ]}
+      testID={testID}
+      onPress={onPress}
     >
-      <AppText style={[styles.tileValue, { color: palette.text }]}>{value}</AppText>
-      <AppText style={[styles.tileLabel, { color: palette.text }]}>{label}</AppText>
+      <AppText style={[styles.tileValue, { color: palette.text }]}>
+        {value}
+      </AppText>
+      <AppText style={[styles.tileLabel, { color: palette.text }]}>
+        {label}
+      </AppText>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  searchRow: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: spacing.xl, paddingBottom: 14 },
+  searchRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    paddingHorizontal: spacing.xl,
+    paddingBottom: 14,
+  },
   scanButton: {
     width: 48,
     height: 48,
     borderRadius: radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: colors.inverse,
   },
   pressed: { opacity: 0.85 },
   chips: { paddingBottom: spacing.sm },
-  listContent: { flexGrow: 1, paddingHorizontal: spacing.xl, paddingTop: spacing.xs, paddingBottom: spacing.xl },
-  summary: { flexDirection: 'row', gap: spacing.sm, marginBottom: 10 },
-  tile: { flex: 1, padding: spacing.md, borderRadius: radius.md, borderWidth: 1, borderColor: 'transparent' },
+  listContent: {
+    flexGrow: 1,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.xl,
+  },
+  summary: { flexDirection: "row", gap: spacing.sm, marginBottom: 10 },
+  tile: {
+    flex: 1,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
   tileNeutral: { backgroundColor: colors.surface, borderColor: colors.border },
-  tileValue: { fontFamily: fontFamily.semibold, fontSize: 20, lineHeight: 26, color: colors.text },
-  tileLabel: { fontFamily: fontFamily.regular, fontSize: 11, lineHeight: 14, color: colors.textMuted, marginTop: 2 },
+  tileValue: {
+    fontFamily: fontFamily.semibold,
+    fontSize: 20,
+    lineHeight: 26,
+    color: colors.text,
+  },
+  tileLabel: {
+    fontFamily: fontFamily.regular,
+    fontSize: 11,
+    lineHeight: 14,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
   separator: { height: 10 },
-  empty: { alignItems: 'center', gap: spacing.lg, paddingVertical: spacing.xl },
-  emptyText: { textAlign: 'center' },
+  empty: { alignItems: "center", gap: spacing.lg, paddingVertical: spacing.xl },
+  emptyText: { textAlign: "center" },
 });

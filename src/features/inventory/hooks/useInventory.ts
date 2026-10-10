@@ -1,11 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query";
 
-import { DEMO_STORE_ID } from '@/mocks/store';
+import { DEMO_STORE_ID } from "@/mocks/store";
 
-import { fetchInventory } from '../api/inventoryApi';
+import { fetchInventory } from "../api/inventoryApi";
 
 export const inventoryQueryKeys = {
-  list: (storeId: string) => ['inventory', storeId] as const,
+  list: (storeId: string) => ["inventory", storeId] as const,
 };
 
 /** Stock levels are server state, so they live in TanStack Query (brief §9). */

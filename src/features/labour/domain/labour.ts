@@ -7,16 +7,24 @@
  * This is a flat-rate estimate. Real Australian payroll applies award or enterprise agreement
  * rules, penalty rates, overtime, allowances and superannuation, none of which are modelled here.
  */
-import { labourPercent } from '@/features/dashboard/domain/kpis';
-import { toDateKey, weekDays } from '@/features/roster/domain/dates';
-import { paidMinutes, shiftsInWeek, shiftsOnDay } from '@/features/roster/domain/shifts';
-import type { Employee } from '@/features/employees/types';
-import type { Shift } from '@/features/roster/types';
+import { labourPercent } from "@/features/dashboard/domain/kpis";
+import { type Employee } from "@/features/employees/types";
+import { toDateKey, weekDays } from "@/features/roster/domain/dates";
+import {
+  paidMinutes,
+  shiftsInWeek,
+  shiftsOnDay,
+} from "@/features/roster/domain/shifts";
+import { type Shift } from "@/features/roster/types";
 
-import type { PayRate } from '../types';
+import { type PayRate } from "../types";
 
 /** The rate in force on a date: the latest one whose effective date is on or before it. */
-export function rateOn(rates: PayRate[], employeeId: string, date: Date): number | null {
+export function rateOn(
+  rates: Array<PayRate>,
+  employeeId: string,
+  date: Date,
+): number | null {
   const key = toDateKey(date);
   const applicable = rates
     .filter((r) => r.employeeId === employeeId && r.effectiveFrom <= key)
@@ -25,7 +33,7 @@ export function rateOn(rates: PayRate[], employeeId: string, date: Date): number
 }
 
 /** Cost of one shift at the rate in force on the day it starts. Null when no rate exists. */
-export function shiftCost(shift: Shift, rates: PayRate[]): number | null {
+export function shiftCost(shift: Shift, rates: Array<PayRate>): number | null {
   const rate = rateOn(rates, shift.employeeId, new Date(shift.startAt));
   return rate === null ? null : roundCents((paidMinutes(shift) / 60) * rate);
 }
@@ -34,41 +42,41 @@ function roundCents(amount: number): number {
   return Math.round(amount * 100) / 100;
 }
 
-export interface EmployeeLabour {
+export type EmployeeLabour = {
+  cost: number;
   employee: Employee | undefined;
   employeeId: string;
   paidMinutes: number;
-  cost: number;
   shiftCount: number;
-}
+};
 
-export interface DayLabour {
+export type DayLabour = {
+  cost: number;
   date: Date;
   paidMinutes: number;
-  cost: number;
-}
+};
 
-export interface WeeklyLabourSummary {
-  totalCost: number;
-  totalPaidMinutes: number;
+export type WeeklyLabourSummary = {
   budget: number;
   /** Positive when under budget, negative when over. */
   budgetRemaining: number;
+  byDay: Array<DayLabour>;
+  byEmployee: Array<EmployeeLabour>;
   forecastSales: number;
   labourPercent: number | null;
-  byDay: DayLabour[];
-  byEmployee: EmployeeLabour[];
   /** Employees with shifts but no applicable pay rate. Their cost is excluded and must be flagged. */
-  missingRateEmployeeIds: string[];
-}
+  missingRateEmployeeIds: Array<string>;
+  totalCost: number;
+  totalPaidMinutes: number;
+};
 
 export function weeklyLabourSummary(input: {
-  weekStart: Date;
-  shifts: Shift[];
-  employees: Employee[];
-  rates: PayRate[];
   budget: number;
-  salesForecastByWeekday: number[];
+  employees: Array<Employee>;
+  rates: Array<PayRate>;
+  salesForecastByWeekday: Array<number>;
+  shifts: Array<Shift>;
+  weekStart: Date;
 }): WeeklyLabourSummary {
   const weekShifts = shiftsInWeek(input.shifts, input.weekStart);
   const employeesById = new Map(input.employees.map((e) => [e.id, e]));
@@ -77,7 +85,9 @@ export function weeklyLabourSummary(input: {
 
   for (const shift of weekShifts) {
     const cost = shiftCost(shift, input.rates);
-    if (cost === null) missing.add(shift.employeeId);
+    if (cost === null) {
+      missing.add(shift.employeeId);
+    }
     const entry = byEmployee.get(shift.employeeId) ?? {
       employee: employeesById.get(shift.employeeId),
       employeeId: shift.employeeId,
@@ -96,12 +106,17 @@ export function weeklyLabourSummary(input: {
     return {
       date,
       paidMinutes: dayShifts.reduce((sum, s) => sum + paidMinutes(s), 0),
-      cost: roundCents(dayShifts.reduce((sum, s) => sum + (shiftCost(s, input.rates) ?? 0), 0)),
+      cost: roundCents(
+        dayShifts.reduce((sum, s) => sum + (shiftCost(s, input.rates) ?? 0), 0),
+      ),
     };
   });
 
   const totalCost = roundCents(byDay.reduce((sum, d) => sum + d.cost, 0));
-  const forecastSales = input.salesForecastByWeekday.reduce((sum, v) => sum + v, 0);
+  const forecastSales = input.salesForecastByWeekday.reduce(
+    (sum, v) => sum + v,
+    0,
+  );
 
   return {
     totalCost,

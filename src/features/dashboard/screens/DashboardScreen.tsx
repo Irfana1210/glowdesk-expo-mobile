@@ -1,8 +1,23 @@
-import { useRouter } from 'expo-router';
-import { useMemo, useRef } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { type FC, useMemo, useRef } from "react";
+import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 
-import { Screen } from '@/components/layout/Screen';
+import { useRouter } from "expo-router";
+
+import { useNow } from "@/hooks/useNow";
+
+import { useInventory } from "@/features/inventory/hooks/useInventory";
+import { unassignedActiveCount } from "@/features/orders/domain/schedule";
+import { useEnsureOrdersLoaded } from "@/features/orders/hooks/useEnsureOrdersLoaded";
+import { useOrdersStore } from "@/features/orders/store/useOrdersStore";
+import { nextBreak, staffOnFloor } from "@/features/roster/domain/cover";
+import { atTime } from "@/features/roster/domain/dates";
+import {
+  shiftsOnDay,
+  STORE_TRADING_HOURS,
+} from "@/features/roster/domain/shifts";
+import { useRosterStore } from "@/features/roster/store/useRosterStore";
+
+import { Screen } from "@/components/layout/Screen";
 import {
   AppText,
   AttentionItem,
@@ -12,30 +27,27 @@ import {
   LoadingState,
   ScreenTitle,
   ShiftCard,
-} from '@/components/ui';
-import { useInventory } from '@/features/inventory/hooks/useInventory';
-import { unassignedActiveCount } from '@/features/orders/domain/schedule';
-import { useEnsureOrdersLoaded } from '@/features/orders/hooks/useEnsureOrdersLoaded';
-import { useOrdersStore } from '@/features/orders/store/useOrdersStore';
-import { atTime } from '@/features/roster/domain/dates';
-import { nextBreak, staffOnFloor } from '@/features/roster/domain/cover';
-import { STORE_TRADING_HOURS, shiftsOnDay } from '@/features/roster/domain/shifts';
-import { useRosterStore } from '@/features/roster/store/useRosterStore';
-import { useNow } from '@/hooks/useNow';
-import { formatClockTime, formatCurrency, formatPercent, formatShortDate } from '@/lib/format';
-import { DEMO_STORE_ID, DEMO_STORE_SHORT_NAME } from '@/mocks/store';
-import { DEMO_USER } from '@/mocks/user';
-import { colors, fontFamily, radius, spacing } from '@/theme';
+} from "@/components/ui";
 
-import { SalesChart } from '../components/SalesChart';
-import { buildAttention } from '../domain/attention';
-import { calculateDashboardKpis, type DashboardKpis } from '../domain/kpis';
-import { shiftCardModel } from '../domain/shiftCard';
-import { useStoreSalesSummary } from '../hooks/useStoreSalesSummary';
+import {
+  formatClockTime,
+  formatCurrency,
+  formatPercent,
+  formatShortDate,
+} from "@/lib/format";
+import { DEMO_STORE_ID, DEMO_STORE_SHORT_NAME } from "@/mocks/store";
+import { DEMO_USER } from "@/mocks/user";
+import { colors, fontFamily, radius, spacing } from "@/theme";
 
-const NOT_AVAILABLE = 'not available';
+import { SalesChart } from "../components/SalesChart";
+import { buildAttention } from "../domain/attention";
+import { calculateDashboardKpis, type DashboardKpis } from "../domain/kpis";
+import { shiftCardModel } from "../domain/shiftCard";
+import { useStoreSalesSummary } from "../hooks/useStoreSalesSummary";
 
-export function DashboardScreen({ now: fixedNow }: { now?: Date } = {}) {
+const NOT_AVAILABLE = "not available";
+
+export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
   const router = useRouter();
   const liveNow = useNow();
   const now = fixedNow ?? liveNow;
@@ -44,12 +56,15 @@ export function DashboardScreen({ now: fixedNow }: { now?: Date } = {}) {
 
   const salesQuery = useStoreSalesSummary(DEMO_STORE_ID);
   const inventoryQuery = useInventory();
-  const kpis = useMemo(() => (salesQuery.data ? calculateDashboardKpis(salesQuery.data) : null), [salesQuery.data]);
+  const kpis = useMemo(
+    () => (salesQuery.data ? calculateDashboardKpis(salesQuery.data) : null),
+    [salesQuery.data],
+  );
 
   const ordersLoadStatus = useEnsureOrdersLoaded();
   const orders = useOrdersStore((s) => s.orders);
   const refreshOrders = useOrdersStore((s) => s.refreshOrders);
-  const ordersReady = ordersLoadStatus === 'ready' || orders.length > 0;
+  const ordersReady = ordersLoadStatus === "ready" || orders.length > 0;
 
   const shifts = useRosterStore((s) => s.shifts);
   const employees = useRosterStore((s) => s.employees);
@@ -72,7 +87,9 @@ export function DashboardScreen({ now: fixedNow }: { now?: Date } = {}) {
       buildAttention({
         orders,
         upcomingBreak,
-        breakEmployeeName: employees.find((e) => e.id === upcomingBreak?.shift.employeeId)?.name,
+        breakEmployeeName: employees.find(
+          (e) => e.id === upcomingBreak?.shift.employeeId,
+        )?.name,
         inventory: inventoryQuery.data,
         now,
       }),
@@ -80,8 +97,10 @@ export function DashboardScreen({ now: fixedNow }: { now?: Date } = {}) {
   );
   const orderCounts = useMemo(
     () => ({
-      pending: orders.filter((o) => o.status === 'NEW' || o.status === 'PICKING').length,
-      ready: orders.filter((o) => o.status === 'READY').length,
+      pending: orders.filter(
+        (o) => o.status === "NEW" || o.status === "PICKING",
+      ).length,
+      ready: orders.filter((o) => o.status === "READY").length,
     }),
     [orders],
   );
@@ -95,39 +114,44 @@ export function DashboardScreen({ now: fixedNow }: { now?: Date } = {}) {
   return (
     <Screen testID="dashboard-screen">
       <ScrollView
-        ref={scrollRef}
         contentContainerStyle={styles.content}
+        ref={scrollRef}
         refreshControl={
           <RefreshControl
-            refreshing={salesQuery.isRefetching}
-            onRefresh={onRefresh}
-            tintColor={colors.accent}
             colors={[colors.accent]}
+            refreshing={salesQuery.isRefetching}
+            tintColor={colors.accent}
+            onRefresh={onRefresh}
           />
         }
       >
         <ScreenTitle
           eyebrow={`${formatShortDate(now)} · ${DEMO_STORE_SHORT_NAME}`}
-          title={`Hi, ${DEMO_USER.firstName}`}
-          subtitle={DEMO_USER.role}
           right={
             <>
               <IconButton
-                testID="notifications"
-                icon="notifications-outline"
-                accessibilityLabel={`Notifications, ${attention.length} ${attention.length === 1 ? 'item needs' : 'items need'} attention`}
+                accessibilityLabel={`Notifications, ${attention.length} ${attention.length === 1 ? "item needs" : "items need"} attention`}
                 badge={attention.length}
-                onPress={() => scrollRef.current?.scrollTo({ y: attentionY.current, animated: true })}
+                icon="notifications-outline"
+                testID="notifications"
+                onPress={() =>
+                  scrollRef.current?.scrollTo({
+                    y: attentionY.current,
+                    animated: true,
+                  })
+                }
               />
               <IconButton
-                testID="profile"
-                icon="person-outline"
-                text={DEMO_USER.firstName.slice(0, 2).toUpperCase()}
                 accessibilityLabel={`Profile and settings, ${DEMO_USER.firstName}`}
-                onPress={() => router.push('/more/settings')}
+                icon="person-outline"
+                testID="profile"
+                text={DEMO_USER.firstName.slice(0, 2).toUpperCase()}
+                onPress={() => router.push("/more/settings")}
               />
             </>
           }
+          subtitle={DEMO_USER.role}
+          title={`Hi, ${DEMO_USER.firstName}`}
         />
 
         <View style={styles.body}>
@@ -140,11 +164,13 @@ export function DashboardScreen({ now: fixedNow }: { now?: Date } = {}) {
             }}
           >
             <View style={styles.sectionHeader}>
-              <AppText variant="sectionTitle" accessibilityRole="header">
+              <AppText accessibilityRole="header" variant="sectionTitle">
                 Needs attention
               </AppText>
               <AppText color="textMuted" style={styles.small}>
-                {attention.length === 1 ? '1 item' : `${attention.length} items`}
+                {attention.length === 1
+                  ? "1 item"
+                  : `${attention.length} items`}
               </AppText>
             </View>
             {attention.length === 0 ? (
@@ -154,11 +180,11 @@ export function DashboardScreen({ now: fixedNow }: { now?: Date } = {}) {
             ) : (
               attention.map((item) => (
                 <AttentionItem
+                  icon={item.icon}
                   key={item.key}
+                  subtitle={item.subtitle}
                   testID={`attention-${item.key}`}
                   title={item.title}
-                  subtitle={item.subtitle}
-                  icon={item.icon}
                   tone={item.tone}
                   onPress={() => router.navigate(item.href)}
                 />
@@ -167,7 +193,7 @@ export function DashboardScreen({ now: fixedNow }: { now?: Date } = {}) {
           </View>
 
           <View style={styles.section}>
-            <AppText variant="sectionTitle" accessibilityRole="header">
+            <AppText accessibilityRole="header" variant="sectionTitle">
               Today so far
             </AppText>
             {salesQuery.isPending ? (
@@ -177,8 +203,8 @@ export function DashboardScreen({ now: fixedNow }: { now?: Date } = {}) {
             ) : salesQuery.isError ? (
               <View style={styles.card}>
                 <ErrorState
-                  title="Couldn't load sales"
                   message={salesQuery.error.message}
+                  title="Couldn't load sales"
                   onRetry={() => void salesQuery.refetch()}
                 />
               </View>
@@ -190,48 +216,58 @@ export function DashboardScreen({ now: fixedNow }: { now?: Date } = {}) {
               {kpis ? (
                 <>
                   <KPICard
-                    testID="kpi-transactions"
-                    style={styles.gridItem}
                     label="Transactions"
-                    value={kpis.transactions.toLocaleString('en-AU')}
+                    style={styles.gridItem}
                     supporting={`Since ${formatClockTime(atTime(now, STORE_TRADING_HOURS.open) ?? now)}`}
+                    testID="kpi-transactions"
+                    value={kpis.transactions.toLocaleString("en-AU")}
                   />
                   <KPICard
-                    testID="kpi-atv"
-                    style={styles.gridItem}
-                    label="Avg transaction"
-                    value={
-                      kpis.averageTransactionValue === null
-                        ? '—'
-                        : formatCurrency(kpis.averageTransactionValue, { cents: true })
-                    }
-                    supporting="Sales ÷ transactions"
                     accessibilityLabel={`Average transaction value, ${
                       kpis.averageTransactionValue === null
                         ? NOT_AVAILABLE
-                        : formatCurrency(kpis.averageTransactionValue, { cents: true })
+                        : formatCurrency(kpis.averageTransactionValue, {
+                            cents: true,
+                          })
                     }`}
+                    label="Avg transaction"
+                    style={styles.gridItem}
+                    supporting="Sales ÷ transactions"
+                    testID="kpi-atv"
+                    value={
+                      kpis.averageTransactionValue === null
+                        ? "—"
+                        : formatCurrency(kpis.averageTransactionValue, {
+                            cents: true,
+                          })
+                    }
                   />
                   <KPICard
-                    testID="kpi-labour"
-                    style={styles.gridItem}
-                    label="Labour"
-                    value={formatPercent(kpis.labourPercent, 1)}
-                    supporting={`${formatCurrency(kpis.labourSpend)} of sales`}
                     accessibilityLabel={`Labour, ${
-                      kpis.labourPercent === null ? NOT_AVAILABLE : `${formatPercent(kpis.labourPercent, 1)} of sales`
+                      kpis.labourPercent === null
+                        ? NOT_AVAILABLE
+                        : `${formatPercent(kpis.labourPercent, 1)} of sales`
                     }, ${formatCurrency(kpis.labourSpend)} estimated spend`}
+                    label="Labour"
+                    style={styles.gridItem}
+                    supporting={`${formatCurrency(kpis.labourSpend)} of sales`}
+                    testID="kpi-labour"
+                    value={formatPercent(kpis.labourPercent, 1)}
                   />
                 </>
               ) : null}
               <KPICard
-                testID="kpi-orders"
-                style={styles.gridItem}
-                label="Click & Collect"
-                value={ordersReady ? String(orderCounts.pending) : '—'}
-                supporting={ordersReady ? `${orderCounts.ready} ready to collect` : 'Loading orders'}
-                onPress={() => router.navigate('/orders')}
                 accessibilityHint="Opens Click & Collect orders"
+                label="Click & Collect"
+                style={styles.gridItem}
+                supporting={
+                  ordersReady
+                    ? `${orderCounts.ready} ready to collect`
+                    : "Loading orders"
+                }
+                testID="kpi-orders"
+                value={ordersReady ? String(orderCounts.pending) : "—"}
+                onPress={() => router.navigate("/orders")}
               />
             </View>
           </View>
@@ -242,24 +278,30 @@ export function DashboardScreen({ now: fixedNow }: { now?: Date } = {}) {
             </View>
           ) : null}
 
-          <AppText variant="supporting" color="textMuted" style={styles.footnote}>
-            Demo mode with fictional data. Labour is a flat-rate estimate, not a payroll calculation.
+          <AppText
+            color="textMuted"
+            style={styles.footnote}
+            variant="supporting"
+          >
+            Demo mode with fictional data. Labour is a flat-rate estimate, not a
+            payroll calculation.
           </AppText>
         </View>
       </ScrollView>
     </Screen>
   );
-}
+};
 
 function SalesHero({ kpis }: { kpis: DashboardKpis }) {
   const achievement = kpis.achievementPercent;
   const remaining =
     achievement === null
-      ? 'No sales target set for today'
+      ? "No sales target set for today"
       : kpis.remainingToTarget === 0
         ? `Target ${formatCurrency(kpis.target)} reached`
         : `${formatCurrency(kpis.remainingToTarget)} to go · target ${formatCurrency(kpis.target)}`;
-  const percent = achievement === null ? 0 : Math.min(100, Math.max(0, achievement));
+  const percent =
+    achievement === null ? 0 : Math.min(100, Math.max(0, achievement));
 
   return (
     <View style={styles.card} testID="sales-summary">
@@ -267,23 +309,32 @@ function SalesHero({ kpis }: { kpis: DashboardKpis }) {
         Sales
       </AppText>
       <View style={styles.heroRow}>
-        <AppText variant="hero" style={styles.heroValue} testID="sales-total" accessibilityLabel={`Today's sales ${formatCurrency(kpis.sales)}`}>
+        <AppText
+          accessibilityLabel={`Today's sales ${formatCurrency(kpis.sales)}`}
+          style={styles.heroValue}
+          testID="sales-total"
+          variant="hero"
+        >
           {formatCurrency(kpis.sales)}
         </AppText>
-        <AppText style={styles.heroPercent}>{formatPercent(achievement, 1)}</AppText>
+        <AppText style={styles.heroPercent}>
+          {formatPercent(achievement, 1)}
+        </AppText>
       </View>
       <View
-        style={styles.track}
         accessible
-        accessibilityRole="progressbar"
         accessibilityLabel={
-          achievement === null ? `Sales target achievement ${NOT_AVAILABLE}` : `Sales target achievement ${formatPercent(achievement, 1)}. ${remaining}`
+          achievement === null
+            ? `Sales target achievement ${NOT_AVAILABLE}`
+            : `Sales target achievement ${formatPercent(achievement, 1)}. ${remaining}`
         }
+        accessibilityRole="progressbar"
         accessibilityValue={{ min: 0, max: 100, now: Math.round(percent) }}
+        style={styles.track}
       >
         <View style={[styles.fill, { width: `${percent}%` }]} />
       </View>
-      <AppText variant="supporting" color="textMuted">
+      <AppText color="textMuted" variant="supporting">
         {remaining}
       </AppText>
     </View>
@@ -294,7 +345,11 @@ const styles = StyleSheet.create({
   content: { paddingBottom: spacing.xxl },
   body: { paddingHorizontal: spacing.xl, gap: spacing.xxl },
   section: { gap: 10 },
-  sectionHeader: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "space-between",
+  },
   small: { fontSize: 13 },
   card: {
     gap: 10,
@@ -305,12 +360,29 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   placeholder: { minHeight: 150 },
-  heroRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
+  heroRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "space-between",
+  },
   heroValue: { fontSize: 44, lineHeight: 50 },
-  heroPercent: { fontFamily: fontFamily.semibold, fontSize: 14, color: colors.successDark },
-  track: { height: 6, borderRadius: radius.pill, backgroundColor: colors.track, overflow: 'hidden' },
-  fill: { height: '100%', borderRadius: radius.pill, backgroundColor: colors.success },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  gridItem: { flexGrow: 1, flexBasis: '45%' },
-  footnote: { textAlign: 'center' },
+  heroPercent: {
+    fontFamily: fontFamily.semibold,
+    fontSize: 14,
+    color: colors.successDark,
+  },
+  track: {
+    height: 6,
+    borderRadius: radius.pill,
+    backgroundColor: colors.track,
+    overflow: "hidden",
+  },
+  fill: {
+    height: "100%",
+    borderRadius: radius.pill,
+    backgroundColor: colors.success,
+  },
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  gridItem: { flexGrow: 1, flexBasis: "45%" },
+  footnote: { textAlign: "center" },
 });

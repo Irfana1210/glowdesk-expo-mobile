@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect } from "react";
 
-import { useOrdersStore, type LoadStatus } from '../store/useOrdersStore';
+import { type LoadStatus, useOrdersStore } from "../store/useOrdersStore";
 
 /**
  * Starts the initial order load if nothing has loaded yet. Screens reachable by deep link
@@ -11,7 +11,9 @@ export function useEnsureOrdersLoaded(): LoadStatus {
   const loadOrders = useOrdersStore((s) => s.loadOrders);
 
   useEffect(() => {
-    if (loadStatus === 'idle') void loadOrders();
+    if (loadStatus === "idle") {
+      void loadOrders();
+    }
   }, [loadStatus, loadOrders]);
 
   return loadStatus;

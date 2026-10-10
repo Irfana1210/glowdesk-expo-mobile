@@ -1,20 +1,27 @@
-import { Text, type TextProps } from 'react-native';
+import { type FC } from "react";
+import { Text, type TextProps } from "react-native";
 
-import { colors, maxFontScale, typography, type ColorToken, type TypographyVariant } from '@/theme';
+import {
+  colors,
+  type ColorToken,
+  maxFontScale,
+  typography,
+  type TypographyVariant,
+} from "@/theme";
 
-export interface AppTextProps extends TextProps {
-  variant?: TypographyVariant;
+export type AppTextProps = {
   color?: ColorToken;
-}
+  variant?: TypographyVariant;
+} & TextProps;
 
 /** Text with the RetailOS type scale. Respects the OS font size, capped so dense layouts stay usable. */
-export function AppText({
-  variant = 'body',
-  color = 'text',
+export const AppText: FC<AppTextProps> = ({
+  variant = "body",
+  color = "text",
   style,
   maxFontSizeMultiplier = maxFontScale,
   ...rest
-}: AppTextProps) {
+}) => {
   return (
     <Text
       allowFontScaling
@@ -23,4 +30,4 @@ export function AppText({
       {...rest}
     />
   );
-}
+};

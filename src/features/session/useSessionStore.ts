@@ -3,18 +3,18 @@
  * labelled demo setting. In production the role comes from Supabase Auth claims and pay data
  * is protected by Row Level Security, not by hiding it in the UI.
  */
-import { create } from 'zustand';
+import { create } from "zustand";
 
-export type DemoRole = 'MANAGER' | 'TEAM_MEMBER';
+export type DemoRole = "MANAGER" | "TEAM_MEMBER";
 
-interface SessionState {
+type SessionState = {
   role: DemoRole;
   setRole: (role: DemoRole) => void;
-}
+};
 
 export const useSessionStore = create<SessionState>()((set) => ({
-  role: 'MANAGER',
+  role: "MANAGER",
   setRole: (role) => set({ role }),
 }));
 
-export const canViewPayInformation = (role: DemoRole) => role === 'MANAGER';
+export const canViewPayInformation = (role: DemoRole) => role === "MANAGER";

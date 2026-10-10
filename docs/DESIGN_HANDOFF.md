@@ -6,13 +6,13 @@ Signed-in user in all mockups: **Jordan Lee, Shift Runner**, RetailOS Melbourne 
 
 ## Screens
 
-| Mockup | Route | Notes |
-| --- | --- | --- |
-| `screens/Dashboard.dc.html` | `src/app/(tabs)/dashboard.tsx` | Shift card, Needs attention, KPIs, sales by hour |
-| `screens/Orders.dc.html` | `src/app/(tabs)/orders.tsx` | Overdue banner, status filter chips, order cards |
-| `screens/OrderDetails.dc.html` | `src/app/orders/[id].tsx` | Order summary, picking progress, products, sticky actions |
-| `screens/Roster.dc.html` | `src/app/(tabs)/roster.tsx` | Week nav, day picker, floor cover chart, shift list |
-| `screens/Inventory.dc.html` | `src/app/(tabs)/inventory.tsx` | Search + scan, category chips, stock summary, product list |
+| Mockup                         | Route                          | Notes                                                      |
+| ------------------------------ | ------------------------------ | ---------------------------------------------------------- |
+| `screens/Dashboard.dc.html`    | `src/app/(tabs)/dashboard.tsx` | Shift card, Needs attention, KPIs, sales by hour           |
+| `screens/Orders.dc.html`       | `src/app/(tabs)/orders.tsx`    | Overdue banner, status filter chips, order cards           |
+| `screens/OrderDetails.dc.html` | `src/app/orders/[id].tsx`      | Order summary, picking progress, products, sticky actions  |
+| `screens/Roster.dc.html`       | `src/app/(tabs)/roster.tsx`    | Week nav, day picker, floor cover chart, shift list        |
+| `screens/Inventory.dc.html`    | `src/app/(tabs)/inventory.tsx` | Search + scan, category chips, stock summary, product list |
 
 In each mockup, the `<script>` block at the bottom holds the mock data (in `renderVals()`). Move that data into `src/mocks/` as typed TypeScript, never inline in screens.
 
@@ -21,6 +21,7 @@ In each mockup, the `<script>` block at the bottom holds the mock data (in `rend
 Colours: background `#F8F5F1`, text `#222024`, muted text `#5E5A61`, inactive tab `#6E6672`, blush `#EBCDD3`, secondary `#816C83`, secondary text `#6F5B71`, success `#4C826C`, success dark `#3E6E5A`, error `#C44D56`, error text `#A8323C`, white `#FFFFFF`, border `#E6E1DC`, divider `#F0EBE6`, track `#EFEAE4`.
 
 Status colours (background / text):
+
 - New `#F3E3E7` / `#7E3343`
 - Picking `#ECE6F0` / `#4F3E55`
 - Ready, In stock `#E1EEE7` / `#2C5B4A`
@@ -28,6 +29,7 @@ Status colours (background / text):
 - Overdue, Out of stock `#F7E1E3` / `#8E2A33`
 
 Typography:
+
 - Display (page titles 38, hero numbers 36–44, order number 32): **Instrument Serif** 400, via `@expo-google-fonts/instrument-serif`
 - Everything else: **DM Sans** 400/500/600/700, via `@expo-google-fonts/dm-sans`
 - Eyebrow labels above titles: 11, weight 600, letter spacing ~1.5, uppercase, muted

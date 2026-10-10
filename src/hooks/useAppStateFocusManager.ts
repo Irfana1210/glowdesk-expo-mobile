@@ -1,6 +1,7 @@
-import { focusManager } from '@tanstack/react-query';
-import { useEffect } from 'react';
-import { AppState, Platform, type AppStateStatus } from 'react-native';
+import { useEffect } from "react";
+import { AppState, type AppStateStatus, Platform } from "react-native";
+
+import { focusManager } from "@tanstack/react-query";
 
 /**
  * React Native has no window focus event. Tell TanStack Query when the app returns to the
@@ -8,10 +9,15 @@ import { AppState, Platform, type AppStateStatus } from 'react-native';
  */
 export function useAppStateFocusManager(): void {
   useEffect(() => {
-    if (Platform.OS === 'web') return;
-    const subscription = AppState.addEventListener('change', (status: AppStateStatus) => {
-      focusManager.setFocused(status === 'active');
-    });
+    if (Platform.OS === "web") {
+      return;
+    }
+    const subscription = AppState.addEventListener(
+      "change",
+      (status: AppStateStatus) => {
+        focusManager.setFocused(status === "active");
+      },
+    );
     return () => subscription.remove();
   }, []);
 }

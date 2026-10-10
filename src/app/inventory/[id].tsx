@@ -1,3 +1,3 @@
-import { ProductDetailsScreen } from '@/features/inventory/screens/ProductDetailsScreen';
+import { ProductDetailsScreen } from "@/features/inventory/screens/ProductDetailsScreen";
 
 export default ProductDetailsScreen;

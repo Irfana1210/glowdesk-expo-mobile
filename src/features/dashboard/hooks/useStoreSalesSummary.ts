@@ -1,9 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query";
 
-import { fetchStoreSalesSummary } from '../api/salesApi';
+import { fetchStoreSalesSummary } from "../api/salesApi";
 
 export const salesQueryKeys = {
-  summary: (storeId: string) => ['sales', 'summary', storeId] as const,
+  summary: (storeId: string) => ["sales", "summary", storeId] as const,
 };
 
 /** Sales are server state, so they live in TanStack Query rather than Zustand (brief §9). */

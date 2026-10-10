@@ -8,17 +8,14 @@
  * Keys are versioned by the persist middleware. Never rename a key without a migration,
  * or saved progress on users' devices is silently dropped.
  */
-import Storage from 'expo-sqlite/kv-store';
-import { createJSONStorage } from 'zustand/middleware';
+import Storage from "expo-sqlite/kv-store";
+import { createJSONStorage } from "zustand/middleware";
 
 export const STORAGE_KEYS = {
-  orders: 'retailos.orders',
-  roster: 'retailos.roster',
-  preferences: 'retailos.preferences',
+  orders: "retailos.orders",
+  roster: "retailos.roster",
+  preferences: "retailos.preferences",
 } as const;
 
 /** JSON storage adapter for zustand's persist middleware. */
 export const persistStorage = createJSONStorage(() => Storage);
-
-/** Raw key-value access, for tests and future migrations. */
-export { Storage as keyValueStore };

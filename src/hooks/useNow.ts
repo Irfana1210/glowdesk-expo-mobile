@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 /**
  * The current time, refreshed on an interval so time-based labels ("Overdue 53 min",

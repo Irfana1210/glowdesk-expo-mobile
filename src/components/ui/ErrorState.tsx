@@ -1,21 +1,32 @@
-import { EmptyState } from './EmptyState';
-import { PrimaryButton } from './PrimaryButton';
+import { type FC } from "react";
 
-export interface ErrorStateProps {
-  title?: string;
+import { EmptyState } from "./EmptyState";
+import { PrimaryButton } from "./PrimaryButton";
+
+type Props = {
   message: string;
   onRetry?: () => void;
   retryLabel?: string;
-}
+  title?: string;
+};
 
-export function ErrorState({ title = 'Something went wrong', message, onRetry, retryLabel = 'Try again' }: ErrorStateProps) {
+export const ErrorState: FC<Props> = ({
+  title = "Something went wrong",
+  message,
+  onRetry,
+  retryLabel = "Try again",
+}) => {
   return (
     <EmptyState
-      testID="error-state"
+      action={
+        onRetry ? (
+          <PrimaryButton icon="refresh" label={retryLabel} onPress={onRetry} />
+        ) : undefined
+      }
       icon="alert-circle-outline"
-      title={title}
       message={message}
-      action={onRetry ? <PrimaryButton label={retryLabel} icon="refresh" onPress={onRetry} /> : undefined}
+      testID="error-state"
+      title={title}
     />
   );
-}
+};

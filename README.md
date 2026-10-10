@@ -10,42 +10,42 @@ It is an independent portfolio project. All stores, customers, brands and produc
 
 ## What works
 
-| Area | Status |
-| --- | --- |
-| Expo SDK 57 project, Expo Router with 5 bottom tabs and a nested order details route | Implemented |
-| Design tokens: brief palette, Inter type scale, 4–32 spacing scale | Implemented |
-| Typed order model and pure state machine (`NEW → PICKING → READY → COLLECTED`, cancellations) | Implemented and unit tested |
-| `canMarkReady` / `markOrderReady`: immutable result, version increment, invalid transitions rejected | Implemented and unit tested |
-| Order list: All / New / Picking / Ready / Collected filters with counts, priority indicator, pull to refresh | Implemented and component tested |
-| Loading, empty and error states with retry | Implemented and component tested |
-| Order details: products, SKU, barcode, picked vs required, picking progress | Implemented and component tested |
-| Start Picking and Mark Ready for Collection (disabled until every item is verified, reason shown) | Implemented and component tested |
-| Barcode scanner with `expo-camera`: permission request, denied and unavailable states | Implemented (camera needs a physical device) |
-| Manual barcode entry fallback for simulators and damaged labels | Implemented and component tested |
-| Barcode matching, quantity validation, wrong-product rejection, over-pick prevention | Implemented and unit tested |
-| Order Completion screen: verified count, confirmation, final status, invalid-transition error | Implemented and component tested |
-| Order state saved on device with `expo-sqlite` key-value storage, restored on restart | Implemented and tested |
-| Reset demo data (Settings, with confirmation) | Implemented |
-| Dashboard KPIs: sales vs target, achievement %, transactions, average transaction value, labour spend and % | Implemented and tested |
-| KPI formulas with safe zero handling (shows "—" and "not available", never NaN) | Implemented and unit tested |
-| Live pending and ready Click & Collect counts on the dashboard | Implemented and component tested |
-| Hourly sales vs target chart (tap a bar for details, screen reader labels per hour) | Implemented and component tested |
-| Quick actions to Orders, Roster and Inventory | Implemented |
-| Inventory: search by name, brand, SKU or barcode; category filters; low-stock toggle; stock status | Implemented and tested |
-| Product details: stock, reorder point and guidance, SKU, barcode, category, price | Implemented and component tested |
-| Inventory barcode lookup (camera or manual entry) opens the product | Implemented and component tested |
-| Weekly roster: week navigation, shifts per day, paid hours, staff count, coverage gaps against trading hours | Implemented and tested |
-| Shift editor (React Hook Form + Zod): add, edit, remove with confirmation | Implemented and component tested |
-| Shift validation: end after start, break shorter than shift, overlap detection, inactive or other-store staff blocked, explicit overnight shifts, real elapsed time across daylight saving | Implemented and unit tested |
-| Labour Management: weekly roster cost, budget, labour % of forecast sales, cost by day and by employee, live recalculation | Implemented and tested |
-| Effective-dated pay rates; missing rates flagged rather than costed at zero | Implemented and unit tested |
-| Pay information restricted to the Manager role (the demo user is a manager; there is no role switch) | Implemented and tested |
-| Settings: profile, assigned store and trading hours, app version | Implemented and component tested |
-| App preference: vibrate on scan errors (used by both scanners), saved on device | Implemented and tested |
-| Notification preferences, saved on device | Implemented. Push notifications are not sent yet, and the screen says so. |
-| Sign out (demo): clears orders, roster changes and preferences on the device, returns to the dashboard | Implemented and tested |
-| Sales Analytics, Employees | Planned (shown as "Planned" in the More tab) |
-| CI, EAS Build, Maestro E2E | Planned |
+| Area                                                                                                                                                                                       | Status                                                                    |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| Expo SDK 57 project, Expo Router with 5 bottom tabs and a nested order details route                                                                                                       | Implemented                                                               |
+| Design tokens: brief palette, Inter type scale, 4–32 spacing scale                                                                                                                         | Implemented                                                               |
+| Typed order model and pure state machine (`NEW → PICKING → READY → COLLECTED`, cancellations)                                                                                              | Implemented and unit tested                                               |
+| `canMarkReady` / `markOrderReady`: immutable result, version increment, invalid transitions rejected                                                                                       | Implemented and unit tested                                               |
+| Order list: All / New / Picking / Ready / Collected filters with counts, priority indicator, pull to refresh                                                                               | Implemented and component tested                                          |
+| Loading, empty and error states with retry                                                                                                                                                 | Implemented and component tested                                          |
+| Order details: products, SKU, barcode, picked vs required, picking progress                                                                                                                | Implemented and component tested                                          |
+| Start Picking and Mark Ready for Collection (disabled until every item is verified, reason shown)                                                                                          | Implemented and component tested                                          |
+| Barcode scanner with `expo-camera`: permission request, denied and unavailable states                                                                                                      | Implemented (camera needs a physical device)                              |
+| Manual barcode entry fallback for simulators and damaged labels                                                                                                                            | Implemented and component tested                                          |
+| Barcode matching, quantity validation, wrong-product rejection, over-pick prevention                                                                                                       | Implemented and unit tested                                               |
+| Order Completion screen: verified count, confirmation, final status, invalid-transition error                                                                                              | Implemented and component tested                                          |
+| Order state saved on device with `expo-sqlite` key-value storage, restored on restart                                                                                                      | Implemented and tested                                                    |
+| Reset demo data (Settings, with confirmation)                                                                                                                                              | Implemented                                                               |
+| Dashboard KPIs: sales vs target, achievement %, transactions, average transaction value, labour spend and %                                                                                | Implemented and tested                                                    |
+| KPI formulas with safe zero handling (shows "—" and "not available", never NaN)                                                                                                            | Implemented and unit tested                                               |
+| Live pending and ready Click & Collect counts on the dashboard                                                                                                                             | Implemented and component tested                                          |
+| Hourly sales vs target chart (tap a bar for details, screen reader labels per hour)                                                                                                        | Implemented and component tested                                          |
+| Quick actions to Orders, Roster and Inventory                                                                                                                                              | Implemented                                                               |
+| Inventory: search by name, brand, SKU or barcode; category filters; low-stock toggle; stock status                                                                                         | Implemented and tested                                                    |
+| Product details: stock, reorder point and guidance, SKU, barcode, category, price                                                                                                          | Implemented and component tested                                          |
+| Inventory barcode lookup (camera or manual entry) opens the product                                                                                                                        | Implemented and component tested                                          |
+| Weekly roster: week navigation, shifts per day, paid hours, staff count, coverage gaps against trading hours                                                                               | Implemented and tested                                                    |
+| Shift editor (React Hook Form + Zod): add, edit, remove with confirmation                                                                                                                  | Implemented and component tested                                          |
+| Shift validation: end after start, break shorter than shift, overlap detection, inactive or other-store staff blocked, explicit overnight shifts, real elapsed time across daylight saving | Implemented and unit tested                                               |
+| Labour Management: weekly roster cost, budget, labour % of forecast sales, cost by day and by employee, live recalculation                                                                 | Implemented and tested                                                    |
+| Effective-dated pay rates; missing rates flagged rather than costed at zero                                                                                                                | Implemented and unit tested                                               |
+| Pay information restricted to the Manager role (the demo user is a manager; there is no role switch)                                                                                       | Implemented and tested                                                    |
+| Settings: profile, assigned store and trading hours, app version                                                                                                                           | Implemented and component tested                                          |
+| App preference: vibrate on scan errors (used by both scanners), saved on device                                                                                                            | Implemented and tested                                                    |
+| Notification preferences, saved on device                                                                                                                                                  | Implemented. Push notifications are not sent yet, and the screen says so. |
+| Sign out (demo): clears orders, roster changes and preferences on the device, returns to the dashboard                                                                                     | Implemented and tested                                                    |
+| Sales Analytics, Employees                                                                                                                                                                 | Planned (shown as "Planned" in the More tab)                              |
+| CI, EAS Build, Maestro E2E                                                                                                                                                                 | Planned                                                                   |
 
 ## Getting started
 
@@ -57,7 +57,7 @@ npx expo start
 ```
 
 - **iPhone:** open the Camera app, scan the QR code in the terminal, and tap the banner to open in Expo Go.
-- **Android:** open Expo Go and choose *Scan QR code*.
+- **Android:** open Expo Go and choose _Scan QR code_.
 - The phone and computer must be on the same Wi-Fi network. If the QR code will not connect (guest or corporate Wi-Fi), use `npx expo start --tunnel`.
 - **Simulators:** press `i` (iOS Simulator, needs Xcode) or `a` (Android emulator) in the Expo terminal.
 
@@ -65,7 +65,7 @@ npx expo start
 
 1. Open the **Orders** tab. High-priority orders sit at the top.
 2. Tap **#ORD-7842** (New) and press **Start Picking**. Mark Ready stays disabled and says how many items remain.
-3. Press **Scan Product Barcode**. On a phone, point the camera at a barcode. On a simulator, type a barcode or tap an item in *Still to pick* to fill it (development builds only).
+3. Press **Scan Product Barcode**. On a phone, point the camera at a barcode. On a simulator, type a barcode or tap an item in _Still to pick_ to fill it (development builds only).
 4. Try a wrong barcode, for example `9301234000080`, to see the rejection. Scan an item twice past its quantity to see over-pick prevention.
 5. When every item is verified, press **Review and complete**, then **Confirm ready for collection**. The order moves to Ready.
 6. Close and reopen the app. The order keeps its status and picked quantities.

@@ -1,35 +1,70 @@
-import Constants from 'expo-constants';
-import { useRouter } from 'expo-router';
-import { useState, type ReactNode } from 'react';
-import { AccessibilityInfo, ScrollView, StyleSheet, Switch, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { type FC, type ReactNode, useState } from "react";
+import {
+  AccessibilityInfo,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { AppHeader } from '@/components/layout/AppHeader';
-import { Screen } from '@/components/layout/Screen';
-import { AppText, ConfirmationModal, InitialsAvatar, InlineBanner, PrimaryButton, SecondaryButton } from '@/components/ui';
-import { useOrdersStore } from '@/features/orders/store/useOrdersStore';
-import { atTime } from '@/features/roster/domain/dates';
-import { STORE_TRADING_HOURS } from '@/features/roster/domain/shifts';
-import { useRosterStore } from '@/features/roster/store/useRosterStore';
-import { formatClockTime } from '@/lib/format';
-import { DEMO_STORE_ID, DEMO_STORE_NAME } from '@/mocks/store';
-import { DEMO_USER } from '@/mocks/user';
-import { colors, radius, spacing } from '@/theme';
+import Constants from "expo-constants";
+import { useRouter } from "expo-router";
 
-import { usePreferencesStore, type NotificationPreferences } from '../usePreferencesStore';
+import { useOrdersStore } from "@/features/orders/store/useOrdersStore";
+import { atTime } from "@/features/roster/domain/dates";
+import { STORE_TRADING_HOURS } from "@/features/roster/domain/shifts";
+import { useRosterStore } from "@/features/roster/store/useRosterStore";
 
-type PendingAction = 'reset' | 'signOut' | null;
+import { AppHeader } from "@/components/layout/AppHeader";
+import { Screen } from "@/components/layout/Screen";
+import {
+  AppText,
+  ConfirmationModal,
+  InitialsAvatar,
+  InlineBanner,
+  PrimaryButton,
+  SecondaryButton,
+} from "@/components/ui";
 
-const NOTIFICATION_ROWS: { key: keyof NotificationPreferences; label: string; description: string }[] = [
-  { key: 'newOrders', label: 'New Click & Collect orders', description: 'When a customer places an order' },
-  { key: 'lowStock', label: 'Low stock alerts', description: 'When a product reaches its reorder point' },
-  { key: 'rosterChanges', label: 'Roster changes', description: 'When your shifts are added or changed' },
+import { formatClockTime } from "@/lib/format";
+import { DEMO_STORE_ID, DEMO_STORE_NAME } from "@/mocks/store";
+import { DEMO_USER } from "@/mocks/user";
+import { colors, radius, spacing } from "@/theme";
+
+import {
+  type NotificationPreferences,
+  usePreferencesStore,
+} from "../usePreferencesStore";
+
+type PendingAction = "reset" | "signOut" | null;
+
+const NOTIFICATION_ROWS: Array<{
+  description: string;
+  key: keyof NotificationPreferences;
+  label: string;
+}> = [
+  {
+    key: "newOrders",
+    label: "New Click & Collect orders",
+    description: "When a customer places an order",
+  },
+  {
+    key: "lowStock",
+    label: "Low stock alerts",
+    description: "When a product reaches its reorder point",
+  },
+  {
+    key: "rosterChanges",
+    label: "Roster changes",
+    description: "When your shifts are added or changed",
+  },
 ];
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({ title, children }: { children: ReactNode; title: string }) {
   return (
     <View style={styles.section}>
-      <AppText variant="cardTitle" accessibilityRole="header">
+      <AppText accessibilityRole="header" variant="cardTitle">
         {title}
       </AppText>
       <View style={styles.card}>{children}</View>
@@ -37,53 +72,74 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function InfoRow({ label, value, first }: { label: string; value: string; first?: boolean }) {
+function InfoRow({
+  label,
+  value,
+  first,
+}: {
+  first?: boolean;
+  label: string;
+  value: string;
+}) {
   return (
-    <View style={[styles.row, !first && styles.divider]} accessible accessibilityLabel={`${label}: ${value}`}>
+    <View
+      accessible
+      accessibilityLabel={`${label}: ${value}`}
+      style={[styles.row, !first && styles.divider]}
+    >
       <AppText color="textMuted">{label}</AppText>
-      <AppText variant="bodyStrong" style={styles.value}>
+      <AppText style={styles.value} variant="bodyStrong">
         {value}
       </AppText>
     </View>
   );
 }
 
-interface SwitchRowProps {
-  label: string;
+type SwitchRowProps = {
   description: string;
-  value: boolean;
+  first?: boolean;
+  label: string;
   onChange: (value: boolean) => void;
   testID: string;
-  first?: boolean;
-}
+  value: boolean;
+};
 
-function SwitchRow({ label, description, value, onChange, testID, first }: SwitchRowProps) {
+function SwitchRow({
+  label,
+  description,
+  value,
+  onChange,
+  testID,
+  first,
+}: SwitchRowProps) {
   return (
     <View style={[styles.row, !first && styles.divider]}>
       <View style={styles.flex}>
         <AppText variant="bodyStrong">{label}</AppText>
-        <AppText variant="supporting" color="textMuted">
+        <AppText color="textMuted" variant="supporting">
           {description}
         </AppText>
       </View>
       <Switch
+        accessibilityHint={description}
+        accessibilityLabel={label}
         testID={testID}
+        trackColor={{ true: colors.accent, false: colors.border }}
         value={value}
         onValueChange={onChange}
-        accessibilityLabel={label}
-        accessibilityHint={description}
-        trackColor={{ true: colors.accent, false: colors.border }}
       />
     </View>
   );
 }
 
-export function SettingsScreen() {
+export const SettingsScreen: FC = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const vibrateOnScanError = usePreferencesStore((s) => s.vibrateOnScanError);
   const notifications = usePreferencesStore((s) => s.notifications);
-  const setVibrateOnScanError = usePreferencesStore((s) => s.setVibrateOnScanError);
+  const setVibrateOnScanError = usePreferencesStore(
+    (s) => s.setVibrateOnScanError,
+  );
   const setNotification = usePreferencesStore((s) => s.setNotification);
   const resetPreferences = usePreferencesStore((s) => s.resetPreferences);
   const resetOrders = useOrdersStore((s) => s.resetDemoData);
@@ -93,42 +149,57 @@ export function SettingsScreen() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  const version = Constants.expoConfig?.version ?? 'dev';
-  const sdkMajor = Constants.expoConfig?.sdkVersion?.split('.')[0] ?? '57';
+  const version = Constants.expoConfig?.version ?? "dev";
+  const sdkMajor = Constants.expoConfig?.sdkVersion?.split(".")[0] ?? "57";
   const tradingHours = [STORE_TRADING_HOURS.open, STORE_TRADING_HOURS.close]
     .map((time) => formatClockTime(atTime(new Date(), time) ?? new Date()))
-    .join(' – ');
+    .join(" – ");
 
-  const goBack = () => (router.canGoBack() ? router.back() : router.replace('/more'));
+  const goBack = () =>
+    router.canGoBack() ? router.back() : router.replace("/more");
 
   const confirm = async () => {
     const action = pending;
     setBusy(true);
     resetRoster();
     await resetOrders();
-    if (action === 'signOut') resetPreferences();
+    if (action === "signOut") {
+      resetPreferences();
+    }
     setBusy(false);
     setPending(null);
 
-    if (action === 'signOut') {
-      AccessibilityInfo.announceForAccessibility('Signed out. Demo data cleared.');
-      router.dismissTo('/dashboard');
+    if (action === "signOut") {
+      AccessibilityInfo.announceForAccessibility(
+        "Signed out. Demo data cleared.",
+      );
+      router.dismissTo("/dashboard");
       return;
     }
-    setMessage('Demo orders and roster restored.');
-    AccessibilityInfo.announceForAccessibility('Demo orders and roster restored.');
+    setMessage("Demo orders and roster restored.");
+    AccessibilityInfo.announceForAccessibility(
+      "Demo orders and roster restored.",
+    );
   };
 
   return (
     <Screen testID="settings-screen">
       <AppHeader title="Settings" onBack={goBack} />
-      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + spacing.lg }]}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: insets.bottom + spacing.lg },
+        ]}
+      >
         <View
-          style={styles.profile}
           accessible
           accessibilityLabel={`${DEMO_USER.firstName}, ${DEMO_USER.role}, demo account`}
+          style={styles.profile}
         >
-          <InitialsAvatar initials={DEMO_USER.firstName.slice(0, 2).toUpperCase()} size={56} />
+          <InitialsAvatar
+            initials={DEMO_USER.firstName.slice(0, 2).toUpperCase()}
+            size={56}
+          />
           <View style={styles.flex}>
             <AppText variant="sectionTitle">{DEMO_USER.firstName}</AppText>
             <AppText color="textMuted">{DEMO_USER.role} · Demo account</AppText>
@@ -144,9 +215,9 @@ export function SettingsScreen() {
         <Section title="App preferences">
           <SwitchRow
             first
-            testID="pref-vibrate"
-            label="Vibrate on scan errors"
             description="A short vibration when a barcode is wrong or already picked"
+            label="Vibrate on scan errors"
+            testID="pref-vibrate"
             value={vibrateOnScanError}
             onChange={setVibrateOnScanError}
           />
@@ -155,18 +226,23 @@ export function SettingsScreen() {
         <Section title="Notifications">
           {NOTIFICATION_ROWS.map((row, index) => (
             <SwitchRow
-              key={row.key}
-              first={index === 0}
-              testID={`pref-notify-${row.key}`}
-              label={row.label}
               description={row.description}
+              first={index === 0}
+              key={row.key}
+              label={row.label}
+              testID={`pref-notify-${row.key}`}
               value={notifications[row.key]}
               onChange={(value) => setNotification(row.key, value)}
             />
           ))}
         </Section>
-        <AppText variant="supporting" color="textMuted" testID="notifications-note">
-          Your choices are saved on this device. Push notifications are not sent yet; they arrive in a later release.
+        <AppText
+          color="textMuted"
+          testID="notifications-note"
+          variant="supporting"
+        >
+          Your choices are saved on this device. Push notifications are not sent
+          yet; they arrive in a later release.
         </AppText>
 
         <Section title="About">
@@ -175,51 +251,57 @@ export function SettingsScreen() {
           <InfoRow label="Data" value="Fictional demo data" />
         </Section>
 
-        {message ? <InlineBanner tone="success" message={message} testID="settings-message" /> : null}
+        {message ? (
+          <InlineBanner
+            message={message}
+            testID="settings-message"
+            tone="success"
+          />
+        ) : null}
 
         <SecondaryButton
-          testID="reset-demo-data"
-          label="Reset demo data"
+          accessibilityHint="Restores orders and the roster to their original demo state"
           icon="refresh"
+          label="Reset demo data"
+          testID="reset-demo-data"
           onPress={() => {
             setMessage(null);
-            setPending('reset');
+            setPending("reset");
           }}
-          accessibilityHint="Restores orders and the roster to their original demo state"
         />
         <PrimaryButton
-          testID="sign-out"
-          label="Sign out"
-          icon="log-out-outline"
-          onPress={() => setPending('signOut')}
           accessibilityHint="Clears data saved on this device and returns to the dashboard"
+          icon="log-out-outline"
+          label="Sign out"
+          testID="sign-out"
+          onPress={() => setPending("signOut")}
         />
       </ScrollView>
 
       <ConfirmationModal
-        visible={pending !== null}
-        title={pending === 'signOut' ? 'Sign out?' : 'Reset demo data?'}
-        message={
-          pending === 'signOut'
-            ? 'This is a demo account, so signing out clears the orders, roster changes and preferences saved on this device.'
-            : 'All order progress and roster changes saved on this device will be lost.'
-        }
-        confirmLabel={pending === 'signOut' ? 'Sign out' : 'Reset data'}
         destructive
+        confirmLabel={pending === "signOut" ? "Sign out" : "Reset data"}
         loading={busy}
-        onConfirm={() => void confirm()}
+        message={
+          pending === "signOut"
+            ? "This is a demo account, so signing out clears the orders, roster changes and preferences saved on this device."
+            : "All order progress and roster changes saved on this device will be lost."
+        }
+        title={pending === "signOut" ? "Sign out?" : "Reset demo data?"}
+        visible={pending !== null}
         onCancel={() => setPending(null)}
+        onConfirm={() => void confirm()}
       />
     </Screen>
   );
-}
+};
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { padding: spacing.lg, gap: spacing.lg },
   profile: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.lg,
     padding: spacing.lg,
     borderRadius: radius.lg,
@@ -235,7 +317,16 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.surface,
   },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md, minHeight: 52 },
-  divider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
-  value: { flexShrink: 1, textAlign: 'right', marginLeft: 'auto' },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    paddingVertical: spacing.md,
+    minHeight: 52,
+  },
+  divider: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+  },
+  value: { flexShrink: 1, textAlign: "right", marginLeft: "auto" },
 });

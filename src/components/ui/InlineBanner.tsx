@@ -1,43 +1,57 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { StyleSheet, View } from 'react-native';
+import { type FC } from "react";
+import { StyleSheet, View } from "react-native";
 
-import { colors, radius, spacing } from '@/theme';
+import Ionicons from "@expo/vector-icons/Ionicons";
 
-import { AppText } from './AppText';
+import { colors, radius, spacing } from "@/theme";
 
-export interface InlineBannerProps {
-  tone: 'error' | 'success' | 'info';
+import { AppText } from "./AppText";
+
+type Props = {
   message: string;
   testID?: string;
-}
+  tone: "error" | "success" | "info";
+};
 
 const TONES = {
-  error: { background: colors.errorSoft, icon: 'alert-circle' as const, iconColor: colors.error },
-  success: { background: colors.successSoft, icon: 'checkmark-circle' as const, iconColor: colors.success },
-  info: { background: colors.infoSoft, icon: 'information-circle' as const, iconColor: colors.accent },
+  error: {
+    background: colors.errorSoft,
+    icon: "alert-circle" as const,
+    iconColor: colors.error,
+  },
+  success: {
+    background: colors.successSoft,
+    icon: "checkmark-circle" as const,
+    iconColor: colors.success,
+  },
+  info: {
+    background: colors.infoSoft,
+    icon: "information-circle" as const,
+    iconColor: colors.accent,
+  },
 };
 
 /** Inline message. Errors use the alert role so screen readers announce them immediately. */
-export function InlineBanner({ tone, message, testID }: InlineBannerProps) {
+export const InlineBanner: FC<Props> = ({ tone, message, testID }) => {
   const t = TONES[tone];
   return (
     <View
-      testID={testID}
       accessible
-      accessibilityRole={tone === 'error' ? 'alert' : 'text'}
-      accessibilityLiveRegion={tone === 'error' ? 'assertive' : 'polite'}
+      accessibilityLiveRegion={tone === "error" ? "assertive" : "polite"}
+      accessibilityRole={tone === "error" ? "alert" : "text"}
       style={[styles.banner, { backgroundColor: t.background }]}
+      testID={testID}
     >
-      <Ionicons name={t.icon} size={18} color={t.iconColor} />
+      <Ionicons color={t.iconColor} name={t.icon} size={18} />
       <AppText style={styles.text}>{message}</AppText>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   banner: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     gap: spacing.sm,
     padding: spacing.md,
     borderRadius: radius.md,

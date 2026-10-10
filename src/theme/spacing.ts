@@ -1,4 +1,4 @@
-import { radii, space } from './tokens';
+import { radii, space } from "./tokens";
 
 /** Spacing scale from the design handoff: 4, 8, 12, 16, 20, 24. */
 export const spacing = {

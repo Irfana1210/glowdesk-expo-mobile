@@ -1,30 +1,43 @@
-import { useEffect } from 'react';
-import { AccessibilityInfo, ActivityIndicator, StyleSheet, View } from 'react-native';
+import { type FC, useEffect } from "react";
+import {
+  AccessibilityInfo,
+  ActivityIndicator,
+  StyleSheet,
+  View,
+} from "react-native";
 
-import { colors, spacing } from '@/theme';
+import { colors, spacing } from "@/theme";
 
-import { AppText } from './AppText';
+import { AppText } from "./AppText";
 
-export function LoadingState({ message = 'Loading…' }: { message?: string }) {
+export const LoadingState: FC<{ message?: string }> = ({
+  message = "Loading…",
+}) => {
   useEffect(() => {
     AccessibilityInfo.announceForAccessibility(message);
   }, [message]);
 
   return (
     <View
-      style={styles.container}
       accessible
-      accessibilityRole="progressbar"
       accessibilityLabel={message}
       accessibilityLiveRegion="polite"
+      accessibilityRole="progressbar"
+      style={styles.container}
       testID="loading-state"
     >
-      <ActivityIndicator size="large" color={colors.accent} />
+      <ActivityIndicator color={colors.accent} size="large" />
       <AppText color="textMuted">{message}</AppText>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.xl },
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.md,
+    padding: spacing.xl,
+  },
 });

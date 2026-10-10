@@ -1,27 +1,42 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import type { ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { type FC, type ReactNode } from "react";
+import { StyleSheet, View } from "react-native";
 
-import { colors, spacing } from '@/theme';
+import Ionicons from "@expo/vector-icons/Ionicons";
 
-import { AppText } from './AppText';
-import type { IconName } from './Button';
+import { colors, spacing } from "@/theme";
 
-export interface EmptyStateProps {
-  title: string;
-  message?: string;
-  icon?: IconName;
+import { AppText } from "./AppText";
+import { type IconName } from "./Button";
+
+type Props = {
   action?: ReactNode;
+  icon?: IconName;
+  message?: string;
   testID?: string;
-}
+  title: string;
+};
 
-export function EmptyState({ title, message, icon = 'file-tray-outline', action, testID = 'empty-state' }: EmptyStateProps) {
+export const EmptyState: FC<Props> = ({
+  title,
+  message,
+  icon = "file-tray-outline",
+  action,
+  testID = "empty-state",
+}) => {
   return (
     <View style={styles.container} testID={testID}>
-      <View style={styles.iconCircle} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-        <Ionicons name={icon} size={28} color={colors.accent} />
+      <View
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        style={styles.iconCircle}
+      >
+        <Ionicons color={colors.accent} name={icon} size={28} />
       </View>
-      <AppText variant="sectionTitle" style={styles.center} accessibilityRole="header">
+      <AppText
+        accessibilityRole="header"
+        style={styles.center}
+        variant="sectionTitle"
+      >
         {title}
       </AppText>
       {message ? (
@@ -32,13 +47,13 @@ export function EmptyState({ title, message, icon = 'file-tray-outline', action,
       {action ? <View style={styles.action}>{action}</View> : null}
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     gap: spacing.sm,
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.xxl,
@@ -48,10 +63,10 @@ const styles = StyleSheet.create({
     height: 64,
     borderRadius: 32,
     backgroundColor: colors.accentSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: spacing.sm,
   },
-  center: { textAlign: 'center' },
-  action: { marginTop: spacing.lg, alignSelf: 'stretch' },
+  center: { textAlign: "center" },
+  action: { marginTop: spacing.lg, alignSelf: "stretch" },
 });

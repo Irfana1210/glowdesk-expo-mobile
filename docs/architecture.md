@@ -100,13 +100,13 @@ src/app (routes)
 
 ## State
 
-| Data | Where it lives | Why |
-| --- | --- | --- |
-| Orders and picking progress | `useOrdersStore`, persisted | Edited on the device. Must survive a restart (brief §19). |
-| Shifts | `useRosterStore`, persisted | Managers add, edit and remove shifts locally until the backend exists. |
-| Preferences | `usePreferencesStore`, persisted | Device-level settings. |
-| Sales summary, inventory | TanStack Query | Read-only server data. Caching, retries and refetch on foreground come for free. |
-| Demo role | `useSessionStore`, in memory | Fixed to Manager. Gates the pay information on the labour screen. |
+| Data                        | Where it lives                   | Why                                                                              |
+| --------------------------- | -------------------------------- | -------------------------------------------------------------------------------- |
+| Orders and picking progress | `useOrdersStore`, persisted      | Edited on the device. Must survive a restart (brief §19).                        |
+| Shifts                      | `useRosterStore`, persisted      | Managers add, edit and remove shifts locally until the backend exists.           |
+| Preferences                 | `usePreferencesStore`, persisted | Device-level settings.                                                           |
+| Sales summary, inventory    | TanStack Query                   | Read-only server data. Caching, retries and refetch on foreground come for free. |
+| Demo role                   | `useSessionStore`, in memory     | Fixed to Manager. Gates the pay information on the labour screen.                |
 
 Every store write goes through the domain rules first, so a store can never hold an invalid order transition or shift.
 

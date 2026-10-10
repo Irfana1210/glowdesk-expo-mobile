@@ -1,33 +1,41 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import type { ComponentProps } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { type ComponentProps, type FC } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  type StyleProp,
+  StyleSheet,
+  View,
+  type ViewStyle,
+} from "react-native";
 
-import { colors, fontFamily, fontSizes, radius, spacing } from '@/theme';
+import Ionicons from "@expo/vector-icons/Ionicons";
 
-import { AppText } from './AppText';
+import { colors, fontFamily, fontSizes, radius, spacing } from "@/theme";
 
-export type IconName = ComponentProps<typeof Ionicons>['name'];
+import { AppText } from "./AppText";
 
-export interface ButtonProps {
-  label: string;
-  onPress?: () => void;
-  disabled?: boolean;
-  loading?: boolean;
-  icon?: IconName;
+export type IconName = ComponentProps<typeof Ionicons>["name"];
+
+export type ButtonProps = {
   accessibilityHint?: string;
+  disabled?: boolean;
+  icon?: IconName;
+  label: string;
+  loading?: boolean;
+  onPress?: () => void;
   style?: StyleProp<ViewStyle>;
   testID?: string;
-}
+};
 
-interface BaseButtonProps extends ButtonProps {
-  variant: 'primary' | 'secondary';
-}
+type Props = {
+  variant: "primary" | "secondary";
+} & ButtonProps;
 
 /**
  * Shared implementation behind PrimaryButton and SecondaryButton.
  * Primary: dark, 52 high. Secondary: white with a border, 48 high. Both use a 14 radius.
  */
-export function BaseButton({
+export const BaseButton: FC<Props> = ({
   variant,
   label,
   onPress,
@@ -37,20 +45,22 @@ export function BaseButton({
   accessibilityHint,
   style,
   testID,
-}: BaseButtonProps) {
-  const isPrimary = variant === 'primary';
+}) => {
+  const isPrimary = variant === "primary";
   const inactive = disabled || loading;
-  const foreground = inactive ? colors.inactive : isPrimary ? colors.textOnDark : colors.text;
+  const foreground = inactive
+    ? colors.inactive
+    : isPrimary
+      ? colors.textOnDark
+      : colors.text;
 
   return (
     <Pressable
-      testID={testID}
-      accessibilityRole="button"
-      accessibilityLabel={label}
       accessibilityHint={accessibilityHint}
+      accessibilityLabel={label}
+      accessibilityRole="button"
       accessibilityState={{ disabled: inactive, busy: loading }}
       disabled={inactive}
-      onPress={onPress}
       style={({ pressed }) => [
         styles.base,
         isPrimary ? styles.primary : styles.secondary,
@@ -58,29 +68,39 @@ export function BaseButton({
         pressed && !inactive && styles.pressed,
         style,
       ]}
+      testID={testID}
+      onPress={onPress}
     >
       <View style={styles.content}>
         {loading ? (
           <ActivityIndicator color={foreground} />
         ) : icon ? (
-          <Ionicons name={icon} size={18} color={foreground} />
+          <Ionicons color={foreground} name={icon} size={18} />
         ) : null}
-        <AppText style={[styles.label, { color: foreground }, isPrimary && styles.primaryLabel]}>{label}</AppText>
+        <AppText
+          style={[
+            styles.label,
+            { color: foreground },
+            isPrimary && styles.primaryLabel,
+          ]}
+        >
+          {label}
+        </AppText>
       </View>
     </Pressable>
   );
-}
+};
 
 const styles = StyleSheet.create({
   base: {
     borderRadius: radius.md,
     paddingHorizontal: spacing.lg,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: spacing.sm,
   },
   primary: { minHeight: 52, backgroundColor: colors.inverse },
@@ -90,8 +110,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  inactive: { backgroundColor: colors.track, borderWidth: 1, borderColor: colors.border },
+  inactive: {
+    backgroundColor: colors.track,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
   pressed: { opacity: 0.85 },
-  label: { fontFamily: fontFamily.semibold, fontSize: fontSizes.body, lineHeight: 20 },
+  label: {
+    fontFamily: fontFamily.semibold,
+    fontSize: fontSizes.body,
+    lineHeight: 20,
+  },
   primaryLabel: { fontSize: fontSizes.bodyLarge },
 });

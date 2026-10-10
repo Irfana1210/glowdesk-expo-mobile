@@ -1,25 +1,38 @@
-import { StyleSheet, View } from 'react-native';
+import { type FC } from "react";
+import { StyleSheet, View } from "react-native";
 
-import { colors, fontFamily } from '@/theme';
+import { colors, fontFamily } from "@/theme";
 
-import { AppText } from './AppText';
+import { AppText } from "./AppText";
 
 /** Decorative avatar. Hidden from screen readers because the parent label already names the person. */
-export function InitialsAvatar({ initials, size = 42, color }: { initials: string; size?: number; color?: string }) {
+export const InitialsAvatar: FC<{
+  color?: string;
+  initials: string;
+  size?: number;
+}> = ({ initials, size = 42, color }) => {
   return (
     <View
-      importantForAccessibility="no-hide-descendants"
       accessibilityElementsHidden
-      style={[styles.circle, { width: size, height: size, borderRadius: size / 2, backgroundColor: color ?? colors.avatar }]}
+      importantForAccessibility="no-hide-descendants"
+      style={[
+        styles.circle,
+        {
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          backgroundColor: color ?? colors.avatar,
+        },
+      ]}
     >
-      <AppText style={styles.text} maxFontSizeMultiplier={1.2}>
+      <AppText maxFontSizeMultiplier={1.2} style={styles.text}>
         {initials}
       </AppText>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  circle: { alignItems: 'center', justifyContent: 'center' },
+  circle: { alignItems: "center", justifyContent: "center" },
   text: { fontFamily: fontFamily.semibold, fontSize: 13, color: colors.text },
 });

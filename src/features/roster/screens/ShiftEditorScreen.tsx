@@ -1,12 +1,27 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { Controller, useForm, useWatch } from 'react-hook-form';
-import { AccessibilityInfo, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { type FC, useMemo, useState } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
+import {
+  AccessibilityInfo,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { AppHeader } from '@/components/layout/AppHeader';
-import { Screen } from '@/components/layout/Screen';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useLocalSearchParams, useRouter } from "expo-router";
+
+import {
+  EMPLOYMENT_TYPE_LABELS,
+  ROLE_LABELS,
+} from "@/features/employees/types";
+
+import { AppHeader } from "@/components/layout/AppHeader";
+import { Screen } from "@/components/layout/Screen";
 import {
   AppText,
   ConfirmationModal,
@@ -15,33 +30,49 @@ import {
   PrimaryButton,
   SecondaryButton,
   SelectField,
-} from '@/components/ui';
-import { EMPLOYMENT_TYPE_LABELS, ROLE_LABELS } from '@/features/employees/types';
-import { DEMO_STORE_ID } from '@/mocks/store';
-import { colors, radius, spacing } from '@/theme';
+} from "@/components/ui";
 
-import { formatDayLabel, fromDateKey, isSameDay, startOfWeek, toDateKey, weekDays, weekdayShort } from '../domain/dates';
+import { DEMO_STORE_ID } from "@/mocks/store";
+import { colors, radius, spacing } from "@/theme";
+
+import {
+  formatDayLabel,
+  fromDateKey,
+  isSameDay,
+  startOfWeek,
+  toDateKey,
+  weekDays,
+  weekdayShort,
+} from "../domain/dates";
 import {
   BREAK_OPTIONS,
-  TIME_OPTIONS,
   createShiftFormSchema,
   defaultFormValues,
+  type ShiftFormValues,
+  TIME_OPTIONS,
   toFormValues,
   toShiftDraft,
-  type ShiftFormValues,
-} from '../domain/shiftForm';
-import { formatHours, paidMinutes, shiftDurationMinutes, type ShiftErrors } from '../domain/shifts';
-import { useRosterStore } from '../store/useRosterStore';
-import type { Shift } from '../types';
+} from "../domain/shiftForm";
+import {
+  formatHours,
+  paidMinutes,
+  shiftDurationMinutes,
+  type ShiftErrors,
+} from "../domain/shifts";
+import { useRosterStore } from "../store/useRosterStore";
+import { type Shift } from "../types";
 
-export function ShiftEditorScreen() {
+export const ShiftEditorScreen: FC = () => {
   const router = useRouter();
-  const params = useLocalSearchParams<{ shiftId?: string; date?: string }>();
-  const shift = useRosterStore((s) => s.shifts.find((x) => x.id === params.shiftId));
+  const params = useLocalSearchParams<{ date?: string; shiftId?: string }>();
+  const shift = useRosterStore((s) =>
+    s.shifts.find((x) => x.id === params.shiftId),
+  );
 
   const close = () => {
-    if (router.canGoBack()) router.back();
-    else router.replace('/roster');
+    if (router.canGoBack()) {
+      router.back();
+    } else router.replace("/roster");
   };
 
   if (params.shiftId && !shift) {
@@ -49,20 +80,33 @@ export function ShiftEditorScreen() {
       <Screen testID="shift-editor-screen">
         <AppHeader title="Edit Shift" onBack={close} />
         <ErrorState
-          title="Shift not found"
           message="It may have been removed."
-          onRetry={() => router.replace('/roster')}
           retryLabel="Back to roster"
+          title="Shift not found"
+          onRetry={() => router.replace("/roster")}
         />
       </Screen>
     );
   }
 
-  const initialDate = params.date && fromDateKey(params.date) ? params.date : toDateKey(new Date());
-  return <ShiftEditorForm shift={shift} initialDate={initialDate} onDone={close} />;
-}
+  const initialDate =
+    params.date && fromDateKey(params.date)
+      ? params.date
+      : toDateKey(new Date());
+  return (
+    <ShiftEditorForm initialDate={initialDate} shift={shift} onDone={close} />
+  );
+};
 
-function ShiftEditorForm({ shift, initialDate, onDone }: { shift?: Shift; initialDate: string; onDone: () => void }) {
+function ShiftEditorForm({
+  shift,
+  initialDate,
+  onDone,
+}: {
+  initialDate: string;
+  onDone: () => void;
+  shift?: Shift;
+}) {
   const insets = useSafeAreaInsets();
   const employees = useRosterStore((s) => s.employees);
   const shifts = useRosterStore((s) => s.shifts);
@@ -73,7 +117,13 @@ function ShiftEditorForm({ shift, initialDate, onDone }: { shift?: Shift; initia
   const isEditing = Boolean(shift);
 
   const schema = useMemo(
-    () => createShiftFormSchema({ storeId: DEMO_STORE_ID, employees, shifts, editingShiftId: shift?.id }),
+    () =>
+      createShiftFormSchema({
+        storeId: DEMO_STORE_ID,
+        employees,
+        shifts,
+        editingShiftId: shift?.id,
+      }),
     [employees, shifts, shift?.id],
   );
   const {
@@ -84,8 +134,8 @@ function ShiftEditorForm({ shift, initialDate, onDone }: { shift?: Shift; initia
   } = useForm<ShiftFormValues>({
     resolver: zodResolver(schema),
     defaultValues: shift ? toFormValues(shift) : defaultFormValues(initialDate),
-    mode: 'onSubmit',
-    reValidateMode: 'onChange',
+    mode: "onSubmit",
+    reValidateMode: "onChange",
   });
   const values = useWatch({ control }) as ShiftFormValues;
 
@@ -107,28 +157,34 @@ function ShiftEditorForm({ shift, initialDate, onDone }: { shift?: Shift; initia
   const duration = draft ? shiftDurationMinutes(draft) : 0;
 
   const applyErrors = (result: ShiftErrors) => {
-    const map: Record<string, keyof ShiftFormValues | 'root'> = {
-      employeeId: 'employeeId',
-      startAt: 'startTime',
-      endAt: 'endTime',
-      unpaidBreakMinutes: 'breakMinutes',
-      form: 'root',
+    const map: Record<string, keyof ShiftFormValues | "root"> = {
+      employeeId: "employeeId",
+      startAt: "startTime",
+      endAt: "endTime",
+      unpaidBreakMinutes: "breakMinutes",
+      form: "root",
     };
     for (const [key, message] of Object.entries(result)) {
       const field = map[key];
-      if (field && message) setError(field, { type: 'domain', message });
+      if (field && message) {
+        setError(field, { type: "domain", message });
+      }
     }
   };
 
   const onSave = handleSubmit((formValues) => {
     const next = toShiftDraft(formValues);
-    if (!next) return;
+    if (!next) {
+      return;
+    }
     const result = shift ? updateShift(shift.id, next) : addShift(next);
     if (!result.ok) {
       applyErrors(result.errors);
       return;
     }
-    AccessibilityInfo.announceForAccessibility(isEditing ? 'Shift updated' : 'Shift added');
+    AccessibilityInfo.announceForAccessibility(
+      isEditing ? "Shift updated" : "Shift added",
+    );
     onDone();
   });
 
@@ -138,14 +194,26 @@ function ShiftEditorForm({ shift, initialDate, onDone }: { shift?: Shift; initia
 
   return (
     <Screen testID="shift-editor-screen">
-      <AppHeader title={isEditing ? 'Edit Shift' : 'Add Shift'} onBack={onDone} />
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <AppHeader
+        title={isEditing ? "Edit Shift" : "Add Shift"}
+        onBack={onDone}
+      />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.flex}
+      >
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+        >
           {isSubmitted && errorMessages.length > 0 ? (
             <InlineBanner
-              tone="error"
+              message={
+                errors.root?.message ??
+                "Fix the highlighted fields before saving."
+              }
               testID="form-errors"
-              message={errors.root?.message ?? 'Fix the highlighted fields before saving.'}
+              tone="error"
             />
           ) : null}
 
@@ -154,13 +222,13 @@ function ShiftEditorForm({ shift, initialDate, onDone }: { shift?: Shift; initia
             name="employeeId"
             render={({ field, fieldState }) => (
               <SelectField
-                testID="field-employee"
-                label="Employee"
-                placeholder="Choose an employee"
-                value={field.value || undefined}
-                options={employeeOptions}
-                onChange={field.onChange}
                 error={fieldState.error?.message}
+                label="Employee"
+                options={employeeOptions}
+                placeholder="Choose an employee"
+                testID="field-employee"
+                value={field.value || undefined}
+                onChange={field.onChange}
               />
             )}
           />
@@ -171,24 +239,37 @@ function ShiftEditorForm({ shift, initialDate, onDone }: { shift?: Shift; initia
             render={({ field }) => (
               <View style={styles.fieldGroup}>
                 <AppText variant="label">Date</AppText>
-                <View style={styles.dayRow} accessibilityRole="radiogroup" accessibilityLabel="Shift date">
+                <View
+                  accessibilityLabel="Shift date"
+                  accessibilityRole="radiogroup"
+                  style={styles.dayRow}
+                >
                   {dayChoices.map((day) => {
                     const key = toDateKey(day);
                     const isSelected = key === field.value;
                     return (
                       <Pressable
-                        key={key}
-                        testID={`field-date-${key}`}
-                        onPress={() => field.onChange(key)}
+                        accessibilityLabel={formatDayLabel(day)}
                         accessibilityRole="radio"
                         accessibilityState={{ checked: isSelected }}
-                        accessibilityLabel={formatDayLabel(day)}
-                        style={[styles.dayChip, isSelected && styles.dayChipSelected]}
+                        key={key}
+                        style={[
+                          styles.dayChip,
+                          isSelected && styles.dayChipSelected,
+                        ]}
+                        testID={`field-date-${key}`}
+                        onPress={() => field.onChange(key)}
                       >
-                        <AppText variant="supporting" maxFontSizeMultiplier={1.2}>
+                        <AppText
+                          maxFontSizeMultiplier={1.2}
+                          variant="supporting"
+                        >
                           {weekdayShort(day)}
                         </AppText>
-                        <AppText variant={isSelected ? 'bodyStrong' : 'body'} maxFontSizeMultiplier={1.2}>
+                        <AppText
+                          maxFontSizeMultiplier={1.2}
+                          variant={isSelected ? "bodyStrong" : "body"}
+                        >
                           {day.getDate()}
                         </AppText>
                       </Pressable>
@@ -206,12 +287,12 @@ function ShiftEditorForm({ shift, initialDate, onDone }: { shift?: Shift; initia
                 name="startTime"
                 render={({ field, fieldState }) => (
                   <SelectField
-                    testID="field-start"
-                    label="Start time"
-                    value={field.value}
-                    options={TIME_OPTIONS}
-                    onChange={field.onChange}
                     error={fieldState.error?.message}
+                    label="Start time"
+                    options={TIME_OPTIONS}
+                    testID="field-start"
+                    value={field.value}
+                    onChange={field.onChange}
                   />
                 )}
               />
@@ -221,13 +302,23 @@ function ShiftEditorForm({ shift, initialDate, onDone }: { shift?: Shift; initia
                 control={control}
                 name="endTime"
                 render={({ field }) => (
-                  <SelectField testID="field-end" label="End time" value={field.value} options={TIME_OPTIONS} onChange={field.onChange} />
+                  <SelectField
+                    label="End time"
+                    options={TIME_OPTIONS}
+                    testID="field-end"
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
                 )}
               />
             </View>
           </View>
           {errors.endTime?.message ? (
-            <AppText variant="supporting" color="error" testID="field-end-error">
+            <AppText
+              color="error"
+              testID="field-end-error"
+              variant="supporting"
+            >
               {errors.endTime.message}
             </AppText>
           ) : null}
@@ -239,16 +330,16 @@ function ShiftEditorForm({ shift, initialDate, onDone }: { shift?: Shift; initia
               <View style={styles.switchRow}>
                 <View style={styles.flex}>
                   <AppText variant="bodyStrong">Ends next day</AppText>
-                  <AppText variant="supporting" color="textMuted">
+                  <AppText color="textMuted" variant="supporting">
                     For overnight shifts, such as a stocktake.
                   </AppText>
                 </View>
                 <Switch
+                  accessibilityLabel="Ends next day"
                   testID="field-next-day"
+                  trackColor={{ true: colors.accent, false: colors.border }}
                   value={field.value}
                   onValueChange={field.onChange}
-                  accessibilityLabel="Ends next day"
-                  trackColor={{ true: colors.accent, false: colors.border }}
                 />
               </View>
             )}
@@ -259,48 +350,68 @@ function ShiftEditorForm({ shift, initialDate, onDone }: { shift?: Shift; initia
             name="breakMinutes"
             render={({ field, fieldState }) => (
               <SelectField
-                testID="field-break"
-                label="Unpaid break"
-                value={field.value}
-                options={BREAK_OPTIONS}
-                onChange={field.onChange}
                 error={fieldState.error?.message}
+                label="Unpaid break"
+                options={BREAK_OPTIONS}
+                testID="field-break"
+                value={field.value}
+                onChange={field.onChange}
               />
             )}
           />
 
-          <View style={styles.summary} accessible testID="shift-summary">
+          <View accessible style={styles.summary} testID="shift-summary">
             <AppText variant="cardTitle">Summary</AppText>
             <AppText color="textMuted">
               {draft && duration > 0
                 ? `${formatHours(duration)} shift · ${formatHours(paidMinutes(draft))} paid`
-                : 'Choose a valid start and end time.'}
+                : "Choose a valid start and end time."}
             </AppText>
-            {draft && !isSameDay(new Date(draft.startAt), new Date(draft.endAt)) ? (
-              <AppText color="textMuted">Ends {formatDayLabel(new Date(draft.endAt))}</AppText>
+            {draft &&
+            !isSameDay(new Date(draft.startAt), new Date(draft.endAt)) ? (
+              <AppText color="textMuted">
+                Ends {formatDayLabel(new Date(draft.endAt))}
+              </AppText>
             ) : null}
           </View>
         </ScrollView>
 
-        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
-          <PrimaryButton testID="save-shift" label={isEditing ? 'Save changes' : 'Add shift'} icon="checkmark" onPress={onSave} />
+        <View
+          style={[
+            styles.footer,
+            { paddingBottom: Math.max(insets.bottom, spacing.lg) },
+          ]}
+        >
+          <PrimaryButton
+            icon="checkmark"
+            label={isEditing ? "Save changes" : "Add shift"}
+            testID="save-shift"
+            onPress={onSave}
+          />
           {isEditing ? (
-            <SecondaryButton testID="delete-shift" label="Remove shift" icon="trash-outline" onPress={() => setConfirmDelete(true)} />
+            <SecondaryButton
+              icon="trash-outline"
+              label="Remove shift"
+              testID="delete-shift"
+              onPress={() => setConfirmDelete(true)}
+            />
           ) : null}
         </View>
       </KeyboardAvoidingView>
 
       <ConfirmationModal
-        visible={confirmDelete}
-        title="Remove this shift?"
-        message="The shift is deleted from the roster. This cannot be undone."
-        confirmLabel="Remove shift"
         destructive
+        confirmLabel="Remove shift"
+        message="The shift is deleted from the roster. This cannot be undone."
+        title="Remove this shift?"
+        visible={confirmDelete}
         onCancel={() => setConfirmDelete(false)}
         onConfirm={() => {
-          if (shift) removeShift(shift.id);
+          if (shift) {
+            removeShift(shift.id);
+          }
           setConfirmDelete(false);
-          AccessibilityInfo.announceForAccessibility('Shift removed');
+          AccessibilityInfo.announceForAccessibility("Shift removed");
           onDone();
         }}
       />
@@ -312,19 +423,22 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { padding: spacing.lg, gap: spacing.lg },
   fieldGroup: { gap: spacing.xs },
-  dayRow: { flexDirection: 'row', gap: spacing.xs },
+  dayRow: { flexDirection: "row", gap: spacing.xs },
   dayChip: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
   },
-  dayChipSelected: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  row: { flexDirection: 'row', gap: spacing.md },
-  switchRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  dayChipSelected: {
+    borderColor: colors.accent,
+    backgroundColor: colors.accentSoft,
+  },
+  row: { flexDirection: "row", gap: spacing.md },
+  switchRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   summary: {
     gap: spacing.xs,
     padding: spacing.lg,

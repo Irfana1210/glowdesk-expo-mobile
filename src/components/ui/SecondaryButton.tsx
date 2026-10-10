@@ -1,5 +1,7 @@
-import { BaseButton, type ButtonProps } from './Button';
+import { type FC } from "react";
 
-export function SecondaryButton(props: ButtonProps) {
+import { BaseButton, type ButtonProps } from "./Button";
+
+export const SecondaryButton: FC<ButtonProps> = (props) => {
   return <BaseButton variant="secondary" {...props} />;
-}
+};

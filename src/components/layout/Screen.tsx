@@ -1,23 +1,27 @@
-import type { ReactNode } from 'react';
-import { StyleSheet } from 'react-native';
-import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
+import { type FC, type ReactNode } from "react";
+import { StyleSheet } from "react-native";
+import { type Edge, SafeAreaView } from "react-native-safe-area-context";
 
-import { colors } from '@/theme';
+import { colors } from "@/theme";
 
-export interface ScreenProps {
+type Props = {
   children: ReactNode;
   /** Tab screens skip the bottom edge because the tab bar already handles it. */
-  edges?: Edge[];
+  edges?: Array<Edge>;
   testID?: string;
-}
+};
 
-export function Screen({ children, edges = ['top', 'left', 'right'], testID }: ScreenProps) {
+export const Screen: FC<Props> = ({
+  children,
+  edges = ["top", "left", "right"],
+  testID,
+}) => {
   return (
-    <SafeAreaView style={styles.container} edges={edges} testID={testID}>
+    <SafeAreaView edges={edges} style={styles.container} testID={testID}>
       {children}
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
