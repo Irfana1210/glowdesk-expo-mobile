@@ -28,12 +28,7 @@ import {
 } from "@/types/product";
 
 import { ProductCard } from "../components/product-card";
-import {
-  EMPTY_FILTER,
-  filterInventory,
-  type InventoryFilter,
-  itemStockStatus,
-} from "../domain/stock";
+import { type InventoryFilter, StockUtils } from "../domain/stock";
 import { useInventory } from "../hooks/use-inventory";
 import { type InventoryItem } from "../types";
 
@@ -54,18 +49,22 @@ export const InventoryScreen: FC = () => {
   const router = useRouter();
   const inventory = useInventory();
   const items = useMemo(() => inventory.data ?? [], [inventory.data]);
-  const [filter, setFilter] = useState<InventoryFilter>(EMPTY_FILTER);
+  const [filter, setFilter] = useState<InventoryFilter>(
+    StockUtils.EMPTY_FILTER,
+  );
 
   const counts = useMemo(
     () => ({
       products: items.length,
-      low: items.filter((i) => itemStockStatus(i) === "LOW_STOCK").length,
-      out: items.filter((i) => itemStockStatus(i) === "OUT_OF_STOCK").length,
+      low: items.filter((i) => StockUtils.itemStockStatus(i) === "LOW_STOCK")
+        .length,
+      out: items.filter((i) => StockUtils.itemStockStatus(i) === "OUT_OF_STOCK")
+        .length,
     }),
     [items],
   );
   const visible = useMemo(
-    () => filterInventory(items, filter),
+    () => StockUtils.filterInventory(items, filter),
     [items, filter],
   );
 
@@ -117,7 +116,7 @@ export const InventoryScreen: FC = () => {
               <SecondaryButton
                 icon="close"
                 label="Clear filters"
-                onPress={() => setFilter(EMPTY_FILTER)}
+                onPress={() => setFilter(StockUtils.EMPTY_FILTER)}
               />
             ) : null}
           </View>

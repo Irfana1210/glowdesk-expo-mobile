@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
-import { formatOrderNumber, pluralise } from "@/utils/format-utils";
+import { FormatUtils } from "@/utils/format-utils";
 
 import { signalScanError } from "@/features/settings/preferences.store";
 
@@ -32,8 +32,8 @@ import { SecondaryButton } from "@/components/ui/secondary-button";
 import { colors, radius, spacing } from "@/theme";
 import { type Order } from "@/types/order";
 
-import { getPickingProgress } from "../domain/order-state-machine";
-import { type PickResult, remainingQuantity } from "../domain/picking";
+import { OrderStateMachine } from "../domain/order-state-machine";
+import { PickingUtils, type PickResult } from "../domain/picking";
 import { useEnsureOrdersLoaded } from "../hooks/use-ensure-orders-loaded";
 import { selectOrderById, useOrdersStore } from "../store/orders.store";
 
@@ -71,7 +71,11 @@ export const BarcodeScannerScreen: FC = () => {
   return (
     <Screen edges={["top", "left", "right"]} testID="scanner-screen">
       <AppHeader
-        title={order ? `Scan ${formatOrderNumber(order.id)}` : "Scan products"}
+        title={
+          order
+            ? `Scan ${FormatUtils.formatOrderNumber(order.id)}`
+            : "Scan products"
+        }
         onBack={close}
       />
       {order ? (
@@ -111,11 +115,11 @@ function ScannerContent({
   const [manualCode, setManualCode] = useState("");
   const lastScan = useRef<{ at: number; code: string } | null>(null);
 
-  const progress = getPickingProgress(order);
+  const progress = OrderStateMachine.getPickingProgress(order);
   const allVerified =
     progress.totalItems > 0 && progress.verifiedItems === progress.totalItems;
   const remainingItems = order.items.filter(
-    (item) => remainingQuantity(item) > 0,
+    (item) => PickingUtils.remainingQuantity(item) > 0,
   );
 
   const submit = useCallback(
@@ -188,7 +192,7 @@ function ScannerContent({
         ) : null}
 
         <ProgressBar
-          label={`${progress.verifiedItems} of ${pluralise(progress.totalItems, "item")} verified`}
+          label={`${progress.verifiedItems} of ${FormatUtils.pluralise(progress.totalItems, "item")} verified`}
           ratio={progress.ratio}
         />
 
@@ -230,7 +234,7 @@ function ScannerContent({
             <View style={styles.remainingList}>
               {remainingItems.map((item) => (
                 <Pressable
-                  accessibilityLabel={`${item.name}, ${remainingQuantity(item)} still to pick, barcode ${item.barcode}`}
+                  accessibilityLabel={`${item.name}, ${PickingUtils.remainingQuantity(item)} still to pick, barcode ${item.barcode}`}
                   accessibilityRole={__DEV__ ? "button" : "text"}
                   disabled={!__DEV__}
                   key={item.id}
@@ -250,7 +254,7 @@ function ScannerContent({
                     </AppText>
                   </View>
                   <AppText variant="bodyStrong">
-                    ×{remainingQuantity(item)}
+                    ×{PickingUtils.remainingQuantity(item)}
                   </AppText>
                 </Pressable>
               ))}

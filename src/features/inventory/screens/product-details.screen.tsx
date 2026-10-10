@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useLocalSearchParams, useRouter } from "expo-router";
 
-import { formatCurrency } from "@/utils/format-utils";
+import { FormatUtils } from "@/utils/format-utils";
 
 import { AppHeader } from "@/components/layout/app-header";
 import { Screen } from "@/components/layout/screen";
@@ -18,7 +18,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { colors, radius, spacing } from "@/theme";
 import { CATEGORY_LABELS } from "@/types/product";
 
-import { itemStockStatus } from "../domain/stock";
+import { StockUtils } from "../domain/stock";
 import { useInventory } from "../hooks/use-inventory";
 import { STOCK_STATUS_META } from "../stock-status-meta";
 import { type InventoryItem } from "../types";
@@ -84,7 +84,7 @@ function stockMessage(item: InventoryItem): {
   message: string;
   tone: "error" | "info" | "success";
 } {
-  switch (itemStockStatus(item)) {
+  switch (StockUtils.itemStockStatus(item)) {
     case "OUT_OF_STOCK":
       return {
         tone: "error",
@@ -107,7 +107,7 @@ function stockMessage(item: InventoryItem): {
 function ProductDetailsContent({ item }: { item: InventoryItem }) {
   const insets = useSafeAreaInsets();
   const { product } = item;
-  const status = STOCK_STATUS_META[itemStockStatus(item)];
+  const status = STOCK_STATUS_META[StockUtils.itemStockStatus(item)];
   const message = stockMessage(item);
 
   return (
@@ -170,7 +170,7 @@ function ProductDetailsContent({ item }: { item: InventoryItem }) {
         <DetailRow label="Category" value={CATEGORY_LABELS[product.category]} />
         <DetailRow
           label="Price"
-          value={formatCurrency(product.price, { cents: true })}
+          value={FormatUtils.formatCurrency(product.price, { cents: true })}
         />
         <DetailRow label="Reorder point" value={String(item.reorderPoint)} />
       </View>

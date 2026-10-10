@@ -7,12 +7,7 @@ import { AppText } from "@/components/ui/app-text";
 
 import { colors, spacing, touchTarget } from "@/theme";
 
-import {
-  addDays,
-  formatWeekRange,
-  isSameDay,
-  startOfWeek,
-} from "../domain/dates";
+import { DateUtils } from "../domain/dates";
 
 type Props = {
   now: Date;
@@ -21,7 +16,10 @@ type Props = {
 };
 
 export const WeekNavigator: FC<Props> = ({ weekStart, now, onChange }) => {
-  const isCurrentWeek = isSameDay(weekStart, startOfWeek(now));
+  const isCurrentWeek = DateUtils.isSameDay(
+    weekStart,
+    DateUtils.startOfWeek(now),
+  );
   return (
     <View style={styles.row}>
       <Pressable
@@ -29,7 +27,7 @@ export const WeekNavigator: FC<Props> = ({ weekStart, now, onChange }) => {
         accessibilityRole="button"
         style={styles.button}
         testID="previous-week"
-        onPress={() => onChange(addDays(weekStart, -7))}
+        onPress={() => onChange(DateUtils.addDays(weekStart, -7))}
       >
         <Ionicons color={colors.text} name="chevron-back" size={22} />
       </Pressable>
@@ -39,13 +37,13 @@ export const WeekNavigator: FC<Props> = ({ weekStart, now, onChange }) => {
           testID="week-range"
           variant="cardTitle"
         >
-          {formatWeekRange(weekStart)}
+          {DateUtils.formatWeekRange(weekStart)}
         </AppText>
         {!isCurrentWeek ? (
           <Pressable
             accessibilityRole="button"
             hitSlop={8}
-            onPress={() => onChange(startOfWeek(now))}
+            onPress={() => onChange(DateUtils.startOfWeek(now))}
           >
             <AppText color="accent" variant="label">
               Back to this week
@@ -58,7 +56,7 @@ export const WeekNavigator: FC<Props> = ({ weekStart, now, onChange }) => {
         accessibilityRole="button"
         style={styles.button}
         testID="next-week"
-        onPress={() => onChange(addDays(weekStart, 7))}
+        onPress={() => onChange(DateUtils.addDays(weekStart, 7))}
       >
         <Ionicons color={colors.text} name="chevron-forward" size={22} />
       </Pressable>

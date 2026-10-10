@@ -1,21 +1,21 @@
-import { buildAttention } from "@/features/dashboard/domain/attention";
-import { shiftCardModel } from "@/features/dashboard/domain/shift-card";
-import { nextBreak, staffOnFloor } from "@/features/roster/domain/cover";
-import { shiftsOnDay } from "@/features/roster/domain/shifts";
+import { AttentionUtils } from "@/features/dashboard/domain/attention";
+import { ShiftCardUtils } from "@/features/dashboard/domain/shift-card";
+import { CoverUtils } from "@/features/roster/domain/cover";
+import { ShiftUtils } from "@/features/roster/domain/shifts";
 
 import { createMockInventory } from "@/mocks/inventory";
 import { createMockOrders } from "@/mocks/orders";
 import { createMockShifts } from "@/mocks/shifts";
 
 const NOW = new Date(2026, 9, 10, 16, 40);
-const today = shiftsOnDay(createMockShifts(NOW), NOW);
+const today = ShiftUtils.shiftsOnDay(createMockShifts(NOW), NOW);
 const orders = createMockOrders(NOW);
 
 describe("buildAttention", () => {
   it("matches the three items in the Dashboard mockup", () => {
-    const items = buildAttention({
+    const items = AttentionUtils.buildAttention({
       orders,
-      upcomingBreak: nextBreak(today, NOW),
+      upcomingBreak: CoverUtils.nextBreak(today, NOW),
       breakEmployeeName: "Grace Liu",
       inventory: createMockInventory(),
       now: NOW,
@@ -43,7 +43,11 @@ describe("buildAttention", () => {
 
   it("is empty when nothing needs attention, and skips stock while inventory is loading", () => {
     expect(
-      buildAttention({ orders: [], upcomingBreak: null, now: NOW }),
+      AttentionUtils.buildAttention({
+        orders: [],
+        upcomingBreak: null,
+        now: NOW,
+      }),
     ).toEqual([]);
   });
 });
@@ -52,11 +56,11 @@ describe("shiftCardModel", () => {
   const alex = today.find((s) => s.employeeId === "emp-01");
 
   it("shows time left, progress and the three figures during the shift", () => {
-    const model = shiftCardModel({
+    const model = ShiftCardUtils.shiftCardModel({
       myShift: alex,
       now: NOW,
-      staffOnFloor: staffOnFloor(today, NOW).length,
-      nextBreakAt: nextBreak(today, NOW)?.startsAt ?? null,
+      staffOnFloor: CoverUtils.staffOnFloor(today, NOW).length,
+      nextBreakAt: CoverUtils.nextBreak(today, NOW)?.startsAt ?? null,
       ordersToAssign: 7,
     });
     expect(model).toMatchObject({
@@ -76,17 +80,21 @@ describe("shiftCardModel", () => {
   it("handles before, after and no shift", () => {
     const base = { staffOnFloor: 0, nextBreakAt: null, ordersToAssign: 1 };
     expect(
-      shiftCardModel({ ...base, myShift: alex, now: new Date(2026, 9, 10, 8) }),
+      ShiftCardUtils.shiftCardModel({
+        ...base,
+        myShift: alex,
+        now: new Date(2026, 9, 10, 8),
+      }),
     ).toMatchObject({ headline: "Starts in 1h", live: false, percent: null });
     expect(
-      shiftCardModel({
+      ShiftCardUtils.shiftCardModel({
         ...base,
         myShift: alex,
         now: new Date(2026, 9, 10, 19),
       }),
     ).toMatchObject({ statusLabel: "Shift finished", percent: 100 });
     expect(
-      shiftCardModel({ ...base, myShift: undefined, now: NOW }),
+      ShiftCardUtils.shiftCardModel({ ...base, myShift: undefined, now: NOW }),
     ).toMatchObject({ statusLabel: "Not rostered", percent: null });
   });
 });

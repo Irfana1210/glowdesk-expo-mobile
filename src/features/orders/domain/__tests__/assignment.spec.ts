@@ -1,12 +1,5 @@
-import {
-  AssignmentError,
-  assignOrder,
-  cancelOrder,
-} from "@/features/orders/domain/assignment";
-import {
-  getUnitProgress,
-  OrderTransitionError,
-} from "@/features/orders/domain/order-state-machine";
+import { AssignmentUtils } from "@/features/orders/domain/assignment";
+import { OrderStateMachine } from "@/features/orders/domain/order-state-machine";
 
 import { createMockOrders } from "@/mocks/orders";
 import { type Order } from "@/types/order";
@@ -23,7 +16,7 @@ const order = (id: string): Order => {
 describe("assignOrder", () => {
   it("assigns and bumps the version without mutating the input", () => {
     const input = order("7846");
-    const result = assignOrder(input, "emp-03");
+    const result = AssignmentUtils.assignOrder(input, "emp-03");
 
     expect(result.assigneeId).toBe("emp-03");
     expect(result.version).toBe(input.version + 1);
@@ -32,31 +25,37 @@ describe("assignOrder", () => {
   });
 
   it("unassigns when no employee is given", () => {
-    expect("assigneeId" in assignOrder(order("7841"), undefined)).toBe(false);
+    expect(
+      "assigneeId" in AssignmentUtils.assignOrder(order("7841"), undefined),
+    ).toBe(false);
   });
 
   it.each(["7840", "7830", "7831"])(
     "refuses to reassign finished order %s",
     (id) => {
-      expect(() => assignOrder(order(id), "emp-02")).toThrow(AssignmentError);
+      expect(() => AssignmentUtils.assignOrder(order(id), "emp-02")).toThrow(
+        AssignmentUtils.AssignmentError,
+      );
     },
   );
 });
 
 describe("cancelOrder", () => {
   it("cancels New and Picking orders through the state machine", () => {
-    expect(cancelOrder(order("7846")).status).toBe("CANCELLED");
-    expect(cancelOrder(order("7841")).status).toBe("CANCELLED");
+    expect(AssignmentUtils.cancelOrder(order("7846")).status).toBe("CANCELLED");
+    expect(AssignmentUtils.cancelOrder(order("7841")).status).toBe("CANCELLED");
   });
 
   it("refuses to cancel a Ready order", () => {
-    expect(() => cancelOrder(order("7840"))).toThrow(OrderTransitionError);
+    expect(() => AssignmentUtils.cancelOrder(order("7840"))).toThrow(
+      OrderStateMachine.OrderTransitionError,
+    );
   });
 });
 
 describe("getUnitProgress", () => {
   it("counts units, as the Order Details mockup does", () => {
-    expect(getUnitProgress(order("7841"))).toEqual({
+    expect(OrderStateMachine.getUnitProgress(order("7841"))).toEqual({
       pickedUnits: 2,
       totalUnits: 6,
       remainingUnits: 4,
@@ -73,8 +72,10 @@ describe("getUnitProgress", () => {
         pickedQuantity: i.requiredQuantity + 3,
       })),
     };
-    expect(getUnitProgress(over).percent).toBe(100);
-    expect(getUnitProgress({ ...order("7841"), items: [] })).toEqual({
+    expect(OrderStateMachine.getUnitProgress(over).percent).toBe(100);
+    expect(
+      OrderStateMachine.getUnitProgress({ ...order("7841"), items: [] }),
+    ).toEqual({
       pickedUnits: 0,
       totalUnits: 0,
       remainingUnits: 0,

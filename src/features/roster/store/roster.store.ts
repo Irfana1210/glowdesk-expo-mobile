@@ -14,7 +14,7 @@ import { MOCK_EMPLOYEES } from "@/mocks/employees";
 import { createMockShifts } from "@/mocks/shifts";
 import { DEMO_STORE_ID } from "@/mocks/store";
 
-import { hasErrors, type ShiftErrors, validateShift } from "../domain/shifts";
+import { type ShiftErrors, ShiftUtils } from "../domain/shifts";
 import { type Shift, type ShiftDraft } from "../types";
 
 export type SaveShiftResult =
@@ -74,8 +74,8 @@ export const useRosterStore = create<RosterState>()(
         shifts: createMockShifts(),
 
         addShift: (draft) => {
-          const errors = validateShift(draft, context());
-          if (hasErrors(errors)) {
+          const errors = ShiftUtils.validateShift(draft, context());
+          if (ShiftUtils.hasErrors(errors)) {
             return { ok: false, errors };
           }
           const shift: Shift = {
@@ -95,8 +95,8 @@ export const useRosterStore = create<RosterState>()(
               errors: { form: "This shift no longer exists." },
             };
           }
-          const errors = validateShift(draft, context(shiftId));
-          if (hasErrors(errors)) {
+          const errors = ShiftUtils.validateShift(draft, context(shiftId));
+          if (ShiftUtils.hasErrors(errors)) {
             return { ok: false, errors };
           }
           const shift: Shift = { ...existing, ...draft };

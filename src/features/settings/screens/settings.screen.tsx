@@ -11,11 +11,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 
-import { formatClockTime } from "@/utils/format-utils";
+import { FormatUtils } from "@/utils/format-utils";
 
 import { useOrdersStore } from "@/features/orders/store/orders.store";
-import { atTime } from "@/features/roster/domain/dates";
-import { STORE_TRADING_HOURS } from "@/features/roster/domain/shifts";
+import { DateUtils } from "@/features/roster/domain/dates";
+import { ShiftUtils } from "@/features/roster/domain/shifts";
 import { useRosterStore } from "@/features/roster/store/roster.store";
 
 import { AppHeader } from "@/components/layout/app-header";
@@ -150,8 +150,15 @@ export const SettingsScreen: FC = () => {
 
   const version = Constants.expoConfig?.version ?? "dev";
   const sdkMajor = Constants.expoConfig?.sdkVersion?.split(".")[0] ?? "57";
-  const tradingHours = [STORE_TRADING_HOURS.open, STORE_TRADING_HOURS.close]
-    .map((time) => formatClockTime(atTime(new Date(), time) ?? new Date()))
+  const tradingHours = [
+    ShiftUtils.STORE_TRADING_HOURS.open,
+    ShiftUtils.STORE_TRADING_HOURS.close,
+  ]
+    .map((time) =>
+      FormatUtils.formatClockTime(
+        DateUtils.atTime(new Date(), time) ?? new Date(),
+      ),
+    )
     .join(" – ");
 
   const goBack = () =>

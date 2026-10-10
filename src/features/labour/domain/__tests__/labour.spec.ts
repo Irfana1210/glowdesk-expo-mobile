@@ -1,11 +1,7 @@
 import { type Employee } from "@/features/employees/types";
-import {
-  rateOn,
-  shiftCost,
-  weeklyLabourSummary,
-} from "@/features/labour/domain/labour";
+import { LabourUtils } from "@/features/labour/domain/labour";
 import { type PayRate } from "@/features/labour/types";
-import { addDays } from "@/features/roster/domain/dates";
+import { DateUtils } from "@/features/roster/domain/dates";
 import { type Shift } from "@/features/roster/types";
 
 import { MOCK_EMPLOYEES } from "@/mocks/employees";
@@ -45,42 +41,52 @@ const employees: Array<Employee> = [
 
 describe("rateOn", () => {
   it("uses the latest rate effective on the shift date", () => {
-    expect(rateOn(rates, "e1", new Date(2026, 9, 6))).toBe(30);
-    expect(rateOn(rates, "e1", new Date(2026, 9, 7))).toBe(32);
+    expect(LabourUtils.rateOn(rates, "e1", new Date(2026, 9, 6))).toBe(30);
+    expect(LabourUtils.rateOn(rates, "e1", new Date(2026, 9, 7))).toBe(32);
   });
 
   it("returns null before the first rate or for unknown employees", () => {
-    expect(rateOn(rates, "e1", new Date(2024, 0, 1))).toBeNull();
-    expect(rateOn(rates, "nobody", new Date(2026, 9, 7))).toBeNull();
+    expect(LabourUtils.rateOn(rates, "e1", new Date(2024, 0, 1))).toBeNull();
+    expect(
+      LabourUtils.rateOn(rates, "nobody", new Date(2026, 9, 7)),
+    ).toBeNull();
   });
 });
 
 describe("shiftCost", () => {
   it("multiplies paid hours by the hourly rate", () => {
     // 8h shift − 30m break = 7.5 paid hours × $30
-    expect(shiftCost(shift(), rates)).toBe(225);
+    expect(LabourUtils.shiftCost(shift(), rates)).toBe(225);
   });
 
   it("applies a rate change from its effective date", () => {
     expect(
-      shiftCost(shift({ startAt: at(7, 9), endAt: at(7, 17) }), rates),
+      LabourUtils.shiftCost(
+        shift({ startAt: at(7, 9), endAt: at(7, 17) }),
+        rates,
+      ),
     ).toBe(240);
   });
 
   it("costs an overnight shift at the rate of the day it starts", () => {
     expect(
-      shiftCost(shift({ startAt: at(6, 22), endAt: at(7, 6) }), rates),
+      LabourUtils.shiftCost(
+        shift({ startAt: at(6, 22), endAt: at(7, 6) }),
+        rates,
+      ),
     ).toBe(225);
   });
 
   it("returns null rather than zero when no rate exists", () => {
-    expect(shiftCost(shift({ employeeId: "nobody" }), rates)).toBeNull();
+    expect(
+      LabourUtils.shiftCost(shift({ employeeId: "nobody" }), rates),
+    ).toBeNull();
   });
 });
 
 describe("weeklyLabourSummary", () => {
   const summarise = (shifts: Array<Shift>, budget = 1000) =>
-    weeklyLabourSummary({
+    LabourUtils.weeklyLabourSummary({
       weekStart: WEEK_START,
       shifts,
       employees,
@@ -126,7 +132,7 @@ describe("weeklyLabourSummary", () => {
   });
 
   it("has no labour percentage without forecast sales", () => {
-    const result = weeklyLabourSummary({
+    const result = LabourUtils.weeklyLabourSummary({
       weekStart: WEEK_START,
       shifts: [shift()],
       employees,
@@ -138,9 +144,9 @@ describe("weeklyLabourSummary", () => {
   });
 
   it("costs the full demo week with every rostered employee rated", () => {
-    const result = weeklyLabourSummary({
+    const result = LabourUtils.weeklyLabourSummary({
       weekStart: WEEK_START,
-      shifts: createMockShifts(addDays(WEEK_START, 2)),
+      shifts: createMockShifts(DateUtils.addDays(WEEK_START, 2)),
       employees: MOCK_EMPLOYEES,
       rates: MOCK_PAY_RATES,
       budget: WEEKLY_LABOUR_BUDGET,

@@ -1,11 +1,7 @@
 import { type FC } from "react";
 import { StyleSheet, View } from "react-native";
 
-import {
-  formatCurrency,
-  formatHour,
-  formatHourShort,
-} from "@/utils/format-utils";
+import { FormatUtils } from "@/utils/format-utils";
 
 import { AppText } from "@/components/ui/app-text";
 
@@ -53,9 +49,9 @@ export function describeChart(data: Array<HourlySales>): string {
     return "No sales recorded yet today.";
   }
   const range = (points: Array<HourlySales>) =>
-    `${formatHour(points[0]!.hour)} to ${formatHour(points[points.length - 1]!.hour)}`;
+    `${FormatUtils.formatHour(points[0]!.hour)} to ${FormatUtils.formatHour(points[points.length - 1]!.hour)}`;
   const rest = upcoming.length > 0 ? ` ${range(upcoming)} still to come.` : "";
-  return `Hourly sales from ${range(traded)}, peaking at ${formatCurrency(peak.sales)} at ${formatHour(peak.hour)}.${rest}`;
+  return `Hourly sales from ${range(traded)}, peaking at ${FormatUtils.formatCurrency(peak.sales)} at ${FormatUtils.formatHour(peak.hour)}.${rest}`;
 }
 
 /**
@@ -92,8 +88,8 @@ export const SalesChart: FC<Props> = ({ data, height = 92 }) => {
             testID="sales-chart-peak"
             variant="supporting"
           >
-            Peak {formatHour(peak.hour).replace(/(am|pm)$/, " $1")} ·{" "}
-            {formatCurrency(peak.sales)}
+            Peak {FormatUtils.formatHour(peak.hour).replace(/(am|pm)$/, " $1")}{" "}
+            · {FormatUtils.formatCurrency(peak.sales)}
           </AppText>
         ) : null}
       </View>
@@ -130,7 +126,7 @@ export const SalesChart: FC<Props> = ({ data, height = 92 }) => {
                 />
               </View>
               <AppText maxFontSizeMultiplier={1.1} style={styles.hour}>
-                {formatHourShort(point.hour, index === 0)}
+                {FormatUtils.formatHourShort(point.hour, index === 0)}
               </AppText>
             </View>
           );

@@ -1,11 +1,4 @@
-import {
-  countNeedingReplenishment,
-  EMPTY_FILTER,
-  filterInventory,
-  lookupByBarcode,
-  matchesQuery,
-  stockStatus,
-} from "@/features/inventory/domain/stock";
+import { StockUtils } from "@/features/inventory/domain/stock";
 
 import { createMockInventory } from "@/mocks/inventory";
 import { MOCK_PRODUCTS } from "@/mocks/products";
@@ -33,7 +26,7 @@ describe("stockStatus", () => {
   ] as const)(
     "%i available with reorder point %i is %s",
     (available, reorderPoint, expected) => {
-      expect(stockStatus(available, reorderPoint)).toBe(expected);
+      expect(StockUtils.stockStatus(available, reorderPoint)).toBe(expected);
     },
   );
 });
@@ -44,34 +37,40 @@ describe("matchesQuery", () => {
   it.each(["dewy", "DEWY", "lumen", "ls-10", "  cream  "])(
     "matches %p",
     (query) => {
-      expect(matchesQuery(cream, query)).toBe(true);
+      expect(StockUtils.matchesQuery(cream, query)).toBe(true);
     },
   );
 
   it('ignores accents, so "kori" finds Kōri', () => {
-    expect(matchesQuery(item(MOCK_PRODUCTS.koriHairOil.sku), "kori")).toBe(
-      true,
-    );
+    expect(
+      StockUtils.matchesQuery(item(MOCK_PRODUCTS.koriHairOil.sku), "kori"),
+    ).toBe(true);
   });
 
   it("matches full and partial barcodes", () => {
-    expect(matchesQuery(cream, MOCK_PRODUCTS.lumenCream.barcode)).toBe(true);
     expect(
-      matchesQuery(cream, MOCK_PRODUCTS.lumenCream.barcode.slice(-5)),
+      StockUtils.matchesQuery(cream, MOCK_PRODUCTS.lumenCream.barcode),
+    ).toBe(true);
+    expect(
+      StockUtils.matchesQuery(
+        cream,
+        MOCK_PRODUCTS.lumenCream.barcode.slice(-5),
+      ),
     ).toBe(true);
   });
 
   it("does not match unrelated text, and matches everything for an empty query", () => {
-    expect(matchesQuery(cream, "parfum")).toBe(false);
-    expect(matchesQuery(cream, "   ")).toBe(true);
+    expect(StockUtils.matchesQuery(cream, "parfum")).toBe(false);
+    expect(StockUtils.matchesQuery(cream, "   ")).toBe(true);
   });
 });
 
 describe("filterInventory", () => {
   it("returns every item sorted by name with no filter", () => {
-    const names = filterInventory(inventory, EMPTY_FILTER).map(
-      (i) => i.product.name,
-    );
+    const names = StockUtils.filterInventory(
+      inventory,
+      StockUtils.EMPTY_FILTER,
+    ).map((i) => i.product.name);
     expect(names).toHaveLength(7);
     expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
   });
@@ -79,26 +78,37 @@ describe("filterInventory", () => {
   it("filters by category", () => {
     expect(
       skus(
-        filterInventory(inventory, { ...EMPTY_FILTER, category: "SKINCARE" }),
+        StockUtils.filterInventory(inventory, {
+          ...StockUtils.EMPTY_FILTER,
+          category: "SKINCARE",
+        }),
       ),
     ).toEqual(["LS-1042", "SW-0381"]);
     expect(
       skus(
-        filterInventory(inventory, { ...EMPTY_FILTER, category: "FRAGRANCE" }),
+        StockUtils.filterInventory(inventory, {
+          ...StockUtils.EMPTY_FILTER,
+          category: "FRAGRANCE",
+        }),
       ),
     ).toEqual(["MI-0730"]);
   });
 
   it("shows only low and out of stock items when asked", () => {
     expect(
-      skus(filterInventory(inventory, { ...EMPTY_FILTER, lowStockOnly: true })),
+      skus(
+        StockUtils.filterInventory(inventory, {
+          ...StockUtils.EMPTY_FILTER,
+          lowStockOnly: true,
+        }),
+      ),
     ).toEqual(["HH-1180", "KR-0555", "PP-0917", "VL-2210"]);
   });
 
   it("combines category, low stock and search", () => {
     expect(
       skus(
-        filterInventory(inventory, {
+        StockUtils.filterInventory(inventory, {
           query: "petal",
           category: "MAKEUP",
           lowStockOnly: true,
@@ -108,14 +118,14 @@ describe("filterInventory", () => {
   });
 
   it("counts items needing replenishment", () => {
-    expect(countNeedingReplenishment(inventory)).toBe(4);
-    expect(countNeedingReplenishment([])).toBe(0);
+    expect(StockUtils.countNeedingReplenishment(inventory)).toBe(4);
+    expect(StockUtils.countNeedingReplenishment([])).toBe(0);
   });
 });
 
 describe("lookupByBarcode", () => {
   it("finds a product by its barcode", () => {
-    const result = lookupByBarcode(
+    const result = StockUtils.lookupByBarcode(
       inventory,
       MOCK_PRODUCTS.koriHairOil.barcode,
     );
@@ -125,11 +135,13 @@ describe("lookupByBarcode", () => {
   });
 
   it("reports unknown barcodes and rejects malformed input", () => {
-    expect(lookupByBarcode(inventory, "9999999999994")).toMatchObject({
+    expect(
+      StockUtils.lookupByBarcode(inventory, "9999999999994"),
+    ).toMatchObject({
       ok: false,
       code: "NOT_FOUND",
     });
-    expect(lookupByBarcode(inventory, "abc")).toMatchObject({
+    expect(StockUtils.lookupByBarcode(inventory, "abc")).toMatchObject({
       ok: false,
       code: "INVALID_BARCODE",
     });

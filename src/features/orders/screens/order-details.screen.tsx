@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
-import { formatClockTime, formatDuration } from "@/utils/format-utils";
+import { FormatUtils } from "@/utils/format-utils";
 
 import { useNow } from "@/hooks/use-now";
 
@@ -37,15 +37,11 @@ import { DEMO_STORE_ID } from "@/mocks/store";
 import { colors, fontFamily, radius, spacing, touchTarget } from "@/theme";
 import { type Order } from "@/types/order";
 
-import {
-  canMarkReady,
-  getUnitProgress,
-  isItemVerified,
-} from "../domain/order-state-machine";
-import { dueAt, isActive, isOverdue, minutesOverdue } from "../domain/schedule";
+import { OrderStateMachine } from "../domain/order-state-machine";
+import { ScheduleUtils } from "../domain/schedule";
 import { useEnsureOrdersLoaded } from "../hooks/use-ensure-orders-loaded";
-import { ORDER_STATUS_META, spellInitials } from "../order-status-meta";
-import { orderNumber, placedLabel } from "../presentation";
+import { ORDER_STATUS_META } from "../order-status-meta";
+import { OrderPresentationUtils } from "../presentation";
 import { selectOrderById, useOrdersStore } from "../store/orders.store";
 
 type Feedback = { message: string; tone: "error" | "success" } | null;
@@ -90,7 +86,7 @@ export const OrderDetailsScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
     );
   }
 
-  const canCancel = order ? isActive(order) : false;
+  const canCancel = order ? ScheduleUtils.isActive(order) : false;
 
   return (
     <Screen edges={["top", "left", "right"]} testID="order-details-screen">
@@ -142,11 +138,17 @@ function OrderDetailsContent({
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [assigning, setAssigning] = useState(false);
 
-  const units = useMemo(() => getUnitProgress(order), [order]);
-  const readiness = useMemo(() => canMarkReady(order), [order]);
+  const units = useMemo(
+    () => OrderStateMachine.getUnitProgress(order),
+    [order],
+  );
+  const readiness = useMemo(
+    () => OrderStateMachine.canMarkReady(order),
+    [order],
+  );
   const assignee = employees.find((e) => e.id === order.assigneeId);
-  const overdue = isOverdue(order, now);
-  const number = orderNumber(order);
+  const overdue = ScheduleUtils.isOverdue(order, now);
+  const number = OrderPresentationUtils.orderNumber(order);
 
   const staffOptions = useMemo(
     () => [
@@ -234,7 +236,7 @@ function OrderDetailsContent({
             <InitialsAvatar initials={order.customerInitials} />
             <View
               accessible
-              accessibilityLabel={`Customer ${spellInitials(order.customerInitials)}, placed ${placedLabel(order, now)}, due ${formatClockTime(dueAt(order))}`}
+              accessibilityLabel={`Customer ${OrderPresentationUtils.spellInitials(order.customerInitials)}, placed ${OrderPresentationUtils.placedLabel(order, now)}, due ${FormatUtils.formatClockTime(ScheduleUtils.dueAt(order))}`}
               style={styles.flex}
             >
               <AppText style={styles.customer}>
@@ -245,9 +247,9 @@ function OrderDetailsContent({
                 testID="order-timing"
                 variant="supporting"
               >
-                Placed {placedLabel(order, now)}
-                {isActive(order)
-                  ? ` · due ${formatClockTime(dueAt(order))}`
+                Placed {OrderPresentationUtils.placedLabel(order, now)}
+                {ScheduleUtils.isActive(order)
+                  ? ` · due ${FormatUtils.formatClockTime(ScheduleUtils.dueAt(order))}`
                   : ""}
               </AppText>
             </View>
@@ -259,7 +261,10 @@ function OrderDetailsContent({
                   size={14}
                 />
                 <AppText style={styles.overdueText}>
-                  Overdue {formatDuration(minutesOverdue(order, now))}
+                  Overdue{" "}
+                  {FormatUtils.formatDuration(
+                    ScheduleUtils.minutesOverdue(order, now),
+                  )}
                 </AppText>
               </View>
             ) : null}
@@ -284,7 +289,7 @@ function OrderDetailsContent({
                 </AppText>
               )}
             </AppText>
-            {isActive(order) ? (
+            {ScheduleUtils.isActive(order) ? (
               <Pressable
                 accessibilityLabel={
                   assignee
@@ -330,7 +335,7 @@ function OrderDetailsContent({
             Products · {order.items.length}
           </AppText>
           {order.items.map((item) => {
-            const verified = isItemVerified(item);
+            const verified = OrderStateMachine.isItemVerified(item);
             return (
               <ProductRow
                 accessibilityLabel={`${item.brand ?? ""} ${item.name}, SKU ${item.sku}, picked ${item.pickedQuantity} of ${item.requiredQuantity}, ${verified ? "verified" : "still to scan"}`}

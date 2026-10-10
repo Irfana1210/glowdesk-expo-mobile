@@ -5,7 +5,7 @@ import { OrderCard } from "@/components/ui/order-card";
 import { type Order } from "@/types/order";
 
 import { ORDER_STATUS_META } from "../order-status-meta";
-import { orderCardModel } from "../presentation";
+import { OrderPresentationUtils } from "../presentation";
 
 export type OrderListCardProps = {
   assigneeName: string | undefined;
@@ -21,7 +21,7 @@ function OrderListCardComponent({
   now,
   onPress,
 }: OrderListCardProps) {
-  const model = orderCardModel(order, assigneeName, now);
+  const model = OrderPresentationUtils.orderCardModel(order, assigneeName, now);
   return (
     <OrderCard
       testID={`order-card-${order.id}`}

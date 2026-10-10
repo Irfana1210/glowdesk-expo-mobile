@@ -10,13 +10,12 @@ import { persist } from "zustand/middleware";
 
 import { persistStorage, STORAGE_KEYS } from "@/utils/storage";
 
-import { assignOrder, cancelOrder } from "@/features/orders/domain/assignment";
+import { AssignmentUtils } from "@/features/orders/domain/assignment";
+import { OrderStateMachine } from "@/features/orders/domain/order-state-machine";
 import {
-  markOrderReady,
-  OrderTransitionError,
-  startPicking,
-} from "@/features/orders/domain/order-state-machine";
-import { type PickResult, recordPick } from "@/features/orders/domain/picking";
+  PickingUtils,
+  type PickResult,
+} from "@/features/orders/domain/picking";
 import { fetchOrders } from "@/features/orders/services/orders.service";
 
 import { type Order, type OrderStatus } from "@/types/order";
@@ -122,7 +121,7 @@ type OrderItemLike = {
 };
 
 function errorMessage(error: unknown): string {
-  if (error instanceof OrderTransitionError) {
+  if (error instanceof OrderStateMachine.OrderTransitionError) {
     return error.message;
   }
   if (error instanceof Error) {
@@ -216,11 +215,16 @@ export const useOrdersStore = create<OrdersState>()(
           }
         },
 
-        startPicking: (orderId) => applyTransition(orderId, startPicking),
-        markReady: (orderId) => applyTransition(orderId, markOrderReady),
+        startPicking: (orderId) =>
+          applyTransition(orderId, OrderStateMachine.startPicking),
+        markReady: (orderId) =>
+          applyTransition(orderId, OrderStateMachine.markOrderReady),
         assignOrder: (orderId, employeeId) =>
-          applyTransition(orderId, (order) => assignOrder(order, employeeId)),
-        cancelOrder: (orderId) => applyTransition(orderId, cancelOrder),
+          applyTransition(orderId, (order) =>
+            AssignmentUtils.assignOrder(order, employeeId),
+          ),
+        cancelOrder: (orderId) =>
+          applyTransition(orderId, AssignmentUtils.cancelOrder),
 
         scanItem: (orderId, barcode) => {
           const current = get().orders.find((order) => order.id === orderId);
@@ -231,7 +235,7 @@ export const useOrdersStore = create<OrdersState>()(
               message: "Order not found.",
             };
           }
-          const result = recordPick(current, barcode);
+          const result = PickingUtils.recordPick(current, barcode);
           if (result.ok) {
             replaceOrder(result.order);
           }

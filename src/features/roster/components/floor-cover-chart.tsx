@@ -1,22 +1,18 @@
 import { type FC } from "react";
 import { StyleSheet, View } from "react-native";
 
-import { formatHour, formatHourShort } from "@/utils/format-utils";
+import { FormatUtils } from "@/utils/format-utils";
 
 import { AppText } from "@/components/ui/app-text";
 
 import { colors, fontFamily, spacing, statusPalette } from "@/theme";
 
-import {
-  type HourCover,
-  hoursBelowMinimum,
-  MIN_FLOOR_COVER,
-} from "../domain/cover";
+import { CoverUtils, type HourCover } from "../domain/cover";
 
 const BAR_UNIT = 10;
 
 function spoken(hour: number): string {
-  return formatHour(hour).replace(/(am|pm)$/, " $1");
+  return FormatUtils.formatHour(hour).replace(/(am|pm)$/, " $1");
 }
 
 export function describeCover(cover: Array<HourCover>): string {
@@ -32,14 +28,17 @@ export function describeCover(cover: Array<HourCover>): string {
   const range = `Staff on the floor by hour, ${spoken(first.hour)} to ${spoken(last.hour)}.`;
   const people = lowest.count === 1 ? "person" : "people";
   return lowest.belowMinimum
-    ? `${range} Lowest is ${lowest.count} ${people} at ${spoken(lowest.hour)}, below the minimum of ${MIN_FLOOR_COVER}.`
-    : `${range} At least ${MIN_FLOOR_COVER} people all day.`;
+    ? `${range} Lowest is ${lowest.count} ${people} at ${spoken(lowest.hour)}, below the minimum of ${CoverUtils.MIN_FLOOR_COVER}.`
+    : `${range} At least ${CoverUtils.MIN_FLOOR_COVER} people all day.`;
 }
 
 /** One bar per trading hour, labelled with its headcount. Hours below minimum are flagged in text too. */
 export const FloorCoverChart: FC<{ cover: Array<HourCover> }> = ({ cover }) => {
-  const max = Math.max(MIN_FLOOR_COVER, ...cover.map((h) => h.count));
-  const low = hoursBelowMinimum(cover);
+  const max = Math.max(
+    CoverUtils.MIN_FLOOR_COVER,
+    ...cover.map((h) => h.count),
+  );
+  const low = CoverUtils.hoursBelowMinimum(cover);
 
   return (
     <View style={styles.container}>
@@ -72,7 +71,7 @@ export const FloorCoverChart: FC<{ cover: Array<HourCover> }> = ({ cover }) => {
               />
             </View>
             <AppText maxFontSizeMultiplier={1.1} style={styles.hour}>
-              {formatHourShort(h.hour, index === 0)}
+              {FormatUtils.formatHourShort(h.hour, index === 0)}
             </AppText>
           </View>
         ))}
@@ -83,8 +82,8 @@ export const FloorCoverChart: FC<{ cover: Array<HourCover> }> = ({ cover }) => {
         testID="cover-note"
       >
         {low.length > 0
-          ? `Below minimum of ${MIN_FLOOR_COVER} at ${low.map(spoken).join(", ")}`
-          : `At least ${MIN_FLOOR_COVER} on the floor all day`}
+          ? `Below minimum of ${CoverUtils.MIN_FLOOR_COVER} at ${low.map(spoken).join(", ")}`
+          : `At least ${CoverUtils.MIN_FLOOR_COVER} on the floor all day`}
       </AppText>
     </View>
   );

@@ -1,10 +1,10 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
 
-import { formatCurrency } from "@/utils/format-utils";
+import { FormatUtils } from "@/utils/format-utils";
 
-import { weeklyLabourSummary } from "@/features/labour/domain/labour";
+import { LabourUtils } from "@/features/labour/domain/labour";
 import { LabourScreen } from "@/features/labour/screens/labour.screen";
-import { startOfWeek } from "@/features/roster/domain/dates";
+import { DateUtils } from "@/features/roster/domain/dates";
 import { useRosterStore } from "@/features/roster/store/roster.store";
 import { useSessionStore } from "@/features/session/session.store";
 
@@ -27,8 +27,8 @@ jest.mock("expo-router", () => ({
 }));
 
 const expectedSummary = () =>
-  weeklyLabourSummary({
-    weekStart: startOfWeek(ROSTER_NOW),
+  LabourUtils.weeklyLabourSummary({
+    weekStart: DateUtils.startOfWeek(ROSTER_NOW),
     shifts: useRosterStore.getState().shifts,
     employees: useRosterStore.getState().employees,
     rates: MOCK_PAY_RATES,
@@ -48,11 +48,13 @@ describe("LabourScreen", () => {
     const summary = expectedSummary();
 
     expect(screen.getByTestId("labour-cost-value")).toHaveTextContent(
-      formatCurrency(summary.totalCost),
+      FormatUtils.formatCurrency(summary.totalCost),
     );
     expect(screen.getByText("202.5h paid")).toBeOnTheScreen();
     expect(
-      screen.getByText(`${formatCurrency(summary.budgetRemaining)} remaining`),
+      screen.getByText(
+        `${FormatUtils.formatCurrency(summary.budgetRemaining)} remaining`,
+      ),
     ).toBeOnTheScreen();
     expect(screen.getByTestId("labour-disclaimer")).toHaveTextContent(
       /Not a payroll calculation/,
@@ -81,7 +83,7 @@ describe("LabourScreen", () => {
     const after = expectedSummary().totalCost;
     expect(after).toBeLessThan(before);
     expect(screen.getByTestId("labour-cost-value")).toHaveTextContent(
-      formatCurrency(after),
+      FormatUtils.formatCurrency(after),
     );
   });
 

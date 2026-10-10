@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
-import { formatOrderNumber } from "@/utils/format-utils";
+import { FormatUtils } from "@/utils/format-utils";
 
 import { AppHeader } from "@/components/layout/app-header";
 import { Screen } from "@/components/layout/screen";
@@ -20,13 +20,9 @@ import { colors, radius, spacing } from "@/theme";
 import { type Order } from "@/types/order";
 
 import { OrderStatusBadge } from "../components/order-status-badge";
-import {
-  canMarkReady,
-  getPickingProgress,
-  getTotalUnits,
-} from "../domain/order-state-machine";
+import { OrderStateMachine } from "../domain/order-state-machine";
 import { useEnsureOrdersLoaded } from "../hooks/use-ensure-orders-loaded";
-import { spellInitials } from "../order-status-meta";
+import { OrderPresentationUtils } from "../presentation";
 import { selectOrderById, useOrdersStore } from "../store/orders.store";
 
 export const OrderCompletionScreen: FC = () => {
@@ -85,13 +81,13 @@ function CompletionContent({
   const markReady = useOrdersStore((s) => s.markReady);
   const [error, setError] = useState<string | null>(null);
 
-  const progress = getPickingProgress(order);
-  const totalUnits = getTotalUnits(order);
+  const progress = OrderStateMachine.getPickingProgress(order);
+  const totalUnits = OrderStateMachine.getTotalUnits(order);
   const pickedUnits = order.items.reduce(
     (sum, item) => sum + Math.min(item.pickedQuantity, item.requiredQuantity),
     0,
   );
-  const readiness = canMarkReady(order);
+  const readiness = OrderStateMachine.canMarkReady(order);
   const isComplete = order.status === "READY" || order.status === "COLLECTED";
 
   const confirm = () => {
@@ -99,7 +95,7 @@ function CompletionContent({
     if (result.ok) {
       setError(null);
       AccessibilityInfo.announceForAccessibility(
-        `${formatOrderNumber(order.id)} is ready for collection.`,
+        `${FormatUtils.formatOrderNumber(order.id)} is ready for collection.`,
       );
     } else {
       setError(result.message);
@@ -132,7 +128,7 @@ function CompletionContent({
           </AppText>
           <AppText color="textMuted" style={styles.center}>
             {isComplete
-              ? `${formatOrderNumber(order.id)} can be handed to the customer.`
+              ? `${FormatUtils.formatOrderNumber(order.id)} can be handed to the customer.`
               : "Check every product is bagged before confirming."}
           </AppText>
         </View>
@@ -140,13 +136,13 @@ function CompletionContent({
         <View style={styles.card}>
           <View style={styles.cardTop}>
             <AppText variant="sectionTitle">
-              {formatOrderNumber(order.id)}
+              {FormatUtils.formatOrderNumber(order.id)}
             </AppText>
             <OrderStatusBadge status={order.status} />
           </View>
           <SummaryRow
             label="Customer"
-            value={spellInitials(order.customerInitials)}
+            value={OrderPresentationUtils.spellInitials(order.customerInitials)}
           />
           <SummaryRow
             label="Verified products"

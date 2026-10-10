@@ -5,12 +5,7 @@ import { AppText } from "@/components/ui/app-text";
 
 import { colors, fontFamily } from "@/theme";
 
-import {
-  formatDayLabel,
-  isSameDay,
-  toDateKey,
-  weekdayShort,
-} from "../domain/dates";
+import { DateUtils } from "../domain/dates";
 
 type Props = {
   days: Array<Date>;
@@ -33,17 +28,17 @@ export const WeekDaySelector: FC<Props> = ({
       style={styles.row}
     >
       {days.map((date) => {
-        const isSelected = isSameDay(date, selected);
-        const isToday = isSameDay(date, today);
+        const isSelected = DateUtils.isSameDay(date, selected);
+        const isToday = DateUtils.isSameDay(date, today);
         const textColor = isSelected ? colors.textOnDark : colors.text;
         return (
           <Pressable
-            accessibilityLabel={`${formatDayLabel(date)}${isToday ? ", today" : ""}`}
+            accessibilityLabel={`${DateUtils.formatDayLabel(date)}${isToday ? ", today" : ""}`}
             accessibilityRole="tab"
             accessibilityState={{ selected: isSelected }}
-            key={toDateKey(date)}
+            key={DateUtils.toDateKey(date)}
             style={[styles.day, isSelected ? styles.selected : styles.idle]}
-            testID={`day-${toDateKey(date)}`}
+            testID={`day-${DateUtils.toDateKey(date)}`}
             onPress={() => onSelect(date)}
           >
             <AppText
@@ -53,7 +48,7 @@ export const WeekDaySelector: FC<Props> = ({
                 { color: isSelected ? colors.textOnDark : colors.textMuted },
               ]}
             >
-              {weekdayShort(date)}
+              {DateUtils.weekdayShort(date)}
             </AppText>
             <AppText
               maxFontSizeMultiplier={1.2}

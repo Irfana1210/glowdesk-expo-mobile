@@ -28,7 +28,7 @@ import { colors, fontFamily, radius, spacing, statusPalette } from "@/theme";
 import { type Order, type OrderStatus } from "@/types/order";
 
 import { OrderListCard } from "../components/order-list-card";
-import { overdueOrders, sortForPicking } from "../domain/schedule";
+import { ScheduleUtils } from "../domain/schedule";
 import { useEnsureOrdersLoaded } from "../hooks/use-ensure-orders-loaded";
 import { useOrdersStore } from "../store/orders.store";
 
@@ -111,9 +111,12 @@ export const OrderListScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
     [names],
   );
 
-  const sorted = useMemo(() => sortForPicking(orders, now), [orders, now]);
+  const sorted = useMemo(
+    () => ScheduleUtils.sortForPicking(orders, now),
+    [orders, now],
+  );
   const overdueCount = useMemo(
-    () => overdueOrders(orders, now).length,
+    () => ScheduleUtils.overdueOrders(orders, now).length,
     [orders, now],
   );
   const filterOptions = useMemo<Array<FilterOption<OrderFilter>>>(

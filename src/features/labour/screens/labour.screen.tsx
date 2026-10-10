@@ -4,12 +4,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useRouter } from "expo-router";
 
-import { formatCurrency, formatPercent } from "@/utils/format-utils";
+import { FormatUtils } from "@/utils/format-utils";
 
 import { ROLE_LABELS } from "@/features/employees/types";
 import { WeekNavigator } from "@/features/roster/components/week-navigator";
-import { formatDayLabel, startOfWeek } from "@/features/roster/domain/dates";
-import { formatHours } from "@/features/roster/domain/shifts";
+import { DateUtils } from "@/features/roster/domain/dates";
+import { ShiftUtils } from "@/features/roster/domain/shifts";
 import { useRosterStore } from "@/features/roster/store/roster.store";
 import {
   canViewPayInformation,
@@ -31,7 +31,7 @@ import {
 } from "@/mocks/pay-rates";
 import { colors, radius, spacing } from "@/theme";
 
-import { weeklyLabourSummary } from "../domain/labour";
+import { LabourUtils } from "../domain/labour";
 
 export const LabourScreen: FC<{ now?: Date }> = ({ now = new Date() }) => {
   const router = useRouter();
@@ -59,12 +59,12 @@ function LabourContent({ now, onBack }: { now: Date; onBack: () => void }) {
   const insets = useSafeAreaInsets();
   const shifts = useRosterStore((s) => s.shifts);
   const employees = useRosterStore((s) => s.employees);
-  const [weekStart, setWeekStart] = useState(() => startOfWeek(now));
+  const [weekStart, setWeekStart] = useState(() => DateUtils.startOfWeek(now));
 
   // Derived straight from the roster store, so any shift change recalculates immediately.
   const summary = useMemo(
     () =>
-      weeklyLabourSummary({
+      LabourUtils.weeklyLabourSummary({
         weekStart,
         shifts,
         employees,
@@ -106,9 +106,9 @@ function LabourContent({ now, onBack }: { now: Date; onBack: () => void }) {
             icon="wallet-outline"
             label="Estimated roster cost"
             style={styles.gridItem}
-            supporting={`${formatHours(summary.totalPaidMinutes)} paid`}
+            supporting={`${ShiftUtils.formatHours(summary.totalPaidMinutes)} paid`}
             testID="labour-cost"
-            value={formatCurrency(summary.totalCost)}
+            value={FormatUtils.formatCurrency(summary.totalCost)}
           />
           <KPICard
             icon={overBudget ? "warning-outline" : "checkmark-circle-outline"}
@@ -116,24 +116,24 @@ function LabourContent({ now, onBack }: { now: Date; onBack: () => void }) {
             style={styles.gridItem}
             supporting={
               overBudget
-                ? `${formatCurrency(-summary.budgetRemaining)} over budget`
-                : `${formatCurrency(summary.budgetRemaining)} remaining`
+                ? `${FormatUtils.formatCurrency(-summary.budgetRemaining)} over budget`
+                : `${FormatUtils.formatCurrency(summary.budgetRemaining)} remaining`
             }
             testID="labour-budget"
-            value={formatCurrency(summary.budget)}
+            value={FormatUtils.formatCurrency(summary.budget)}
           />
           <KPICard
             accessibilityLabel={`Labour percentage of forecast sales, ${
               summary.labourPercent === null
                 ? "not available"
-                : formatPercent(summary.labourPercent, 1)
+                : FormatUtils.formatPercent(summary.labourPercent, 1)
             }`}
             icon="pie-chart-outline"
             label="Labour % of forecast sales"
             style={styles.gridItem}
-            supporting={`Forecast ${formatCurrency(summary.forecastSales)}`}
+            supporting={`Forecast ${FormatUtils.formatCurrency(summary.forecastSales)}`}
             testID="labour-percent"
-            value={formatPercent(summary.labourPercent, 1)}
+            value={FormatUtils.formatPercent(summary.labourPercent, 1)}
           />
         </View>
 
@@ -144,12 +144,12 @@ function LabourContent({ now, onBack }: { now: Date; onBack: () => void }) {
           {summary.byDay.map((day) => (
             <View
               accessible
-              accessibilityLabel={`${formatDayLabel(day.date)}: ${formatCurrency(day.cost)}, ${formatHours(day.paidMinutes)} paid`}
+              accessibilityLabel={`${DateUtils.formatDayLabel(day.date)}: ${FormatUtils.formatCurrency(day.cost)}, ${ShiftUtils.formatHours(day.paidMinutes)} paid`}
               key={day.date.toISOString()}
               style={styles.dayRow}
             >
               <AppText style={styles.dayLabel}>
-                {formatDayLabel(day.date)}
+                {DateUtils.formatDayLabel(day.date)}
               </AppText>
               <View style={styles.barTrack}>
                 <View
@@ -160,7 +160,7 @@ function LabourContent({ now, onBack }: { now: Date; onBack: () => void }) {
                 />
               </View>
               <AppText style={styles.dayCost} variant="bodyStrong">
-                {formatCurrency(day.cost)}
+                {FormatUtils.formatCurrency(day.cost)}
               </AppText>
             </View>
           ))}
@@ -176,7 +176,7 @@ function LabourContent({ now, onBack }: { now: Date; onBack: () => void }) {
             summary.byEmployee.map((row) => (
               <View
                 accessible
-                accessibilityLabel={`${row.employee?.name ?? "Unknown"}: ${formatCurrency(row.cost, { cents: true })}, ${formatHours(row.paidMinutes)} over ${row.shiftCount} shifts`}
+                accessibilityLabel={`${row.employee?.name ?? "Unknown"}: ${FormatUtils.formatCurrency(row.cost, { cents: true })}, ${ShiftUtils.formatHours(row.paidMinutes)} over ${row.shiftCount} shifts`}
                 key={row.employeeId}
                 style={styles.employeeRow}
                 testID={`employee-cost-${row.employeeId}`}
@@ -187,11 +187,12 @@ function LabourContent({ now, onBack }: { now: Date; onBack: () => void }) {
                   </AppText>
                   <AppText color="textMuted" variant="supporting">
                     {row.employee ? ROLE_LABELS[row.employee.role] : ""} ·{" "}
-                    {formatHours(row.paidMinutes)} · {row.shiftCount} shifts
+                    {ShiftUtils.formatHours(row.paidMinutes)} · {row.shiftCount}{" "}
+                    shifts
                   </AppText>
                 </View>
                 <AppText variant="bodyStrong">
-                  {formatCurrency(row.cost, { cents: true })}
+                  {FormatUtils.formatCurrency(row.cost, { cents: true })}
                 </AppText>
               </View>
             ))

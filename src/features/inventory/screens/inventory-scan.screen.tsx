@@ -22,7 +22,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 
 import { spacing } from "@/theme";
 
-import { lookupByBarcode } from "../domain/stock";
+import { StockUtils } from "../domain/stock";
 import { useInventory } from "../hooks/use-inventory";
 
 const SAME_CODE_COOLDOWN_MS = 2000;
@@ -47,7 +47,7 @@ export const InventoryScanScreen: FC = () => {
       if (navigating.current || !inventory.data) {
         return false;
       }
-      const result = lookupByBarcode(inventory.data, code);
+      const result = StockUtils.lookupByBarcode(inventory.data, code);
       if (!result.ok) {
         setError(result.message);
         AccessibilityInfo.announceForAccessibility(result.message);

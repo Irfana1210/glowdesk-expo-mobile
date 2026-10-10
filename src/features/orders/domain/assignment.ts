@@ -4,36 +4,40 @@
  */
 import { type Order, type OrderItem } from "@/types/order";
 
-import { transitionOrder } from "./order-state-machine";
-import { isActive } from "./schedule";
+import { OrderStateMachine } from "./order-state-machine";
+import { ScheduleUtils } from "./schedule";
 
-export class AssignmentError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "AssignmentError";
+export namespace AssignmentUtils {
+  export class AssignmentError extends Error {
+    constructor(message: string) {
+      super(message);
+      this.name = "AssignmentError";
+    }
   }
-}
 
-/** Assigns an order to a team member, or unassigns it when `employeeId` is undefined. */
-export function assignOrder(
-  order: Order,
-  employeeId: string | undefined,
-): Order {
-  if (!isActive(order)) {
-    throw new AssignmentError("Only New and Picking orders can be reassigned.");
+  /** Assigns an order to a team member, or unassigns it when `employeeId` is undefined. */
+  export function assignOrder(
+    order: Order,
+    employeeId: string | undefined,
+  ): Order {
+    if (!ScheduleUtils.isActive(order)) {
+      throw new AssignmentError(
+        "Only New and Picking orders can be reassigned.",
+      );
+    }
+    const { assigneeId: _previous, ...rest } = order;
+    return Object.freeze({
+      ...rest,
+      ...(employeeId ? { assigneeId: employeeId } : {}),
+      version: order.version + 1,
+      items: Object.freeze(
+        order.items.map((item) => Object.freeze({ ...item })),
+      ) as Array<OrderItem>,
+    });
   }
-  const { assigneeId: _previous, ...rest } = order;
-  return Object.freeze({
-    ...rest,
-    ...(employeeId ? { assigneeId: employeeId } : {}),
-    version: order.version + 1,
-    items: Object.freeze(
-      order.items.map((item) => Object.freeze({ ...item })),
-    ) as Array<OrderItem>,
-  });
-}
 
-/** Cancels a New or Picking order through the existing state machine rules. */
-export function cancelOrder(order: Order): Order {
-  return transitionOrder(order, "CANCELLED");
+  /** Cancels a New or Picking order through the existing state machine rules. */
+  export function cancelOrder(order: Order): Order {
+    return OrderStateMachine.transitionOrder(order, "CANCELLED");
+  }
 }

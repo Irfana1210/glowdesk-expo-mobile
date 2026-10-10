@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
-import { shiftsOnDay } from "@/features/roster/domain/shifts";
+import { ShiftUtils } from "@/features/roster/domain/shifts";
 import { RosterScreen } from "@/features/roster/screens/roster.screen";
 
 import { createMockShifts } from "@/mocks/shifts";
@@ -137,7 +137,7 @@ describe("RosterScreen", () => {
 });
 
 function todayShiftId(employeeId: string): string {
-  const shift = shiftsOnDay(createMockShifts(NOW), NOW).find(
+  const shift = ShiftUtils.shiftsOnDay(createMockShifts(NOW), NOW).find(
     (s) => s.employeeId === employeeId,
   );
   if (!shift) {

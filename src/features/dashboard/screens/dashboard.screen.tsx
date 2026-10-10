@@ -3,25 +3,17 @@ import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 
 import { useRouter } from "expo-router";
 
-import {
-  formatClockTime,
-  formatCurrency,
-  formatPercent,
-  formatShortDate,
-} from "@/utils/format-utils";
+import { FormatUtils } from "@/utils/format-utils";
 
 import { useNow } from "@/hooks/use-now";
 
 import { useInventory } from "@/features/inventory/hooks/use-inventory";
-import { unassignedActiveCount } from "@/features/orders/domain/schedule";
+import { ScheduleUtils } from "@/features/orders/domain/schedule";
 import { useEnsureOrdersLoaded } from "@/features/orders/hooks/use-ensure-orders-loaded";
 import { useOrdersStore } from "@/features/orders/store/orders.store";
-import { nextBreak, staffOnFloor } from "@/features/roster/domain/cover";
-import { atTime } from "@/features/roster/domain/dates";
-import {
-  shiftsOnDay,
-  STORE_TRADING_HOURS,
-} from "@/features/roster/domain/shifts";
+import { CoverUtils } from "@/features/roster/domain/cover";
+import { DateUtils } from "@/features/roster/domain/dates";
+import { ShiftUtils } from "@/features/roster/domain/shifts";
 import { useRosterStore } from "@/features/roster/store/roster.store";
 
 import { Screen } from "@/components/layout/screen";
@@ -39,9 +31,9 @@ import { DEMO_USER } from "@/mocks/user";
 import { colors, fontFamily, radius, spacing } from "@/theme";
 
 import { SalesChart } from "../components/sales-chart";
-import { buildAttention } from "../domain/attention";
-import { calculateDashboardKpis, type DashboardKpis } from "../domain/kpis";
-import { shiftCardModel } from "../domain/shift-card";
+import { AttentionUtils } from "../domain/attention";
+import { type DashboardKpis, KpiUtils } from "../domain/kpis";
+import { ShiftCardUtils } from "../domain/shift-card";
 import { useStoreSalesSummary } from "../hooks/use-store-sales-summary";
 
 const NOT_AVAILABLE = "not available";
@@ -56,7 +48,8 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
   const salesQuery = useStoreSalesSummary(DEMO_STORE_ID);
   const inventoryQuery = useInventory();
   const kpis = useMemo(
-    () => (salesQuery.data ? calculateDashboardKpis(salesQuery.data) : null),
+    () =>
+      salesQuery.data ? KpiUtils.calculateDashboardKpis(salesQuery.data) : null,
     [salesQuery.data],
   );
 
@@ -68,22 +61,28 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
   const shifts = useRosterStore((s) => s.shifts);
   const employees = useRosterStore((s) => s.employees);
 
-  const today = useMemo(() => shiftsOnDay(shifts, now), [shifts, now]);
-  const upcomingBreak = useMemo(() => nextBreak(today, now), [today, now]);
+  const today = useMemo(
+    () => ShiftUtils.shiftsOnDay(shifts, now),
+    [shifts, now],
+  );
+  const upcomingBreak = useMemo(
+    () => CoverUtils.nextBreak(today, now),
+    [today, now],
+  );
   const shiftCard = useMemo(
     () =>
-      shiftCardModel({
+      ShiftCardUtils.shiftCardModel({
         myShift: today.find((s) => s.employeeId === DEMO_USER.employeeId),
         now,
-        staffOnFloor: staffOnFloor(today, now).length,
+        staffOnFloor: CoverUtils.staffOnFloor(today, now).length,
         nextBreakAt: upcomingBreak?.startsAt ?? null,
-        ordersToAssign: unassignedActiveCount(orders),
+        ordersToAssign: ScheduleUtils.unassignedActiveCount(orders),
       }),
     [today, now, upcomingBreak, orders],
   );
   const attention = useMemo(
     () =>
-      buildAttention({
+      AttentionUtils.buildAttention({
         orders,
         upcomingBreak,
         breakEmployeeName: employees.find(
@@ -125,7 +124,7 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
         }
       >
         <ScreenTitle
-          eyebrow={`${formatShortDate(now)} · ${DEMO_STORE_SHORT_NAME}`}
+          eyebrow={`${FormatUtils.formatShortDate(now)} · ${DEMO_STORE_SHORT_NAME}`}
           right={
             <>
               <IconButton
@@ -217,7 +216,7 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
                   <KPICard
                     label="Transactions"
                     style={styles.gridItem}
-                    supporting={`Since ${formatClockTime(atTime(now, STORE_TRADING_HOURS.open) ?? now)}`}
+                    supporting={`Since ${FormatUtils.formatClockTime(DateUtils.atTime(now, ShiftUtils.STORE_TRADING_HOURS.open) ?? now)}`}
                     testID="kpi-transactions"
                     value={kpis.transactions.toLocaleString("en-AU")}
                   />
@@ -225,9 +224,12 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
                     accessibilityLabel={`Average transaction value, ${
                       kpis.averageTransactionValue === null
                         ? NOT_AVAILABLE
-                        : formatCurrency(kpis.averageTransactionValue, {
-                            cents: true,
-                          })
+                        : FormatUtils.formatCurrency(
+                            kpis.averageTransactionValue,
+                            {
+                              cents: true,
+                            },
+                          )
                     }`}
                     label="Avg transaction"
                     style={styles.gridItem}
@@ -236,22 +238,25 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
                     value={
                       kpis.averageTransactionValue === null
                         ? "—"
-                        : formatCurrency(kpis.averageTransactionValue, {
-                            cents: true,
-                          })
+                        : FormatUtils.formatCurrency(
+                            kpis.averageTransactionValue,
+                            {
+                              cents: true,
+                            },
+                          )
                     }
                   />
                   <KPICard
                     accessibilityLabel={`Labour, ${
                       kpis.labourPercent === null
                         ? NOT_AVAILABLE
-                        : `${formatPercent(kpis.labourPercent, 1)} of sales`
-                    }, ${formatCurrency(kpis.labourSpend)} estimated spend`}
+                        : `${FormatUtils.formatPercent(kpis.labourPercent, 1)} of sales`
+                    }, ${FormatUtils.formatCurrency(kpis.labourSpend)} estimated spend`}
                     label="Labour"
                     style={styles.gridItem}
-                    supporting={`${formatCurrency(kpis.labourSpend)} of sales`}
+                    supporting={`${FormatUtils.formatCurrency(kpis.labourSpend)} of sales`}
                     testID="kpi-labour"
-                    value={formatPercent(kpis.labourPercent, 1)}
+                    value={FormatUtils.formatPercent(kpis.labourPercent, 1)}
                   />
                 </>
               ) : null}
@@ -297,8 +302,8 @@ function SalesHero({ kpis }: { kpis: DashboardKpis }) {
     achievement === null
       ? "No sales target set for today"
       : kpis.remainingToTarget === 0
-        ? `Target ${formatCurrency(kpis.target)} reached`
-        : `${formatCurrency(kpis.remainingToTarget)} to go · target ${formatCurrency(kpis.target)}`;
+        ? `Target ${FormatUtils.formatCurrency(kpis.target)} reached`
+        : `${FormatUtils.formatCurrency(kpis.remainingToTarget)} to go · target ${FormatUtils.formatCurrency(kpis.target)}`;
   const percent =
     achievement === null ? 0 : Math.min(100, Math.max(0, achievement));
 
@@ -309,15 +314,15 @@ function SalesHero({ kpis }: { kpis: DashboardKpis }) {
       </AppText>
       <View style={styles.heroRow}>
         <AppText
-          accessibilityLabel={`Today's sales ${formatCurrency(kpis.sales)}`}
+          accessibilityLabel={`Today's sales ${FormatUtils.formatCurrency(kpis.sales)}`}
           style={styles.heroValue}
           testID="sales-total"
           variant="hero"
         >
-          {formatCurrency(kpis.sales)}
+          {FormatUtils.formatCurrency(kpis.sales)}
         </AppText>
         <AppText style={styles.heroPercent}>
-          {formatPercent(achievement, 1)}
+          {FormatUtils.formatPercent(achievement, 1)}
         </AppText>
       </View>
       <View
@@ -325,7 +330,7 @@ function SalesHero({ kpis }: { kpis: DashboardKpis }) {
         accessibilityLabel={
           achievement === null
             ? `Sales target achievement ${NOT_AVAILABLE}`
-            : `Sales target achievement ${formatPercent(achievement, 1)}. ${remaining}`
+            : `Sales target achievement ${FormatUtils.formatPercent(achievement, 1)}. ${remaining}`
         }
         accessibilityRole="progressbar"
         accessibilityValue={{ min: 0, max: 100, now: Math.round(percent) }}

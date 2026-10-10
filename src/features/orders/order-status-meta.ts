@@ -9,7 +9,3 @@ export const ORDER_STATUS_META: Record<OrderStatus, StatusBadgeProps> = {
   COLLECTED: { label: "Collected", icon: "bag-check-outline", tone: "neutral" },
   CANCELLED: { label: "Cancelled", icon: "close", tone: "overdue" },
 };
-
-export function spellInitials(initials: string): string {
-  return initials.replace(/\./g, "").split("").join(" ");
-}

@@ -33,30 +33,9 @@ import { SelectField } from "@/components/ui/select-field";
 import { DEMO_STORE_ID } from "@/mocks/store";
 import { colors, radius, spacing } from "@/theme";
 
-import {
-  formatDayLabel,
-  fromDateKey,
-  isSameDay,
-  startOfWeek,
-  toDateKey,
-  weekDays,
-  weekdayShort,
-} from "../domain/dates";
-import {
-  BREAK_OPTIONS,
-  createShiftFormSchema,
-  defaultFormValues,
-  type ShiftFormValues,
-  TIME_OPTIONS,
-  toFormValues,
-  toShiftDraft,
-} from "../domain/shift-form";
-import {
-  formatHours,
-  paidMinutes,
-  shiftDurationMinutes,
-  type ShiftErrors,
-} from "../domain/shifts";
+import { DateUtils } from "../domain/dates";
+import { ShiftFormUtils, type ShiftFormValues } from "../domain/shift-form";
+import { type ShiftErrors, ShiftUtils } from "../domain/shifts";
 import { useRosterStore } from "../store/roster.store";
 import { type Shift } from "../types";
 
@@ -88,9 +67,9 @@ export const ShiftEditorScreen: FC = () => {
   }
 
   const initialDate =
-    params.date && fromDateKey(params.date)
+    params.date && DateUtils.fromDateKey(params.date)
       ? params.date
-      : toDateKey(new Date());
+      : DateUtils.toDateKey(new Date());
   return (
     <ShiftEditorForm initialDate={initialDate} shift={shift} onDone={close} />
   );
@@ -116,7 +95,7 @@ function ShiftEditorForm({
 
   const schema = useMemo(
     () =>
-      createShiftFormSchema({
+      ShiftFormUtils.createShiftFormSchema({
         storeId: DEMO_STORE_ID,
         employees,
         shifts,
@@ -131,7 +110,9 @@ function ShiftEditorForm({
     formState: { errors, isSubmitted },
   } = useForm<ShiftFormValues>({
     resolver: zodResolver(schema),
-    defaultValues: shift ? toFormValues(shift) : defaultFormValues(initialDate),
+    defaultValues: shift
+      ? ShiftFormUtils.toFormValues(shift)
+      : ShiftFormUtils.defaultFormValues(initialDate),
     mode: "onSubmit",
     reValidateMode: "onChange",
   });
@@ -149,10 +130,10 @@ function ShiftEditorForm({
         })),
     [employees],
   );
-  const formDay = fromDateKey(values.date) ?? new Date();
-  const dayChoices = weekDays(startOfWeek(formDay));
-  const draft = toShiftDraft(values);
-  const duration = draft ? shiftDurationMinutes(draft) : 0;
+  const formDay = DateUtils.fromDateKey(values.date) ?? new Date();
+  const dayChoices = DateUtils.weekDays(DateUtils.startOfWeek(formDay));
+  const draft = ShiftFormUtils.toShiftDraft(values);
+  const duration = draft ? ShiftUtils.shiftDurationMinutes(draft) : 0;
 
   const applyErrors = (result: ShiftErrors) => {
     const map: Record<string, keyof ShiftFormValues | "root"> = {
@@ -171,7 +152,7 @@ function ShiftEditorForm({
   };
 
   const onSave = handleSubmit((formValues) => {
-    const next = toShiftDraft(formValues);
+    const next = ShiftFormUtils.toShiftDraft(formValues);
     if (!next) {
       return;
     }
@@ -243,11 +224,11 @@ function ShiftEditorForm({
                   style={styles.dayRow}
                 >
                   {dayChoices.map((day) => {
-                    const key = toDateKey(day);
+                    const key = DateUtils.toDateKey(day);
                     const isSelected = key === field.value;
                     return (
                       <Pressable
-                        accessibilityLabel={formatDayLabel(day)}
+                        accessibilityLabel={DateUtils.formatDayLabel(day)}
                         accessibilityRole="radio"
                         accessibilityState={{ checked: isSelected }}
                         key={key}
@@ -262,7 +243,7 @@ function ShiftEditorForm({
                           maxFontSizeMultiplier={1.2}
                           variant="supporting"
                         >
-                          {weekdayShort(day)}
+                          {DateUtils.weekdayShort(day)}
                         </AppText>
                         <AppText
                           maxFontSizeMultiplier={1.2}
@@ -287,7 +268,7 @@ function ShiftEditorForm({
                   <SelectField
                     error={fieldState.error?.message}
                     label="Start time"
-                    options={TIME_OPTIONS}
+                    options={ShiftFormUtils.TIME_OPTIONS}
                     testID="field-start"
                     value={field.value}
                     onChange={field.onChange}
@@ -302,7 +283,7 @@ function ShiftEditorForm({
                 render={({ field }) => (
                   <SelectField
                     label="End time"
-                    options={TIME_OPTIONS}
+                    options={ShiftFormUtils.TIME_OPTIONS}
                     testID="field-end"
                     value={field.value}
                     onChange={field.onChange}
@@ -350,7 +331,7 @@ function ShiftEditorForm({
               <SelectField
                 error={fieldState.error?.message}
                 label="Unpaid break"
-                options={BREAK_OPTIONS}
+                options={ShiftFormUtils.BREAK_OPTIONS}
                 testID="field-break"
                 value={field.value}
                 onChange={field.onChange}
@@ -362,13 +343,16 @@ function ShiftEditorForm({
             <AppText variant="cardTitle">Summary</AppText>
             <AppText color="textMuted">
               {draft && duration > 0
-                ? `${formatHours(duration)} shift · ${formatHours(paidMinutes(draft))} paid`
+                ? `${ShiftUtils.formatHours(duration)} shift · ${ShiftUtils.formatHours(ShiftUtils.paidMinutes(draft))} paid`
                 : "Choose a valid start and end time."}
             </AppText>
             {draft &&
-            !isSameDay(new Date(draft.startAt), new Date(draft.endAt)) ? (
+            !DateUtils.isSameDay(
+              new Date(draft.startAt),
+              new Date(draft.endAt),
+            ) ? (
               <AppText color="textMuted">
-                Ends {formatDayLabel(new Date(draft.endAt))}
+                Ends {DateUtils.formatDayLabel(new Date(draft.endAt))}
               </AppText>
             ) : null}
           </View>
