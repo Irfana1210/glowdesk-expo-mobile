@@ -1,5 +1,7 @@
 import Storage from "expo-sqlite/kv-store";
 
+import { LOCALE } from "@/constants/locale";
+
 import { OrdersService } from "@/features/orders/services/orders.service";
 import {
   isPersistedOrder,
@@ -189,7 +191,7 @@ describe("assignment and cancellation actions", () => {
     expect(useOrdersStore.getState().assignOrder("ORD-7840", "emp-02")).toEqual(
       {
         ok: false,
-        message: "Only New and Picking orders can be reassigned.",
+        message: LOCALE.orders.assignment.notReassignable,
       },
     );
     expect(useOrdersStore.getState().orders).toBe(before);

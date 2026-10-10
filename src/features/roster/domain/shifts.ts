@@ -3,6 +3,7 @@
  * Durations are measured between absolute instants, so overnight shifts and
  * daylight-saving changes are counted in real elapsed time.
  */
+import { LOCALE } from "@/constants/locale";
 import { MS_IN_MINUTE } from "@/constants/primitives";
 
 import { FormatUtils } from "@/utils/format-utils";
@@ -106,41 +107,42 @@ export namespace ShiftUtils {
 
     const employee = context.employees.find((e) => e.id === draft.employeeId);
     if (!draft.employeeId) {
-      errors.employeeId = "Choose an employee.";
+      errors.employeeId = LOCALE.roster.validation.chooseEmployee;
     } else if (!employee) {
-      errors.employeeId = "This employee does not exist.";
+      errors.employeeId = LOCALE.roster.validation.employeeMissing;
     } else if (employee.storeId !== context.storeId) {
-      errors.employeeId = `${employee.name} is not assigned to this store.`;
+      errors.employeeId = LOCALE.roster.validation.employeeNotAssigned(
+        employee.name,
+      );
     } else if (!employee.active) {
-      errors.employeeId = `${employee.name} is inactive and cannot be rostered.`;
+      errors.employeeId = LOCALE.roster.validation.employeeInactive(
+        employee.name,
+      );
     }
 
     const start = instant(draft.startAt);
     const end = instant(draft.endAt);
     if (start === null) {
-      errors.startAt = "Enter a valid start time.";
+      errors.startAt = LOCALE.roster.validation.invalidStartTime;
     }
     if (end === null) {
-      errors.endAt = "Enter a valid end time.";
+      errors.endAt = LOCALE.roster.validation.invalidEndTime;
     }
 
     if (start !== null && end !== null) {
       const duration = Math.round((end - start) / MS_IN_MINUTE);
       if (duration <= 0) {
-        errors.endAt =
-          'End time must be after the start time. Turn on "Ends next day" for an overnight shift.';
+        errors.endAt = LOCALE.roster.validation.endBeforeStart;
       } else if (duration > MAX_SHIFT_MINUTES) {
-        errors.endAt = `Shifts cannot be longer than ${MAX_SHIFT_MINUTES / 60} hours. Check the end time and "Ends next day".`;
+        errors.endAt = LOCALE.roster.validation.tooLong(MAX_SHIFT_MINUTES / 60);
       } else {
         if (
           !Number.isInteger(draft.unpaidBreakMinutes) ||
           draft.unpaidBreakMinutes < 0
         ) {
-          errors.unpaidBreakMinutes =
-            "Break must be zero or more whole minutes.";
+          errors.unpaidBreakMinutes = LOCALE.roster.validation.breakNotWhole;
         } else if (draft.unpaidBreakMinutes >= duration) {
-          errors.unpaidBreakMinutes =
-            "Break cannot be as long as, or longer than, the shift.";
+          errors.unpaidBreakMinutes = LOCALE.roster.validation.breakTooLong;
         }
       }
     }
@@ -153,7 +155,11 @@ export namespace ShiftUtils {
           shiftsOverlap(s, draft),
       );
       if (clash) {
-        errors.form = `${employee.name} already works ${formatShiftTimes(clash)} on ${DateUtils.formatDayLabel(new Date(clash.startAt))}.`;
+        errors.form = LOCALE.roster.validation.alreadyWorks(
+          employee.name,
+          formatShiftTimes(clash),
+          DateUtils.formatDayLabel(new Date(clash.startAt)),
+        );
       }
     }
 

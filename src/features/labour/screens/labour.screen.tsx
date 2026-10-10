@@ -4,6 +4,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useRouter } from "expo-router";
 
+import { LOCALE } from "@/constants/locale";
+
 import { FormatUtils } from "@/utils/format-utils";
 
 import { ROLE_LABELS } from "@/features/employees/types";
@@ -33,6 +35,9 @@ import { colors, radius, spacing } from "@/theme";
 
 import { LabourUtils } from "../domain/labour";
 
+const L = LOCALE.labour.labour;
+const RESTRICTED = LOCALE.labour.restricted;
+
 export const LabourScreen: FC<{ now?: Date }> = ({ now = new Date() }) => {
   const router = useRouter();
   const role = useSessionStore((s) => s.role);
@@ -42,11 +47,11 @@ export const LabourScreen: FC<{ now?: Date }> = ({ now = new Date() }) => {
   if (!canViewPayInformation(role)) {
     return (
       <Screen testID="labour-screen">
-        <AppHeader title="Labour Management" onBack={goBack} />
+        <AppHeader title={L.title} onBack={goBack} />
         <EmptyState
           icon="lock-closed-outline"
-          message="Labour costs include confidential pay information, so only store managers can view them."
-          title="Managers only"
+          message={RESTRICTED.message}
+          title={RESTRICTED.title}
         />
       </Screen>
     );
@@ -79,7 +84,7 @@ function LabourContent({ now, onBack }: { now: Date; onBack: () => void }) {
 
   return (
     <Screen testID="labour-screen">
-      <AppHeader title="Labour Management" onBack={onBack} />
+      <AppHeader title={L.title} onBack={onBack} />
       <WeekNavigator now={now} weekStart={weekStart} onChange={setWeekStart} />
       <ScrollView
         contentContainerStyle={[
@@ -88,14 +93,14 @@ function LabourContent({ now, onBack }: { now: Date; onBack: () => void }) {
         ]}
       >
         <InlineBanner
-          message="Estimate only: paid hours × base hourly rate. Not a payroll calculation. Award penalty rates, overtime, allowances and superannuation are not included."
+          message={L.disclaimer}
           testID="labour-disclaimer"
           tone="info"
         />
 
         {summary.missingRateEmployeeIds.length > 0 ? (
           <InlineBanner
-            message={`No pay rate for ${summary.missingRateEmployeeIds.length} rostered employee(s). Their shifts are not included in the cost.`}
+            message={L.missingRates(summary.missingRateEmployeeIds.length)}
             testID="missing-rates"
             tone="error"
           />
@@ -104,34 +109,42 @@ function LabourContent({ now, onBack }: { now: Date; onBack: () => void }) {
         <View style={styles.grid}>
           <KPICard
             icon="wallet-outline"
-            label="Estimated roster cost"
+            label={L.costLabel}
             style={styles.gridItem}
-            supporting={`${ShiftUtils.formatHours(summary.totalPaidMinutes)} paid`}
+            supporting={L.paid(
+              ShiftUtils.formatHours(summary.totalPaidMinutes),
+            )}
             testID="labour-cost"
             value={FormatUtils.formatCurrency(summary.totalCost)}
           />
           <KPICard
             icon={overBudget ? "warning-outline" : "checkmark-circle-outline"}
-            label="Labour budget"
+            label={L.budgetLabel}
             style={styles.gridItem}
             supporting={
               overBudget
-                ? `${FormatUtils.formatCurrency(-summary.budgetRemaining)} over budget`
-                : `${FormatUtils.formatCurrency(summary.budgetRemaining)} remaining`
+                ? L.budgetOver(
+                    FormatUtils.formatCurrency(-summary.budgetRemaining),
+                  )
+                : L.budgetRemaining(
+                    FormatUtils.formatCurrency(summary.budgetRemaining),
+                  )
             }
             testID="labour-budget"
             value={FormatUtils.formatCurrency(summary.budget)}
           />
           <KPICard
-            accessibilityLabel={`Labour percentage of forecast sales, ${
+            accessibilityLabel={L.percentA11y(
               summary.labourPercent === null
-                ? "not available"
-                : FormatUtils.formatPercent(summary.labourPercent, 1)
-            }`}
+                ? L.percentNotAvailable
+                : FormatUtils.formatPercent(summary.labourPercent, 1),
+            )}
             icon="pie-chart-outline"
-            label="Labour % of forecast sales"
+            label={L.percentLabel}
             style={styles.gridItem}
-            supporting={`Forecast ${FormatUtils.formatCurrency(summary.forecastSales)}`}
+            supporting={L.forecast(
+              FormatUtils.formatCurrency(summary.forecastSales),
+            )}
             testID="labour-percent"
             value={FormatUtils.formatPercent(summary.labourPercent, 1)}
           />
@@ -139,12 +152,16 @@ function LabourContent({ now, onBack }: { now: Date; onBack: () => void }) {
 
         <View style={styles.card}>
           <AppText accessibilityRole="header" variant="cardTitle">
-            Daily labour cost
+            {L.dailyCost}
           </AppText>
           {summary.byDay.map((day) => (
             <View
               accessible
-              accessibilityLabel={`${DateUtils.formatDayLabel(day.date)}: ${FormatUtils.formatCurrency(day.cost)}, ${ShiftUtils.formatHours(day.paidMinutes)} paid`}
+              accessibilityLabel={L.dayA11y(
+                DateUtils.formatDayLabel(day.date),
+                FormatUtils.formatCurrency(day.cost),
+                ShiftUtils.formatHours(day.paidMinutes),
+              )}
               key={day.date.toISOString()}
               style={styles.dayRow}
             >
@@ -168,27 +185,34 @@ function LabourContent({ now, onBack }: { now: Date; onBack: () => void }) {
 
         <View style={styles.card}>
           <AppText accessibilityRole="header" variant="cardTitle">
-            Cost by employee
+            {L.costByEmployee}
           </AppText>
           {summary.byEmployee.length === 0 ? (
-            <AppText color="textMuted">No shifts rostered this week.</AppText>
+            <AppText color="textMuted">{L.noShifts}</AppText>
           ) : (
             summary.byEmployee.map((row) => (
               <View
                 accessible
-                accessibilityLabel={`${row.employee?.name ?? "Unknown"}: ${FormatUtils.formatCurrency(row.cost, { cents: true })}, ${ShiftUtils.formatHours(row.paidMinutes)} over ${row.shiftCount} shifts`}
+                accessibilityLabel={L.employeeA11y(
+                  row.employee?.name ?? L.unknown,
+                  FormatUtils.formatCurrency(row.cost, { cents: true }),
+                  ShiftUtils.formatHours(row.paidMinutes),
+                  row.shiftCount,
+                )}
                 key={row.employeeId}
                 style={styles.employeeRow}
                 testID={`employee-cost-${row.employeeId}`}
               >
                 <View style={styles.flex}>
                   <AppText variant="bodyStrong">
-                    {row.employee?.name ?? "Unknown employee"}
+                    {row.employee?.name ?? L.unknownEmployee}
                   </AppText>
                   <AppText color="textMuted" variant="supporting">
-                    {row.employee ? ROLE_LABELS[row.employee.role] : ""} ·{" "}
-                    {ShiftUtils.formatHours(row.paidMinutes)} · {row.shiftCount}{" "}
-                    shifts
+                    {L.employeeMeta(
+                      row.employee ? ROLE_LABELS[row.employee.role] : "",
+                      ShiftUtils.formatHours(row.paidMinutes),
+                      row.shiftCount,
+                    )}
                   </AppText>
                 </View>
                 <AppText variant="bodyStrong">
@@ -200,9 +224,9 @@ function LabourContent({ now, onBack }: { now: Date; onBack: () => void }) {
         </View>
 
         <SecondaryButton
-          accessibilityHint="Costs here update as soon as shifts change"
+          accessibilityHint={L.adjustShiftsHint}
           icon="calendar-outline"
-          label="Adjust shifts in the roster"
+          label={L.adjustShifts}
           testID="adjust-shifts"
           onPress={() => router.navigate("/roster")}
         />

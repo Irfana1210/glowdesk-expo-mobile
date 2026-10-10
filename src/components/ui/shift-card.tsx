@@ -1,6 +1,8 @@
 import { type FC } from "react";
 import { StyleSheet, View } from "react-native";
 
+import { LOCALE } from "@/constants/locale";
+
 import {
   darkSurface,
   fontFamily,
@@ -11,6 +13,8 @@ import {
 } from "@/theme";
 
 import { AppText } from "./app-text";
+
+const L = LOCALE.components.shiftCard;
 
 export type ShiftCardStat = {
   label: string;
@@ -46,7 +50,7 @@ export const ShiftCard: FC<ShiftCardProps> = ({
   const clamped =
     percent === null ? null : Math.min(100, Math.max(0, Math.round(percent)));
   return (
-    <View accessibilityLabel="Your shift" style={styles.card} testID={testID}>
+    <View accessibilityLabel={L.label} style={styles.card} testID={testID}>
       <View style={styles.top}>
         <View style={[styles.pill, live && styles.pillLive]}>
           <View style={styles.dot} />
@@ -67,7 +71,7 @@ export const ShiftCard: FC<ShiftCardProps> = ({
       {clamped === null ? null : (
         <View
           accessible
-          accessibilityLabel="Shift progress"
+          accessibilityLabel={L.progress}
           accessibilityRole="progressbar"
           accessibilityValue={{ min: 0, max: 100, now: clamped }}
           style={styles.track}

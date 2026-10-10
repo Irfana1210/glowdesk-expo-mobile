@@ -1,6 +1,8 @@
 import { type FC } from "react";
 import { StyleSheet, View } from "react-native";
 
+import { LOCALE } from "@/constants/locale";
+
 import { FormatUtils } from "@/utils/format-utils";
 
 import { AppText } from "@/components/ui/app-text";
@@ -8,6 +10,8 @@ import { AppText } from "@/components/ui/app-text";
 import { colors, fontFamily, spacing, statusPalette } from "@/theme";
 
 import { CoverUtils, type HourCover } from "../domain/cover";
+
+const L = LOCALE.roster.floorCover;
 
 const BAR_UNIT = 10;
 
@@ -17,7 +21,7 @@ function spoken(hour: number): string {
 
 export function describeCover(cover: Array<HourCover>): string {
   if (cover.length === 0) {
-    return "No trading hours.";
+    return L.noTradingHours;
   }
   const first = cover[0]!;
   const last = cover[cover.length - 1]!;
@@ -25,11 +29,15 @@ export function describeCover(cover: Array<HourCover>): string {
     (min, h) => (h.count < min.count ? h : min),
     first,
   );
-  const range = `Staff on the floor by hour, ${spoken(first.hour)} to ${spoken(last.hour)}.`;
-  const people = lowest.count === 1 ? "person" : "people";
+  const range = L.range(spoken(first.hour), spoken(last.hour));
   return lowest.belowMinimum
-    ? `${range} Lowest is ${lowest.count} ${people} at ${spoken(lowest.hour)}, below the minimum of ${CoverUtils.MIN_FLOOR_COVER}.`
-    : `${range} At least ${CoverUtils.MIN_FLOOR_COVER} people all day.`;
+    ? L.belowMinimum(
+        range,
+        lowest.count,
+        spoken(lowest.hour),
+        CoverUtils.MIN_FLOOR_COVER,
+      )
+    : L.allDay(range, CoverUtils.MIN_FLOOR_COVER);
 }
 
 /** One bar per trading hour, labelled with its headcount. Hours below minimum are flagged in text too. */
@@ -82,8 +90,11 @@ export const FloorCoverChart: FC<{ cover: Array<HourCover> }> = ({ cover }) => {
         testID="cover-note"
       >
         {low.length > 0
-          ? `Below minimum of ${CoverUtils.MIN_FLOOR_COVER} at ${low.map(spoken).join(", ")}`
-          : `At least ${CoverUtils.MIN_FLOOR_COVER} on the floor all day`}
+          ? L.belowMinimumNote(
+              CoverUtils.MIN_FLOOR_COVER,
+              low.map(spoken).join(", "),
+            )
+          : L.allDayNote(CoverUtils.MIN_FLOOR_COVER)}
       </AppText>
     </View>
   );

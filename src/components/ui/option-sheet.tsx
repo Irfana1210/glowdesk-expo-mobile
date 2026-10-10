@@ -4,9 +4,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import Ionicons from "@expo/vector-icons/Ionicons";
 
+import { LOCALE } from "@/constants/locale";
+
 import { colors, radius, spacing, touchTarget } from "@/theme";
 
 import { AppText } from "./app-text";
+
+const L = LOCALE.components.optionSheet;
 
 export type SheetOption = {
   description?: string;
@@ -44,7 +48,7 @@ export const OptionSheet: FC<Props> = ({
     >
       <View style={styles.backdrop}>
         <Pressable
-          accessibilityLabel="Close"
+          accessibilityLabel={L.close}
           accessibilityRole="button"
           style={styles.flex}
           onPress={onClose}
@@ -62,7 +66,7 @@ export const OptionSheet: FC<Props> = ({
               {title}
             </AppText>
             <Pressable
-              accessibilityLabel="Close"
+              accessibilityLabel={L.close}
               accessibilityRole="button"
               style={styles.close}
               onPress={onClose}

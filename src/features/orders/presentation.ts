@@ -1,12 +1,16 @@
 /**
  * Turns an order into the text the Orders list shows. Pure, so it is tested without rendering.
  */
+import { LOCALE } from "@/constants/locale";
+
 import { FormatUtils } from "@/utils/format-utils";
 
 import { type Order } from "@/types/order";
 
 import { ScheduleUtils } from "./domain/schedule";
 import { ORDER_STATUS_META } from "./order-status-meta";
+
+const L = LOCALE.orders.card;
 
 export type OrderCardModel = {
   accessibilityLabel: string;
@@ -39,7 +43,7 @@ export namespace OrderPresentationUtils {
       now.getDate() - 1,
     );
     return isSameDay(placed, yesterday)
-      ? "yesterday"
+      ? L.yesterday
       : placed.toLocaleDateString("en-AU", { day: "numeric", month: "short" });
   }
 
@@ -49,22 +53,24 @@ export namespace OrderPresentationUtils {
 
   export function timingLabel(order: Order, now: Date): string {
     if (ScheduleUtils.isOverdue(order, now)) {
-      return `Overdue ${FormatUtils.formatDuration(ScheduleUtils.minutesOverdue(order, now))}`;
+      return L.overdue(
+        FormatUtils.formatDuration(ScheduleUtils.minutesOverdue(order, now)),
+      );
     }
     switch (order.status) {
       case "NEW":
       case "PICKING":
-        return `Due ${FormatUtils.formatClockTime(ScheduleUtils.dueAt(order))}`;
+        return L.due(FormatUtils.formatClockTime(ScheduleUtils.dueAt(order)));
       case "READY": {
         const waiting = ScheduleUtils.minutesWaiting(order, now);
         return waiting === null
-          ? "Ready"
-          : `Waiting ${FormatUtils.formatWaiting(waiting)}`;
+          ? L.ready
+          : L.waiting(FormatUtils.formatWaiting(waiting));
       }
       case "COLLECTED":
-        return "Collected";
+        return L.collected;
       case "CANCELLED":
-        return "Cancelled";
+        return L.cancelled;
     }
   }
 
@@ -73,13 +79,13 @@ export namespace OrderPresentationUtils {
     assigneeName: string | undefined,
   ): string {
     if (order.status === "CANCELLED") {
-      return "Not picked";
+      return L.notPicked;
     }
     if (!assigneeName) {
-      return "Unassigned";
+      return L.unassigned;
     }
     return order.status === "READY" || order.status === "COLLECTED"
-      ? `Packed by ${assigneeName}`
+      ? L.packedBy(assigneeName)
       : assigneeName;
   }
 
@@ -92,15 +98,21 @@ export namespace OrderPresentationUtils {
     const status = ORDER_STATUS_META[order.status].label;
     const timing = timingLabel(order, now);
     const assignee = assigneeLabel(order, assigneeName);
-    const items = FormatUtils.pluralise(order.items.length, "item");
+    const items = L.itemCount(order.items.length);
     return {
       orderNumber: number,
       initials: order.customerInitials,
-      summary: `${items} · placed ${placedLabel(order, now)}`,
+      summary: L.summary(items, placedLabel(order, now)),
       assigneeLabel: assignee,
       timingLabel: timing,
       overdue: ScheduleUtils.isOverdue(order, now),
-      accessibilityLabel: `Order ${number}, ${status}, ${timing}, ${assignee}, ${items}`,
+      accessibilityLabel: L.accessibilityLabel(
+        number,
+        status,
+        timing,
+        assignee,
+        items,
+      ),
     };
   }
 

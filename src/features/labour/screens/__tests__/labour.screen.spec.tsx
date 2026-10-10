@@ -1,5 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
 
+import { LOCALE } from "@/constants/locale";
+
 import { FormatUtils } from "@/utils/format-utils";
 
 import { LabourUtils } from "@/features/labour/domain/labour";
@@ -15,6 +17,8 @@ import {
 } from "@/mocks/pay-rates";
 
 import { resetRosterStore, ROSTER_NOW } from "@test/roster-test-utils";
+
+const L = LOCALE.labour.labour;
 
 const mockNavigate = jest.fn();
 jest.mock("expo-router", () => ({
@@ -50,14 +54,15 @@ describe("LabourScreen", () => {
     expect(screen.getByTestId("labour-cost-value")).toHaveTextContent(
       FormatUtils.formatCurrency(summary.totalCost),
     );
-    expect(screen.getByText("202.5h paid")).toBeOnTheScreen();
+    expect(screen.getByText(L.paid("202.5h"))).toBeOnTheScreen();
     expect(
       screen.getByText(
-        `${FormatUtils.formatCurrency(summary.budgetRemaining)} remaining`,
+        L.budgetRemaining(FormatUtils.formatCurrency(summary.budgetRemaining)),
       ),
     ).toBeOnTheScreen();
     expect(screen.getByTestId("labour-disclaimer")).toHaveTextContent(
-      /Not a payroll calculation/,
+      L.disclaimer,
+      { exact: false },
     );
   });
 
@@ -67,7 +72,9 @@ describe("LabourScreen", () => {
     expect(screen.getByLabelText(/^Sun 11 Oct: \$\d/)).toBeOnTheScreen();
     // Alex: 6 shifts × 8 paid hours × $38.50
     expect(
-      screen.getByLabelText("Alex Morgan: $1,848.00, 48h over 6 shifts"),
+      screen.getByLabelText(
+        L.employeeA11y("Alex Morgan", "$1,848.00", "48h", 6),
+      ),
     ).toBeOnTheScreen();
   });
 
@@ -92,7 +99,7 @@ describe("LabourScreen", () => {
     await fireEvent.press(screen.getByTestId("next-week"));
 
     expect(screen.getByTestId("labour-cost-value")).toHaveTextContent("$0");
-    expect(screen.getByText("No shifts rostered this week.")).toBeOnTheScreen();
+    expect(screen.getByText(L.noShifts)).toBeOnTheScreen();
   });
 
   it("links to the roster to adjust shifts", async () => {
@@ -105,7 +112,7 @@ describe("LabourScreen", () => {
     useSessionStore.setState({ role: "TEAM_MEMBER" });
     await render(<LabourScreen now={ROSTER_NOW} />);
 
-    expect(screen.getByText("Managers only")).toBeOnTheScreen();
+    expect(screen.getByText(LOCALE.labour.restricted.title)).toBeOnTheScreen();
     expect(screen.queryByTestId("labour-cost")).not.toBeOnTheScreen();
     expect(screen.queryByText(/Alex Morgan/)).not.toBeOnTheScreen();
   });

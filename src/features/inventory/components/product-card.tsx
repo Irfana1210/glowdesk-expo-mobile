@@ -1,5 +1,7 @@
 import { memo } from "react";
 
+import { LOCALE } from "@/constants/locale";
+
 import { ProductRow } from "@/components/ui/product-row";
 
 import { CATEGORY_LABELS } from "@/types/product";
@@ -7,6 +9,8 @@ import { CATEGORY_LABELS } from "@/types/product";
 import { StockUtils } from "../domain/stock";
 import { STOCK_STATUS_META } from "../stock-status-meta";
 import { type InventoryItem } from "../types";
+
+const L = LOCALE.inventory.productCard;
 
 export type ProductCardProps = {
   item: InventoryItem;
@@ -17,10 +21,16 @@ export type ProductCardProps = {
 function ProductCardComponent({ item, onPress }: ProductCardProps) {
   const { product } = item;
   const status = STOCK_STATUS_META[StockUtils.itemStockStatus(item)];
-  const detail = `${CATEGORY_LABELS[product.category]} · SKU ${product.sku}`;
+  const detail = L.detail(CATEGORY_LABELS[product.category], product.sku);
   return (
     <ProductRow
-      accessibilityLabel={`${product.brand} ${product.name}, ${detail}, ${item.availableQuantity} on hand, ${status.label}`}
+      accessibilityLabel={L.accessibilityLabel(
+        product.brand,
+        product.name,
+        detail,
+        item.availableQuantity,
+        status.label,
+      )}
       brand={product.brand}
       detail={detail}
       name={product.name}

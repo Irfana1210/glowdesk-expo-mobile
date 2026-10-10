@@ -3,11 +3,15 @@ import { Pressable, StyleSheet, View } from "react-native";
 
 import Ionicons from "@expo/vector-icons/Ionicons";
 
+import { LOCALE } from "@/constants/locale";
+
 import { colors, fontFamily, spacing, statusPalette } from "@/theme";
 
 import { AppText } from "./app-text";
 import { ProductThumbnail } from "./product-thumbnail";
 import { StatusBadge, type StatusBadgeProps } from "./status-badge";
+
+const L = LOCALE.components.productRow;
 
 export type ProductRowTrailing =
   | { kind: "status"; status: StatusBadgeProps }
@@ -76,11 +80,11 @@ function ProductRowComponent({
           <View style={styles.verified}>
             <Ionicons color={colors.successDark} name="checkmark" size={12} />
             <AppText style={[styles.state, styles.verifiedText]}>
-              Verified
+              {L.verified}
             </AppText>
           </View>
         ) : (
-          <AppText style={[styles.state, styles.toScan]}>To scan</AppText>
+          <AppText style={[styles.state, styles.toScan]}>{L.toScan}</AppText>
         )}
       </View>
     </>

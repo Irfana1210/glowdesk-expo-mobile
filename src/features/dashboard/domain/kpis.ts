@@ -3,6 +3,8 @@
  * Every ratio returns null instead of NaN or Infinity when its denominator is zero,
  * so the UI can show "not available" rather than a misleading number.
  */
+import { LOCALE } from "@/constants/locale";
+
 import { type StoreSalesSummary } from "../types";
 
 export type DashboardKpis = {
@@ -82,11 +84,11 @@ export namespace KpiUtils {
   export function greetingFor(date: Date): string {
     const hour = date.getHours();
     if (hour < 12) {
-      return "Good morning";
+      return LOCALE.dashboard.greeting.morning;
     }
     if (hour < 17) {
-      return "Good afternoon";
+      return LOCALE.dashboard.greeting.afternoon;
     }
-    return "Good evening";
+    return LOCALE.dashboard.greeting.evening;
   }
 }

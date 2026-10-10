@@ -1,5 +1,7 @@
 import { fireEvent, screen } from "@testing-library/react-native";
 
+import { LOCALE } from "@/constants/locale";
+
 import { InventoryScanScreen } from "@/features/inventory/screens/inventory-scan.screen";
 
 import { MOCK_PRODUCTS } from "@/mocks/products";
@@ -53,7 +55,8 @@ describe("InventoryScanScreen", () => {
     await renderWithQuery(<InventoryScanScreen />);
     await enter("9999999999994");
     expect(screen.getByTestId("lookup-error")).toHaveTextContent(
-      /No product in this store has barcode 9999999999994/,
+      LOCALE.inventory.barcodeLookup.notFound("9999999999994"),
+      { exact: false },
     );
     expect(mockReplace).not.toHaveBeenCalled();
   });

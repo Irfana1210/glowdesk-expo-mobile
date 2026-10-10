@@ -1,6 +1,8 @@
 /**
  * Builds the dashboard's "Needs attention" list from orders, roster and stock. Pure function.
  */
+import { LOCALE } from "@/constants/locale";
+
 import { FormatUtils } from "@/utils/format-utils";
 
 import { StockUtils } from "@/features/inventory/domain/stock";
@@ -51,8 +53,10 @@ export namespace AttentionUtils {
     if (oldest) {
       entries.push({
         key: "orders",
-        title: `${overdue.length} ${overdue.length === 1 ? "order" : "orders"} overdue`,
-        subtitle: `Oldest has waited ${FormatUtils.formatDuration(ScheduleUtils.minutesOverdue(oldest, now))} past due`,
+        title: LOCALE.dashboard.attention.orders.title(overdue.length),
+        subtitle: LOCALE.dashboard.attention.orders.subtitle(
+          FormatUtils.formatDuration(ScheduleUtils.minutesOverdue(oldest, now)),
+        ),
         icon: "time-outline",
         tone: "overdue",
         href: "/orders",
@@ -62,8 +66,14 @@ export namespace AttentionUtils {
     if (upcomingBreak && CoverUtils.breakNeedsCover(upcomingBreak, now)) {
       entries.push({
         key: "breakCover",
-        title: `Break cover at ${FormatUtils.formatClockTime(upcomingBreak.startsAt)}`,
-        subtitle: `${breakEmployeeName ?? "Team member"} · ${upcomingBreak.shift.unpaidBreakMinutes} min break`,
+        title: LOCALE.dashboard.attention.breakCover.title(
+          FormatUtils.formatClockTime(upcomingBreak.startsAt),
+        ),
+        subtitle: LOCALE.dashboard.attention.breakCover.subtitle(
+          breakEmployeeName ??
+            LOCALE.dashboard.attention.breakCover.fallbackName,
+          upcomingBreak.shift.unpaidBreakMinutes,
+        ),
         icon: "people-outline",
         tone: "picking",
         href: "/roster",
@@ -76,8 +86,11 @@ export namespace AttentionUtils {
       const more = low.length - 1;
       entries.push({
         key: "stock",
-        title: `${low.length} ${low.length === 1 ? "product" : "products"} low or out`,
-        subtitle: `${first.product.brand} ${shortName(first.product.name)}${more > 0 ? ` and ${more} more` : ""}`,
+        title: LOCALE.dashboard.attention.stock.title(low.length),
+        subtitle: LOCALE.dashboard.attention.stock.subtitle(
+          `${first.product.brand} ${shortName(first.product.name)}`,
+          more,
+        ),
         icon: "cube-outline",
         tone: "lowStock",
         href: "/inventory",

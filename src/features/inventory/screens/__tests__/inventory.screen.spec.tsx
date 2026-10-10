@@ -1,5 +1,7 @@
 import { fireEvent, screen } from "@testing-library/react-native";
 
+import { LOCALE } from "@/constants/locale";
+
 import { InventoryScreen } from "@/features/inventory/screens/inventory.screen";
 import { InventoryService } from "@/features/inventory/services/inventory.service";
 
@@ -7,6 +9,8 @@ import { createMockInventory } from "@/mocks/inventory";
 import { MOCK_PRODUCTS } from "@/mocks/products";
 
 import { renderWithQuery } from "@test/render-with-query";
+
+const L = LOCALE.inventory;
 
 const mockPush = jest.fn();
 jest.mock("expo-router", () => ({ useRouter: () => ({ push: mockPush }) }));
@@ -30,26 +34,46 @@ describe("InventoryScreen", () => {
     await renderWithQuery(<InventoryScreen />);
 
     expect(await screen.findByTestId("summary-products")).toHaveTextContent(
-      /7.*products/,
+      new RegExp(`7.*${L.list.summary.products}`),
     );
-    expect(screen.getByTestId("summary-low")).toHaveTextContent(/3.*low stock/);
+    expect(screen.getByTestId("summary-low")).toHaveTextContent(
+      new RegExp(`3.*${L.list.summary.lowStock}`),
+    );
     expect(screen.getByTestId("summary-out")).toHaveTextContent(
-      /1.*out of stock/,
+      new RegExp(`1.*${L.list.summary.outOfStock}`),
     );
     expect(rowIds()).toHaveLength(7);
     expect(
       screen.getByLabelText(
-        /Hearth & Hollow Whipped Body Butter 200ml, Body Care · SKU HH-1180, 0 on hand, Out of stock/,
+        L.productCard.accessibilityLabel(
+          "Hearth & Hollow",
+          "Whipped Body Butter 200ml",
+          L.productCard.detail("Body Care", "HH-1180"),
+          0,
+          L.stockStatus.outOfStock,
+        ),
       ),
     ).toBeOnTheScreen();
     expect(
       screen.getByLabelText(
-        /Velour Soft Focus Blush · Rosewood, Makeup · SKU VL-2210, 3 on hand, Low stock/,
+        L.productCard.accessibilityLabel(
+          "Velour",
+          "Soft Focus Blush · Rosewood",
+          L.productCard.detail("Makeup", "VL-2210"),
+          3,
+          L.stockStatus.lowStock,
+        ),
       ),
     ).toBeOnTheScreen();
     expect(
       screen.getByLabelText(
-        /Maison Iris Fig Leaf Eau de Parfum 50ml, Fragrance · SKU MI-0730, 11 on hand, In stock/,
+        L.productCard.accessibilityLabel(
+          "Maison Iris",
+          "Fig Leaf Eau de Parfum 50ml",
+          L.productCard.detail("Fragrance", "MI-0730"),
+          11,
+          L.stockStatus.inStock,
+        ),
       ),
     ).toBeOnTheScreen();
   });
@@ -104,11 +128,11 @@ describe("InventoryScreen", () => {
       "no such product",
     );
     expect(screen.getByTestId("empty-state")).toHaveTextContent(
-      'No products match "no such product".',
+      L.list.empty.noMatch("no such product"),
     );
 
     await fireEvent.press(
-      screen.getByRole("button", { name: "Clear filters" }),
+      screen.getByRole("button", { name: L.list.clearFilters }),
     );
     expect(rowIds()).toHaveLength(7);
     expect(screen.getByTestId("inventory-search").props.value).toBe("");
@@ -120,9 +144,7 @@ describe("InventoryScreen", () => {
     );
     await renderWithQuery(<InventoryScreen />);
 
-    expect(
-      await screen.findByText("Couldn't load inventory"),
-    ).toBeOnTheScreen();
+    expect(await screen.findByText(L.list.errorTitle)).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
     expect(await screen.findByTestId("inventory-list")).toBeOnTheScreen();
   });

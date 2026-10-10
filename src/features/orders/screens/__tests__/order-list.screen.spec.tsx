@@ -1,5 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
+import { LOCALE } from "@/constants/locale";
+
 import { OrderListScreen } from "@/features/orders/screens/order-list.screen";
 import { OrdersService } from "@/features/orders/services/orders.service";
 
@@ -7,6 +9,10 @@ import { createMockOrders } from "@/mocks/orders";
 
 import { resetOrdersStore } from "@test/order-test-utils";
 import { resetRosterStore } from "@test/roster-test-utils";
+
+const L = LOCALE.orders.list;
+const CARD = LOCALE.orders.card;
+const STATUS = LOCALE.orders.status;
 
 const mockPush = jest.fn();
 jest.mock("expo-router", () => ({
@@ -41,7 +47,8 @@ describe("OrderListScreen", () => {
 
     expect(await screen.findByTestId("order-card-ORD-7841")).toBeOnTheScreen();
     expect(screen.getByTestId("overdue-banner")).toHaveTextContent(
-      /3 overdue · shown first/,
+      L.overdueBanner(3),
+      { exact: false },
     );
     expect(mockedFetchOrders).toHaveBeenCalledTimes(1);
   });
@@ -64,15 +71,28 @@ describe("OrderListScreen", () => {
 
     expect(
       screen.getByLabelText(
-        "Order 7841, Picking, Overdue 53 min, Jordan Lee, 5 items",
+        CARD.accessibilityLabel(
+          "7841",
+          STATUS.picking,
+          CARD.overdue("53 min"),
+          "Jordan Lee",
+          CARD.itemCount(5),
+        ),
       ),
     ).toBeOnTheScreen();
     expect(screen.getByTestId("order-card-ORD-7841")).toHaveTextContent(
-      /placed 1:47 pm/,
+      CARD.summary(CARD.itemCount(5), "1:47 pm"),
+      { exact: false },
     );
     expect(
       screen.getByLabelText(
-        "Order 7843, Picking, Due 4:44 pm, Leo Martin, 2 items",
+        CARD.accessibilityLabel(
+          "7843",
+          STATUS.picking,
+          CARD.due("4:44 pm"),
+          "Leo Martin",
+          CARD.itemCount(2),
+        ),
       ),
     ).toBeOnTheScreen();
   });
@@ -99,7 +119,15 @@ describe("OrderListScreen", () => {
     ]);
     expect(
       screen.getByLabelText(
-        /^Order 7840, Ready, Waiting 3h, Packed by Aisha Rahman/,
+        CARD.accessibilityLabel(
+          "7840",
+          STATUS.ready,
+          CARD.waiting("3h"),
+          CARD.packedBy("Aisha Rahman"),
+          CARD.itemCount(
+            orders().find((o) => o.id === "ORD-7840")?.items.length ?? 0,
+          ),
+        ),
       ),
     ).toBeOnTheScreen();
   });
@@ -117,7 +145,7 @@ describe("OrderListScreen", () => {
 
     await fireEvent.changeText(screen.getByTestId("order-search"), "zzz");
     expect(screen.getByTestId("empty-state")).toHaveTextContent(
-      'No orders match "zzz".',
+      L.empty.noMatch("zzz"),
     );
   });
 
@@ -130,7 +158,7 @@ describe("OrderListScreen", () => {
 
     await fireEvent.press(screen.getByTestId("filter-COLLECTED"));
     expect(screen.getByTestId("empty-state")).toHaveTextContent(
-      "No collected orders.",
+      L.empty.collected,
     );
   });
 
@@ -150,7 +178,7 @@ describe("OrderListScreen", () => {
     );
     await render(<OrderListScreen now={NOW} />);
 
-    expect(await screen.findByText("Couldn't load orders")).toBeOnTheScreen();
+    expect(await screen.findByText(L.loadErrorTitle)).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
     expect(await screen.findByTestId("order-card-ORD-7841")).toBeOnTheScreen();
   });

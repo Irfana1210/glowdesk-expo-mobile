@@ -10,6 +10,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useRouter } from "expo-router";
 
+import { LOCALE } from "@/constants/locale";
+
 import { signalScanError } from "@/features/settings/preferences.store";
 
 import { AppHeader } from "@/components/layout/app-header";
@@ -24,6 +26,8 @@ import { spacing } from "@/theme";
 
 import { StockUtils } from "../domain/stock";
 import { useInventory } from "../hooks/use-inventory";
+
+const L = LOCALE.inventory.scan;
 
 const SAME_CODE_COOLDOWN_MS = 2000;
 
@@ -84,12 +88,12 @@ export const InventoryScanScreen: FC = () => {
 
   let content;
   if (inventory.isPending) {
-    content = <LoadingState message="Loading inventory" />;
+    content = <LoadingState message={L.loading} />;
   } else if (inventory.isError) {
     content = (
       <ErrorState
         message={inventory.error.message}
-        title="Couldn't load inventory"
+        title={L.errorTitle}
         onRetry={() => void inventory.refetch()}
       />
     );
@@ -110,14 +114,14 @@ export const InventoryScanScreen: FC = () => {
           {error ? (
             <InlineBanner message={error} testID="lookup-error" tone="error" />
           ) : null}
-          <ManualBarcodeEntry submitLabel="Find product" onSubmit={lookup} />
+          <ManualBarcodeEntry submitLabel={L.submitLabel} onSubmit={lookup} />
         </ScrollView>
       </KeyboardAvoidingView>
     );
 
   return (
     <Screen testID="inventory-scan-screen">
-      <AppHeader title="Scan product" onBack={close} />
+      <AppHeader title={L.title} onBack={close} />
       {content}
     </Screen>
   );

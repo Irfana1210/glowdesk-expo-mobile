@@ -1,6 +1,10 @@
+import { LOCALE } from "@/constants/locale";
+
 import { OrderStateMachine } from "@/features/orders/domain/order-state-machine";
 
 import { type Order, type OrderItem, type OrderStatus } from "@/types/order";
+
+const SM = LOCALE.orders.stateMachine;
 
 const item = (overrides: Partial<OrderItem> = {}): OrderItem => ({
   id: "item-1",
@@ -116,7 +120,7 @@ describe("canMarkReady", () => {
     expect(result).toEqual({
       ok: false,
       code: "ITEMS_NOT_VERIFIED",
-      message: "2 items still to verify.",
+      message: SM.itemsNotVerified(2),
     });
   });
 
@@ -155,7 +159,7 @@ describe("markOrderReady", () => {
       OrderStateMachine.OrderTransitionError,
     );
     expect(() => OrderStateMachine.markOrderReady(incomplete)).toThrow(
-      "1 item still to verify.",
+      SM.itemsNotVerified(1),
     );
   });
 
@@ -182,7 +186,7 @@ describe("startPicking and transitionOrder", () => {
 
   it("rejects starting to pick an order that is already PICKING", () => {
     expect(() => OrderStateMachine.startPicking(order())).toThrow(
-      "Cannot move an order from PICKING to PICKING.",
+      SM.transitionNotAllowed("PICKING", "PICKING"),
     );
   });
 

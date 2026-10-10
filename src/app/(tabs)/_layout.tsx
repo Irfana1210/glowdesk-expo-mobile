@@ -4,7 +4,11 @@ import { type ColorValue, StyleSheet, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Tabs } from "expo-router/js-tabs";
 
+import { LOCALE } from "@/constants/locale";
+
 import { colors, fontFamily, radius } from "@/theme";
+
+const L = LOCALE.app.tabs;
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
 type TabRoute = "dashboard" | "orders" | "roster" | "inventory" | "more";
@@ -40,11 +44,11 @@ function TabIcon({
 }
 
 const TABS: Array<{ name: TabRoute; title: string }> = [
-  { name: "dashboard", title: "Dashboard" },
-  { name: "orders", title: "Orders" },
-  { name: "roster", title: "Roster" },
-  { name: "inventory", title: "Inventory" },
-  { name: "more", title: "More" },
+  { name: "dashboard", title: L.dashboard },
+  { name: "orders", title: L.orders },
+  { name: "roster", title: L.roster },
+  { name: "inventory", title: L.inventory },
+  { name: "more", title: L.more },
 ];
 
 export default function TabLayout() {

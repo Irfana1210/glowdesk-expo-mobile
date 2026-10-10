@@ -5,6 +5,8 @@ import Constants from "expo-constants";
 import { type Href } from "expo-router";
 import { useRouter } from "expo-router";
 
+import { LOCALE } from "@/constants/locale";
+
 import { AppHeader } from "@/components/layout/app-header";
 import { Screen } from "@/components/layout/screen";
 import { AppText } from "@/components/ui/app-text";
@@ -12,6 +14,8 @@ import { type IconName } from "@/components/ui/button";
 import { InlineBanner } from "@/components/ui/inline-banner";
 
 import { colors, radius, spacing, touchTarget } from "@/theme";
+
+const L = LOCALE.app.more;
 
 type MenuItem = {
   description: string;
@@ -22,20 +26,17 @@ type MenuItem = {
 
 const MENU: Array<MenuItem> = [
   {
-    label: "Labour Management",
-    description: "Roster cost, budget and labour %",
+    ...L.labour,
     icon: "wallet-outline",
     href: "/more/labour",
   },
   {
-    label: "Sales Analytics",
-    description: "Planned",
+    ...L.salesAnalytics,
     icon: "stats-chart-outline",
   },
-  { label: "Employees", description: "Planned", icon: "people-outline" },
+  { ...L.employees, icon: "people-outline" },
   {
-    label: "Settings",
-    description: "Profile, store, preferences and sign out",
+    ...L.settings,
     icon: "settings-outline",
     href: "/more/settings",
   },
@@ -47,14 +48,14 @@ export default function MoreTab() {
 
   return (
     <Screen testID="more-screen">
-      <AppHeader subtitle={`RetailOS v${version}`} title="More" />
+      <AppHeader subtitle={L.version(version)} title={L.title} />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.menu}>
           {MENU.map((item, index) => {
             const enabled = Boolean(item.href);
             return (
               <Pressable
-                accessibilityLabel={`${item.label}, ${item.description}`}
+                accessibilityLabel={L.itemSummary(item.label, item.description)}
                 accessibilityRole="button"
                 accessibilityState={{ disabled: !enabled }}
                 disabled={!enabled}
@@ -97,10 +98,7 @@ export default function MoreTab() {
           })}
         </View>
 
-        <InlineBanner
-          message="Demo mode. Signed in as Alex, Store Manager. This build uses fictional data and has no production authentication."
-          tone="info"
-        />
+        <InlineBanner message={L.demoBanner} tone="info" />
       </ScrollView>
     </Screen>
   );

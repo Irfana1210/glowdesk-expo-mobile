@@ -3,6 +3,8 @@ import { Pressable, StyleSheet, TextInput, View } from "react-native";
 
 import Ionicons from "@expo/vector-icons/Ionicons";
 
+import { LOCALE } from "@/constants/locale";
+
 import {
   colors,
   fontFamily,
@@ -11,6 +13,8 @@ import {
   spacing,
   touchTarget,
 } from "@/theme";
+
+const L = LOCALE.components.searchBar;
 
 type Props = {
   accessibilityLabel: string;
@@ -47,7 +51,7 @@ export const SearchBar: FC<Props> = ({
       />
       {value.length > 0 ? (
         <Pressable
-          accessibilityLabel="Clear search"
+          accessibilityLabel={L.clear}
           accessibilityRole="button"
           hitSlop={8}
           style={styles.clear}

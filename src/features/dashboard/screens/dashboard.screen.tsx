@@ -3,6 +3,8 @@ import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 
 import { useRouter } from "expo-router";
 
+import { LOCALE } from "@/constants/locale";
+
 import { FormatUtils } from "@/utils/format-utils";
 
 import { useNow } from "@/hooks/use-now";
@@ -36,7 +38,11 @@ import { type DashboardKpis, KpiUtils } from "../domain/kpis";
 import { ShiftCardUtils } from "../domain/shift-card";
 import { useStoreSalesSummary } from "../hooks/use-store-sales-summary";
 
-const NOT_AVAILABLE = "not available";
+const L = LOCALE.dashboard.screen;
+const A = LOCALE.dashboard.attention;
+const T = LOCALE.dashboard.today;
+const K = LOCALE.dashboard.kpis;
+const H = LOCALE.dashboard.salesHero;
 
 export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
   const router = useRouter();
@@ -128,7 +134,7 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
           right={
             <>
               <IconButton
-                accessibilityLabel={`Notifications, ${attention.length} ${attention.length === 1 ? "item needs" : "items need"} attention`}
+                accessibilityLabel={L.notificationsLabel(attention.length)}
                 badge={attention.length}
                 icon="notifications-outline"
                 testID="notifications"
@@ -140,7 +146,7 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
                 }
               />
               <IconButton
-                accessibilityLabel={`Profile and settings, ${DEMO_USER.firstName}`}
+                accessibilityLabel={L.profileLabel(DEMO_USER.firstName)}
                 icon="person-outline"
                 testID="profile"
                 text={DEMO_USER.firstName.slice(0, 2).toUpperCase()}
@@ -149,7 +155,7 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
             </>
           }
           subtitle={DEMO_USER.role}
-          title={`Hi, ${DEMO_USER.firstName}`}
+          title={L.greeting(DEMO_USER.firstName)}
         />
 
         <View style={styles.body}>
@@ -163,17 +169,15 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
           >
             <View style={styles.sectionHeader}>
               <AppText accessibilityRole="header" variant="sectionTitle">
-                Needs attention
+                {A.title}
               </AppText>
               <AppText color="textMuted" style={styles.small}>
-                {attention.length === 1
-                  ? "1 item"
-                  : `${attention.length} items`}
+                {A.count(attention.length)}
               </AppText>
             </View>
             {attention.length === 0 ? (
               <AppText color="textMuted" testID="attention-empty">
-                Nothing needs attention right now.
+                {A.empty}
               </AppText>
             ) : (
               attention.map((item) => (
@@ -192,17 +196,17 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
 
           <View style={styles.section}>
             <AppText accessibilityRole="header" variant="sectionTitle">
-              Today so far
+              {T.title}
             </AppText>
             {salesQuery.isPending ? (
               <View style={[styles.card, styles.placeholder]}>
-                <LoadingState message="Loading today's sales" />
+                <LoadingState message={T.loading} />
               </View>
             ) : salesQuery.isError ? (
               <View style={styles.card}>
                 <ErrorState
                   message={salesQuery.error.message}
-                  title="Couldn't load sales"
+                  title={T.errorTitle}
                   onRetry={() => void salesQuery.refetch()}
                 />
               </View>
@@ -214,30 +218,37 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
               {kpis ? (
                 <>
                   <KPICard
-                    label="Transactions"
+                    label={K.transactions.label}
                     style={styles.gridItem}
-                    supporting={`Since ${FormatUtils.formatClockTime(DateUtils.atTime(now, ShiftUtils.STORE_TRADING_HOURS.open) ?? now)}`}
+                    supporting={K.transactions.supporting(
+                      FormatUtils.formatClockTime(
+                        DateUtils.atTime(
+                          now,
+                          ShiftUtils.STORE_TRADING_HOURS.open,
+                        ) ?? now,
+                      ),
+                    )}
                     testID="kpi-transactions"
                     value={kpis.transactions.toLocaleString("en-AU")}
                   />
                   <KPICard
-                    accessibilityLabel={`Average transaction value, ${
+                    accessibilityLabel={K.averageTransaction.accessibilityLabel(
                       kpis.averageTransactionValue === null
-                        ? NOT_AVAILABLE
+                        ? K.notAvailable
                         : FormatUtils.formatCurrency(
                             kpis.averageTransactionValue,
                             {
                               cents: true,
                             },
-                          )
-                    }`}
-                    label="Avg transaction"
+                          ),
+                    )}
+                    label={K.averageTransaction.label}
                     style={styles.gridItem}
-                    supporting="Sales ÷ transactions"
+                    supporting={K.averageTransaction.supporting}
                     testID="kpi-atv"
                     value={
                       kpis.averageTransactionValue === null
-                        ? "—"
+                        ? K.noValue
                         : FormatUtils.formatCurrency(
                             kpis.averageTransactionValue,
                             {
@@ -247,30 +258,35 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
                     }
                   />
                   <KPICard
-                    accessibilityLabel={`Labour, ${
+                    accessibilityLabel={K.labour.accessibilityLabel(
                       kpis.labourPercent === null
-                        ? NOT_AVAILABLE
-                        : `${FormatUtils.formatPercent(kpis.labourPercent, 1)} of sales`
-                    }, ${FormatUtils.formatCurrency(kpis.labourSpend)} estimated spend`}
-                    label="Labour"
+                        ? K.notAvailable
+                        : K.labour.ofSales(
+                            FormatUtils.formatPercent(kpis.labourPercent, 1),
+                          ),
+                      FormatUtils.formatCurrency(kpis.labourSpend),
+                    )}
+                    label={K.labour.label}
                     style={styles.gridItem}
-                    supporting={`${FormatUtils.formatCurrency(kpis.labourSpend)} of sales`}
+                    supporting={K.labour.ofSales(
+                      FormatUtils.formatCurrency(kpis.labourSpend),
+                    )}
                     testID="kpi-labour"
                     value={FormatUtils.formatPercent(kpis.labourPercent, 1)}
                   />
                 </>
               ) : null}
               <KPICard
-                accessibilityHint="Opens Click & Collect orders"
-                label="Click & Collect"
+                accessibilityHint={K.clickAndCollect.hint}
+                label={K.clickAndCollect.label}
                 style={styles.gridItem}
                 supporting={
                   ordersReady
-                    ? `${orderCounts.ready} ready to collect`
-                    : "Loading orders"
+                    ? K.clickAndCollect.readyToCollect(orderCounts.ready)
+                    : K.clickAndCollect.loading
                 }
                 testID="kpi-orders"
-                value={ordersReady ? String(orderCounts.pending) : "—"}
+                value={ordersReady ? String(orderCounts.pending) : K.noValue}
                 onPress={() => router.navigate("/orders")}
               />
             </View>
@@ -287,8 +303,7 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
             style={styles.footnote}
             variant="supporting"
           >
-            Demo mode with fictional data. Labour is a flat-rate estimate, not a
-            payroll calculation.
+            {L.footnote}
           </AppText>
         </View>
       </ScrollView>
@@ -300,21 +315,26 @@ function SalesHero({ kpis }: { kpis: DashboardKpis }) {
   const achievement = kpis.achievementPercent;
   const remaining =
     achievement === null
-      ? "No sales target set for today"
+      ? H.noTarget
       : kpis.remainingToTarget === 0
-        ? `Target ${FormatUtils.formatCurrency(kpis.target)} reached`
-        : `${FormatUtils.formatCurrency(kpis.remainingToTarget)} to go · target ${FormatUtils.formatCurrency(kpis.target)}`;
+        ? H.targetReached(FormatUtils.formatCurrency(kpis.target))
+        : H.toGo(
+            FormatUtils.formatCurrency(kpis.remainingToTarget),
+            FormatUtils.formatCurrency(kpis.target),
+          );
   const percent =
     achievement === null ? 0 : Math.min(100, Math.max(0, achievement));
 
   return (
     <View style={styles.card} testID="sales-summary">
       <AppText color="textMuted" style={styles.small}>
-        Sales
+        {H.label}
       </AppText>
       <View style={styles.heroRow}>
         <AppText
-          accessibilityLabel={`Today's sales ${FormatUtils.formatCurrency(kpis.sales)}`}
+          accessibilityLabel={H.totalLabel(
+            FormatUtils.formatCurrency(kpis.sales),
+          )}
           style={styles.heroValue}
           testID="sales-total"
           variant="hero"
@@ -329,8 +349,11 @@ function SalesHero({ kpis }: { kpis: DashboardKpis }) {
         accessible
         accessibilityLabel={
           achievement === null
-            ? `Sales target achievement ${NOT_AVAILABLE}`
-            : `Sales target achievement ${FormatUtils.formatPercent(achievement, 1)}. ${remaining}`
+            ? H.achievementUnavailable
+            : H.achievementLabel(
+                FormatUtils.formatPercent(achievement, 1),
+                remaining,
+              )
         }
         accessibilityRole="progressbar"
         accessibilityValue={{ min: 0, max: 100, now: Math.round(percent) }}

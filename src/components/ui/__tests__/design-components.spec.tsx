@@ -1,5 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
+import { LOCALE } from "@/constants/locale";
+
 import { AttentionItem } from "@/components/ui/attention-item";
 import { FilterChips } from "@/components/ui/filter-chips";
 import { IconButton } from "@/components/ui/icon-button";
@@ -11,6 +13,8 @@ import { ShiftCard } from "@/components/ui/shift-card";
 import { ShiftRow } from "@/components/ui/shift-row";
 import { StatusBadge } from "@/components/ui/status-badge";
 
+const L = LOCALE.components;
+
 describe("StatusBadge", () => {
   it("always shows the status as text with a spoken label", async () => {
     await render(
@@ -20,9 +24,9 @@ describe("StatusBadge", () => {
         tone="lowStock"
       />,
     );
-    expect(screen.getByLabelText("Status: Low stock")).toHaveTextContent(
-      /Low stock/,
-    );
+    expect(
+      screen.getByLabelText(L.statusBadge.label("Low stock")),
+    ).toHaveTextContent(/Low stock/);
   });
 });
 
@@ -64,9 +68,11 @@ describe("OrderCard", () => {
         onPress={onPress}
       />,
     );
-    expect(screen.getByText("#ORD-7841")).toBeOnTheScreen();
+    expect(screen.getByText(L.orderCard.orderNumber("7841"))).toBeOnTheScreen();
     expect(screen.getByText("Overdue 53 min")).toBeOnTheScreen();
-    expect(screen.getByLabelText("Status: Picking")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(L.statusBadge.label("Picking")),
+    ).toBeOnTheScreen();
     await fireEvent.press(screen.getByTestId("card"));
     expect(onPress).toHaveBeenCalled();
   });
@@ -99,9 +105,11 @@ describe("ProductRow", () => {
       </>,
     );
     expect(screen.getByTestId("done")).toHaveTextContent(
-      /LUMEN SKIN.*1 \/ 1.*Verified/,
+      new RegExp(`LUMEN SKIN.*1 / 1.*${L.productRow.verified}`),
     );
-    expect(screen.getByTestId("todo")).toHaveTextContent(/0 \/ 2.*To scan/);
+    expect(screen.getByTestId("todo")).toHaveTextContent(
+      new RegExp(`0 / 2.*${L.productRow.toScan}`),
+    );
   });
 
   it("builds monograms the way the design shows them", () => {
@@ -126,7 +134,7 @@ describe("ShiftCard", () => {
       />,
     );
     expect(
-      screen.getByRole("progressbar", { name: "Shift progress" }),
+      screen.getByRole("progressbar", { name: L.shiftCard.progress }),
     ).toHaveAccessibilityValue({ now: 90 });
     expect(screen.getByLabelText("4 on the floor")).toBeOnTheScreen();
   });
@@ -183,7 +191,7 @@ describe("AttentionItem, ShiftRow, IconButton and ScreenTitle", () => {
     );
     expect(screen.getByText("Break at 5:00 pm")).toBeOnTheScreen();
     await fireEvent.press(
-      screen.getByRole("button", { name: "Edit shift for Grace Liu" }),
+      screen.getByRole("button", { name: L.shiftRow.edit("Grace Liu") }),
     );
     expect(onEdit).toHaveBeenCalled();
   });

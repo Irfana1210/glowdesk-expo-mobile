@@ -1,10 +1,14 @@
 import { type FC, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
+import { LOCALE } from "@/constants/locale";
+
 import { spacing } from "@/theme";
 
 import { SecondaryButton } from "../ui/secondary-button";
 import { TextField } from "../ui/text-field";
+
+const L = LOCALE.components.manualBarcodeEntry;
 
 type Props = {
   /** Focus the field on mount, e.g. when the user chose "Type code". */
@@ -21,8 +25,8 @@ type Props = {
 /** Barcode text entry for damaged labels and simulators, which have no camera. */
 export const ManualBarcodeEntry: FC<Props> = ({
   onSubmit,
-  label = "Enter barcode manually",
-  submitLabel = "Verify barcode",
+  label = L.label,
+  submitLabel = L.submit,
   value,
   onChangeValue,
   autoFocus = false,
@@ -45,10 +49,10 @@ export const ManualBarcodeEntry: FC<Props> = ({
       <TextField
         autoCorrect={false}
         autoFocus={autoFocus}
-        hint="Use this if the barcode will not scan, or on a simulator."
+        hint={L.hint}
         keyboardType="number-pad"
         label={label}
-        placeholder="e.g. 9300601042118"
+        placeholder={L.placeholder}
         returnKeyType="done"
         testID="manual-barcode"
         value={code}

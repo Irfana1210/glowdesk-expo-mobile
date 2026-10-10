@@ -1,9 +1,13 @@
+import { LOCALE } from "@/constants/locale";
+
 import { OrderStateMachine } from "@/features/orders/domain/order-state-machine";
 import { ScheduleUtils } from "@/features/orders/domain/schedule";
 import { OrderPresentationUtils } from "@/features/orders/presentation";
 
 import { createMockOrders } from "@/mocks/orders";
 import { type Order } from "@/types/order";
+
+const CARD = LOCALE.orders.card;
 
 const NOW = new Date(2026, 9, 10, 16, 40);
 const all = createMockOrders(NOW);
@@ -71,33 +75,33 @@ describe("ready time", () => {
 describe("order card text", () => {
   it("matches the mockup wording", () => {
     expect(OrderPresentationUtils.timingLabel(order("7841"), NOW)).toBe(
-      "Overdue 53 min",
+      CARD.overdue("53 min"),
     );
     expect(OrderPresentationUtils.timingLabel(order("7843"), NOW)).toBe(
-      "Due 4:44 pm",
+      CARD.due("4:44 pm"),
     );
     expect(OrderPresentationUtils.timingLabel(order("7840"), NOW)).toBe(
-      "Waiting 3h",
+      CARD.waiting("3h"),
     );
     expect(OrderPresentationUtils.timingLabel(order("7835"), NOW)).toBe(
-      "Waiting 1 day",
+      CARD.waiting("1 day"),
     );
     expect(OrderPresentationUtils.assigneeLabel(order("7846"), undefined)).toBe(
-      "Unassigned",
+      CARD.unassigned,
     );
     expect(
       OrderPresentationUtils.assigneeLabel(order("7840"), "Aisha Rahman"),
-    ).toBe("Packed by Aisha Rahman");
+    ).toBe(CARD.packedBy("Aisha Rahman"));
   });
 
   it("builds the summary line", () => {
     expect(
       OrderPresentationUtils.orderCardModel(order("7841"), "Jordan Lee", NOW)
         .summary,
-    ).toBe("5 items · placed 1:47 pm");
+    ).toBe(CARD.summary(CARD.itemCount(5), "1:47 pm"));
     expect(
       OrderPresentationUtils.orderCardModel(order("7835"), "Alex Morgan", NOW)
         .summary,
-    ).toBe("3 items · placed yesterday");
+    ).toBe(CARD.summary(CARD.itemCount(3), CARD.yesterday));
   });
 });

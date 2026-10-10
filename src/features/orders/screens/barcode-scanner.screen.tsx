@@ -13,6 +13,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
+import { LOCALE } from "@/constants/locale";
+
 import { FormatUtils } from "@/utils/format-utils";
 
 import { signalScanError } from "@/features/settings/preferences.store";
@@ -37,6 +39,9 @@ import { PickingUtils, type PickResult } from "../domain/picking";
 import { useEnsureOrdersLoaded } from "../hooks/use-ensure-orders-loaded";
 import { selectOrderById, useOrdersStore } from "../store/orders.store";
 
+const L = LOCALE.orders.scanner;
+const C = LOCALE.orders.common;
+
 /** The camera reports the same code many times a second. Ignore repeats inside this window. */
 export const SAME_CODE_COOLDOWN_MS = 2000;
 
@@ -47,7 +52,11 @@ function feedbackFor(result: PickResult): Feedback {
     const { item } = result;
     return {
       tone: "success",
-      message: `Verified ${item.name}. ${item.pickedQuantity} of ${item.requiredQuantity} picked.`,
+      message: L.verified(
+        item.name,
+        item.pickedQuantity,
+        item.requiredQuantity,
+      ),
     };
   }
   return { tone: "error", message: result.message };
@@ -73,8 +82,8 @@ export const BarcodeScannerScreen: FC = () => {
       <AppHeader
         title={
           order
-            ? `Scan ${FormatUtils.formatOrderNumber(order.id)}`
-            : "Scan products"
+            ? L.title(FormatUtils.formatOrderNumber(order.id))
+            : L.titleFallback
         }
         onBack={close}
       />
@@ -85,12 +94,12 @@ export const BarcodeScannerScreen: FC = () => {
           onDone={close}
         />
       ) : loadStatus === "idle" || loadStatus === "loading" ? (
-        <LoadingState message="Loading order" />
+        <LoadingState message={C.loadingOrder} />
       ) : (
         <ErrorState
-          message="Open an order and start picking before scanning."
-          retryLabel="Back to orders"
-          title="Order not found"
+          message={L.notFoundMessage}
+          retryLabel={C.backToOrders}
+          title={C.orderNotFound}
           onRetry={() => router.replace("/orders")}
         />
       )}
@@ -157,14 +166,10 @@ function ScannerContent({
     return (
       <View style={styles.padded}>
         <InlineBanner
-          message={
-            order.status === "NEW"
-              ? "Start picking this order before scanning products."
-              : "This order is no longer being picked, so scanning is closed."
-          }
+          message={order.status === "NEW" ? L.notStarted : L.closed}
           tone="error"
         />
-        <SecondaryButton label="Back to order" onPress={onDone} />
+        <SecondaryButton label={C.backToOrder} onPress={onDone} />
       </View>
     );
   }
@@ -192,19 +197,16 @@ function ScannerContent({
         ) : null}
 
         <ProgressBar
-          label={`${progress.verifiedItems} of ${FormatUtils.pluralise(progress.totalItems, "item")} verified`}
+          label={L.progress(progress.verifiedItems, progress.totalItems)}
           ratio={progress.ratio}
         />
 
         {allVerified ? (
           <View style={styles.doneBlock}>
-            <InlineBanner
-              message="All items verified. Review the order and mark it ready."
-              tone="success"
-            />
+            <InlineBanner message={L.allVerified} tone="success" />
             <PrimaryButton
               icon="checkmark-done-outline"
-              label="Review and complete"
+              label={L.reviewAndComplete}
               testID="review-complete"
               onPress={() =>
                 router.replace({
@@ -224,7 +226,7 @@ function ScannerContent({
             />
 
             <AppText accessibilityRole="header" variant="cardTitle">
-              Still to pick
+              {L.stillToPick}
             </AppText>
             {__DEV__ ? (
               <AppText color="textMuted" variant="supporting">
@@ -234,7 +236,11 @@ function ScannerContent({
             <View style={styles.remainingList}>
               {remainingItems.map((item) => (
                 <Pressable
-                  accessibilityLabel={`${item.name}, ${PickingUtils.remainingQuantity(item)} still to pick, barcode ${item.barcode}`}
+                  accessibilityLabel={L.remainingAccessibilityLabel(
+                    item.name,
+                    PickingUtils.remainingQuantity(item),
+                    item.barcode,
+                  )}
                   accessibilityRole={__DEV__ ? "button" : "text"}
                   disabled={!__DEV__}
                   key={item.id}
@@ -254,7 +260,7 @@ function ScannerContent({
                     </AppText>
                   </View>
                   <AppText variant="bodyStrong">
-                    ×{PickingUtils.remainingQuantity(item)}
+                    {L.remainingQuantity(PickingUtils.remainingQuantity(item))}
                   </AppText>
                 </Pressable>
               ))}

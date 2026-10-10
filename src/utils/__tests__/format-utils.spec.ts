@@ -1,6 +1,10 @@
+import { LOCALE } from "@/constants/locale";
+
 import { FormatUtils } from "@/utils/format-utils";
 
 import { withEan13CheckDigit } from "@/mocks/products";
+
+const L = LOCALE.app.format;
 
 describe("format helpers", () => {
   const now = new Date(2026, 9, 10, 12, 0);
@@ -26,20 +30,20 @@ describe("format helpers", () => {
         new Date(2026, 9, 10, 9, 47).toISOString(),
         now,
       ),
-    ).toBe("Today, 9:47 am");
+    ).toBe(L.today("9:47 am"));
     expect(
       FormatUtils.formatOrderTime(
         new Date(2026, 9, 9, 16, 10).toISOString(),
         now,
       ),
-    ).toBe("Yesterday, 4:10 pm");
+    ).toBe(L.yesterday("4:10 pm"));
     expect(
       FormatUtils.formatOrderTime(
         new Date(2026, 9, 8, 15, 15).toISOString(),
         now,
       ),
     ).toBe("8 Oct, 3:15 pm");
-    expect(FormatUtils.formatOrderTime("not a date", now)).toBe("Unknown time");
+    expect(FormatUtils.formatOrderTime("not a date", now)).toBe(L.unknownTime);
   });
 
   it("pluralises counts", () => {
@@ -74,10 +78,10 @@ describe("currency and percentage formatting", () => {
   });
 
   it("shows a dash for values that cannot be calculated", () => {
-    expect(FormatUtils.formatPercent(null)).toBe("—");
+    expect(FormatUtils.formatPercent(null)).toBe(L.notAvailable);
     expect(FormatUtils.formatPercent(92.5)).toBe("93%");
     expect(FormatUtils.formatPercent(17.027, 1)).toBe("17.0%");
-    expect(FormatUtils.formatCurrency(Number.NaN)).toBe("—");
+    expect(FormatUtils.formatCurrency(Number.NaN)).toBe(L.notAvailable);
   });
 
   it("formats hours", () => {
@@ -104,17 +108,17 @@ describe("time ranges and durations", () => {
 
   it("formats durations and waiting times", () => {
     expect([53, 65, 230, 120, -4].map(FormatUtils.formatDuration)).toEqual([
-      "53 min",
-      "1h 5m",
-      "3h 50m",
-      "2h",
-      "0 min",
+      L.minutes(53),
+      L.hoursMinutes(1, 5),
+      L.hoursMinutes(3, 50),
+      L.hours(2),
+      L.minutes(0),
     ]);
     expect([12, 185, 1500, 3000].map(FormatUtils.formatWaiting)).toEqual([
-      "12 min",
-      "3h",
-      "1 day",
-      "2 days",
+      L.minutes(12),
+      L.hours(3),
+      L.days(1),
+      L.days(2),
     ]);
   });
 

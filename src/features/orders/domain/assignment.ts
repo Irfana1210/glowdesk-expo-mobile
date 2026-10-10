@@ -2,6 +2,8 @@
  * Who is picking an order. Pure functions, like the state machine: every change returns a new
  * frozen order with an incremented version, so a future backend can reject stale updates.
  */
+import { LOCALE } from "@/constants/locale";
+
 import { type Order, type OrderItem } from "@/types/order";
 
 import { OrderStateMachine } from "./order-state-machine";
@@ -21,9 +23,7 @@ export namespace AssignmentUtils {
     employeeId: string | undefined,
   ): Order {
     if (!ScheduleUtils.isActive(order)) {
-      throw new AssignmentError(
-        "Only New and Picking orders can be reassigned.",
-      );
+      throw new AssignmentError(LOCALE.orders.assignment.notReassignable);
     }
     const { assigneeId: _previous, ...rest } = order;
     return Object.freeze({

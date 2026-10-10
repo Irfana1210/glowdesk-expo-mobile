@@ -1,9 +1,14 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
+import { LOCALE } from "@/constants/locale";
+
 import { ShiftEditorScreen } from "@/features/roster/screens/shift-editor.screen";
 import { useRosterStore } from "@/features/roster/store/roster.store";
 
 import { resetRosterStore } from "@test/roster-test-utils";
+
+const L = LOCALE.roster.shiftEditor;
+const V = LOCALE.roster.validation;
 
 let mockParams: { date?: string; shiftId?: string } = {};
 const mockBack = jest.fn();
@@ -42,7 +47,8 @@ describe("ShiftEditorScreen", () => {
     await choose("field-employee", "emp-06");
 
     expect(screen.getByTestId("shift-summary")).toHaveTextContent(
-      /8h shift · 7\.5h paid/,
+      L.summaryHours("8h", "7.5h"),
+      { exact: false },
     );
     await fireEvent.press(screen.getByTestId("save-shift"));
 
@@ -57,7 +63,7 @@ describe("ShiftEditorScreen", () => {
     await fireEvent.press(screen.getByTestId("save-shift"));
 
     expect(await screen.findByTestId("field-employee-error")).toHaveTextContent(
-      "Choose an employee.",
+      LOCALE.roster.shiftForm.chooseEmployee,
     );
     expect(screen.getByTestId("form-errors")).toBeOnTheScreen();
     expect(mockBack).not.toHaveBeenCalled();
@@ -70,7 +76,8 @@ describe("ShiftEditorScreen", () => {
     await fireEvent.press(screen.getByTestId("save-shift"));
 
     expect(await screen.findByTestId("form-errors")).toHaveTextContent(
-      /Grace Liu already works 1:00 pm – 9:00 pm on Wed 7 Oct\./,
+      V.alreadyWorks("Grace Liu", "1:00 pm – 9:00 pm", "Wed 7 Oct"),
+      { exact: false },
     );
     expect(useRosterStore.getState().shifts).toHaveLength(before);
   });
@@ -83,12 +90,13 @@ describe("ShiftEditorScreen", () => {
     await fireEvent.press(screen.getByTestId("save-shift"));
 
     expect(await screen.findByTestId("field-end-error")).toHaveTextContent(
-      /Turn on "Ends next day"/,
+      V.endBeforeStart,
     );
 
     await fireEvent(screen.getByTestId("field-next-day"), "valueChange", true);
     expect(screen.getByTestId("shift-summary")).toHaveTextContent(
-      /Ends Tue 6 Oct/,
+      L.endsOn("Tue 6 Oct"),
+      { exact: false },
     );
     await fireEvent.press(screen.getByTestId("save-shift"));
 
@@ -107,7 +115,7 @@ describe("ShiftEditorScreen", () => {
     await fireEvent.press(screen.getByTestId("save-shift"));
 
     expect(await screen.findByTestId("field-break-error")).toHaveTextContent(
-      /Break cannot be as long/,
+      V.breakTooLong,
     );
   });
 

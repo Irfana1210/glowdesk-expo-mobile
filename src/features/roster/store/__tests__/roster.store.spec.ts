@@ -1,5 +1,7 @@
 import Storage from "expo-sqlite/kv-store";
 
+import { LOCALE } from "@/constants/locale";
+
 import {
   isPersistedShift,
   ROSTER_STORAGE_KEY,
@@ -8,6 +10,7 @@ import {
 
 import { createMockShifts } from "@/mocks/shifts";
 
+const V = LOCALE.roster.validation;
 const NOW = new Date(2026, 9, 7, 10); // Wednesday 7 October 2026
 const at = (day: number, h: number, m = 0) =>
   new Date(2026, 9, day, h, m).toISOString();
@@ -46,7 +49,7 @@ describe("useRosterStore", () => {
     expect(result).toEqual({
       ok: false,
       errors: {
-        form: "Alex Morgan already works 8:30 am – 5:00 pm on Mon 5 Oct.",
+        form: V.alreadyWorks("Alex Morgan", "8:30 am – 5:00 pm", "Mon 5 Oct"),
       },
     });
     expect(useRosterStore.getState().shifts).toBe(before);
@@ -62,11 +65,11 @@ describe("useRosterStore", () => {
       });
     expect(add("emp-07")).toMatchObject({
       ok: false,
-      errors: { employeeId: expect.stringMatching(/inactive/) },
+      errors: { employeeId: V.employeeInactive("Sam Okafor") },
     });
     expect(add("emp-08")).toMatchObject({
       ok: false,
-      errors: { employeeId: expect.stringMatching(/not assigned/) },
+      errors: { employeeId: V.employeeNotAssigned("Mei Tanaka") },
     });
   });
 

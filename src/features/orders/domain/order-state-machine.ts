@@ -5,6 +5,8 @@
  * new frozen order with an incremented version and never mutates its input.
  * In production these rules must also be enforced atomically on the backend.
  */
+import { LOCALE } from "@/constants/locale";
+
 import { type Order, type OrderItem, type OrderStatus } from "@/types/order";
 
 export type ReadinessFailureCode =
@@ -82,14 +84,14 @@ export namespace OrderStateMachine {
       return {
         ok: false,
         code: "INVALID_STATUS",
-        message: `Only orders in Picking can be marked ready. This order is ${order.status}.`,
+        message: LOCALE.orders.stateMachine.invalidStatus(order.status),
       };
     }
     if (order.items.length === 0) {
       return {
         ok: false,
         code: "NO_ITEMS",
-        message: "This order has no items to verify.",
+        message: LOCALE.orders.stateMachine.noItems,
       };
     }
     if (
@@ -102,7 +104,7 @@ export namespace OrderStateMachine {
       return {
         ok: false,
         code: "INVALID_QUANTITY",
-        message: "Every item must have a required quantity greater than zero.",
+        message: LOCALE.orders.stateMachine.invalidQuantity,
       };
     }
     const remaining = order.items.filter(
@@ -112,7 +114,7 @@ export namespace OrderStateMachine {
       return {
         ok: false,
         code: "ITEMS_NOT_VERIFIED",
-        message: `${remaining} ${remaining === 1 ? "item" : "items"} still to verify.`,
+        message: LOCALE.orders.stateMachine.itemsNotVerified(remaining),
       };
     }
     return { ok: true };
@@ -141,7 +143,7 @@ export namespace OrderStateMachine {
         order.status,
         to,
         "TRANSITION_NOT_ALLOWED",
-        `Cannot move an order from ${order.status} to ${to}.`,
+        LOCALE.orders.stateMachine.transitionNotAllowed(order.status, to),
       );
     }
     if (to === "READY") {

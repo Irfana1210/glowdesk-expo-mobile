@@ -4,6 +4,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useLocalSearchParams, useRouter } from "expo-router";
 
+import { LOCALE } from "@/constants/locale";
+
 import { FormatUtils } from "@/utils/format-utils";
 
 import { AppHeader } from "@/components/layout/app-header";
@@ -23,6 +25,8 @@ import { useInventory } from "../hooks/use-inventory";
 import { STOCK_STATUS_META } from "../stock-status-meta";
 import { type InventoryItem } from "../types";
 
+const L = LOCALE.inventory.productDetails;
+
 export const ProductDetailsScreen: FC = () => {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -37,21 +41,21 @@ export const ProductDetailsScreen: FC = () => {
 
   let content;
   if (inventory.isPending) {
-    content = <LoadingState message="Loading product" />;
+    content = <LoadingState message={L.loading} />;
   } else if (inventory.isError) {
     content = (
       <ErrorState
         message={inventory.error.message}
-        title="Couldn't load product"
+        title={L.errorTitle}
         onRetry={() => void inventory.refetch()}
       />
     );
   } else if (!item) {
     content = (
       <ErrorState
-        message={`No product with ID ${id ?? ""} in this store.`}
-        retryLabel="Back to inventory"
-        title="Product not found"
+        message={L.notFoundMessage(id ?? "")}
+        retryLabel={L.backToInventory}
+        title={L.notFoundTitle}
         onRetry={() => router.replace("/inventory")}
       />
     );
@@ -59,7 +63,7 @@ export const ProductDetailsScreen: FC = () => {
 
   return (
     <Screen testID="product-details-screen">
-      <AppHeader title="Product details" onBack={goBack} />
+      <AppHeader title={L.title} onBack={goBack} />
       {content}
     </Screen>
   );
@@ -69,7 +73,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <View
       accessible
-      accessibilityLabel={`${label}: ${value}`}
+      accessibilityLabel={L.rowLabel(label, value)}
       style={styles.row}
     >
       <AppText color="textMuted">{label}</AppText>
@@ -88,18 +92,20 @@ function stockMessage(item: InventoryItem): {
     case "OUT_OF_STOCK":
       return {
         tone: "error",
-        message:
-          "Out of stock. Reorder now and remove from Click & Collect availability.",
+        message: L.stockMessage.outOfStock,
       };
     case "LOW_STOCK":
       return {
         tone: "error",
-        message: `Low stock. ${item.availableQuantity} left, at or below the reorder point of ${item.reorderPoint}.`,
+        message: L.stockMessage.lowStock(
+          item.availableQuantity,
+          item.reorderPoint,
+        ),
       };
     default:
       return {
         tone: "success",
-        message: `Healthy stock. Reorder point is ${item.reorderPoint}.`,
+        message: L.stockMessage.healthy(item.reorderPoint),
       };
   }
 }
@@ -143,10 +149,10 @@ function ProductDetailsContent({ item }: { item: InventoryItem }) {
         <View style={styles.stockTop}>
           <View
             accessible
-            accessibilityLabel={`${item.availableQuantity} available`}
+            accessibilityLabel={L.availableLabel(item.availableQuantity)}
           >
             <AppText color="textMuted" variant="supporting">
-              Available
+              {L.available}
             </AppText>
             <AppText testID="available-quantity" variant="pageTitle">
               {item.availableQuantity}
@@ -163,16 +169,22 @@ function ProductDetailsContent({ item }: { item: InventoryItem }) {
 
       <View style={styles.card}>
         <AppText accessibilityRole="header" variant="cardTitle">
-          Product information
+          {L.infoTitle}
         </AppText>
-        <DetailRow label="SKU" value={product.sku} />
-        <DetailRow label="Barcode" value={product.barcode} />
-        <DetailRow label="Category" value={CATEGORY_LABELS[product.category]} />
+        <DetailRow label={L.fields.sku} value={product.sku} />
+        <DetailRow label={L.fields.barcode} value={product.barcode} />
         <DetailRow
-          label="Price"
+          label={L.fields.category}
+          value={CATEGORY_LABELS[product.category]}
+        />
+        <DetailRow
+          label={L.fields.price}
           value={FormatUtils.formatCurrency(product.price, { cents: true })}
         />
-        <DetailRow label="Reorder point" value={String(item.reorderPoint)} />
+        <DetailRow
+          label={L.fields.reorderPoint}
+          value={String(item.reorderPoint)}
+        />
       </View>
     </ScrollView>
   );

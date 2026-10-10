@@ -4,9 +4,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import Ionicons from "@expo/vector-icons/Ionicons";
 
+import { LOCALE } from "@/constants/locale";
+
 import { colors, radius, spacing, touchTarget } from "@/theme";
 
 import { AppText } from "./app-text";
+
+const L = LOCALE.components.selectField;
 
 export type SelectOption<T extends string | number> = {
   description?: string;
@@ -32,7 +36,7 @@ export function SelectField<T extends string | number>({
   value,
   options,
   onChange,
-  placeholder = "Select",
+  placeholder = L.placeholder,
   error,
   testID,
 }: SelectFieldProps<T>) {
@@ -45,8 +49,8 @@ export function SelectField<T extends string | number>({
     <View style={styles.container}>
       <AppText variant="label">{label}</AppText>
       <Pressable
-        accessibilityHint={error ?? "Opens a list of options"}
-        accessibilityLabel={`${label}, ${selected?.label ?? "not selected"}`}
+        accessibilityHint={error ?? L.hint}
+        accessibilityLabel={L.summary(label, selected?.label ?? L.notSelected)}
         accessibilityRole="button"
         style={[styles.field, error ? styles.fieldError : null]}
         testID={testID}
@@ -75,7 +79,7 @@ export function SelectField<T extends string | number>({
       >
         <View style={styles.backdrop}>
           <Pressable
-            accessibilityLabel="Close"
+            accessibilityLabel={L.close}
             accessibilityRole="button"
             style={styles.flex}
             onPress={() => setOpen(false)}
@@ -92,7 +96,7 @@ export function SelectField<T extends string | number>({
                 {label}
               </AppText>
               <Pressable
-                accessibilityLabel="Close"
+                accessibilityLabel={L.close}
                 accessibilityRole="button"
                 style={styles.close}
                 onPress={() => setOpen(false)}

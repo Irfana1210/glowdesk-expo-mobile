@@ -10,6 +10,8 @@ import {
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 
+import { LOCALE } from "@/constants/locale";
+
 import { useNow } from "@/hooks/use-now";
 
 import { useRosterStore } from "@/features/roster/store/roster.store";
@@ -32,6 +34,8 @@ import { ScheduleUtils } from "../domain/schedule";
 import { useEnsureOrdersLoaded } from "../hooks/use-ensure-orders-loaded";
 import { useOrdersStore } from "../store/orders.store";
 
+const L = LOCALE.orders.list;
+
 export type OrderFilter = "ALL" | Exclude<OrderStatus, "CANCELLED">;
 
 const FILTERS: Array<{
@@ -39,18 +43,14 @@ const FILTERS: Array<{
   label: string;
   value: OrderFilter;
 }> = [
-  { value: "ALL", label: "All", emptyLabel: "No Click & Collect orders yet." },
-  { value: "NEW", label: "New", emptyLabel: "No new orders." },
-  { value: "PICKING", label: "Picking", emptyLabel: "Nothing being picked." },
-  {
-    value: "READY",
-    label: "Ready",
-    emptyLabel: "No orders ready for collection.",
-  },
+  { value: "ALL", label: L.filters.all, emptyLabel: L.empty.all },
+  { value: "NEW", label: L.filters.new, emptyLabel: L.empty.new },
+  { value: "PICKING", label: L.filters.picking, emptyLabel: L.empty.picking },
+  { value: "READY", label: L.filters.ready, emptyLabel: L.empty.ready },
   {
     value: "COLLECTED",
-    label: "Collected",
-    emptyLabel: "No collected orders.",
+    label: L.filters.collected,
+    emptyLabel: L.empty.collected,
   },
 ];
 
@@ -153,19 +153,20 @@ export const OrderListScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
   const hasData = orders.length > 0;
   let body;
   if (!hasData && (loadStatus === "idle" || loadStatus === "loading")) {
-    body = <LoadingState message="Loading Click & Collect orders" />;
+    body = <LoadingState message={L.loading} />;
   } else if (!hasData && loadStatus === "error") {
     body = (
       <ErrorState
-        message={loadError ?? "Check your connection and try again."}
-        title="Couldn't load orders"
+        message={loadError ?? L.loadErrorMessage}
+        title={L.loadErrorTitle}
         onRetry={() => void loadOrders()}
       />
     );
   } else {
     const emptyLabel = query
-      ? `No orders match "${query}".`
-      : (FILTERS.find((f) => f.value === filter)?.emptyLabel ?? "No orders.");
+      ? L.empty.noMatch(query)
+      : (FILTERS.find((f) => f.value === filter)?.emptyLabel ??
+        L.empty.fallback);
     body = (
       <FlatList
         ItemSeparatorComponent={Separator}
@@ -177,10 +178,7 @@ export const OrderListScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
         ListHeaderComponent={
           loadError ? (
             <View style={styles.banner}>
-              <InlineBanner
-                message={`Refresh failed: ${loadError}`}
-                tone="error"
-              />
+              <InlineBanner message={L.refreshFailed(loadError)} tone="error" />
             </View>
           ) : null
         }
@@ -205,10 +203,10 @@ export const OrderListScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
   return (
     <Screen testID="order-list-screen">
       <ScreenTitle
-        eyebrow="Click & Collect"
+        eyebrow={L.eyebrow}
         right={
           <IconButton
-            accessibilityLabel={searchOpen ? "Close search" : "Search orders"}
+            accessibilityLabel={searchOpen ? L.closeSearch : L.openSearch}
             icon={searchOpen ? "close" : "search"}
             testID="toggle-search"
             onPress={() => {
@@ -219,13 +217,13 @@ export const OrderListScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
             }}
           />
         }
-        title="Orders"
+        title={L.title}
       />
       <View style={styles.controls}>
         {searchOpen ? (
           <SearchBar
-            accessibilityLabel="Search orders by number, customer initials or team member"
-            placeholder="Order number, initials or team member"
+            accessibilityLabel={L.searchAccessibilityLabel}
+            placeholder={L.searchPlaceholder}
             testID="order-search"
             value={query}
             onChangeText={setQuery}
@@ -234,7 +232,7 @@ export const OrderListScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
         {overdueCount > 0 ? (
           <View
             accessible
-            accessibilityLabel={`${overdueCount} ${overdueCount === 1 ? "order is" : "orders are"} overdue and shown first`}
+            accessibilityLabel={L.overdueBannerAccessibilityLabel(overdueCount)}
             accessibilityRole="alert"
             style={styles.overdue}
             testID="overdue-banner"
@@ -245,14 +243,14 @@ export const OrderListScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
               size={18}
             />
             <AppText style={styles.overdueText}>
-              {overdueCount} overdue · shown first
+              {L.overdueBanner(overdueCount)}
             </AppText>
           </View>
         ) : null}
       </View>
       <View style={styles.filters}>
         <FilterChips
-          accessibilityLabel="Filter orders by status"
+          accessibilityLabel={L.filterAccessibilityLabel}
           options={filterOptions}
           selected={filter}
           onChange={setFilter}

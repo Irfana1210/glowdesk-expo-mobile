@@ -4,6 +4,8 @@
  */
 import { z } from "zod";
 
+import { LOCALE } from "@/constants/locale";
+
 import { FormatUtils } from "@/utils/format-utils";
 
 import { type Shift, type ShiftDraft } from "../types";
@@ -16,15 +18,17 @@ export namespace ShiftFormUtils {
   const TIME = /^\d{2}:\d{2}$/;
 
   export const shiftFormSchema = z.object({
-    employeeId: z.string().min(1, "Choose an employee."),
-    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Choose a date."),
-    startTime: z.string().regex(TIME, "Choose a start time."),
-    endTime: z.string().regex(TIME, "Choose an end time."),
+    employeeId: z.string().min(1, LOCALE.roster.shiftForm.chooseEmployee),
+    date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, LOCALE.roster.shiftForm.chooseDate),
+    startTime: z.string().regex(TIME, LOCALE.roster.shiftForm.chooseStartTime),
+    endTime: z.string().regex(TIME, LOCALE.roster.shiftForm.chooseEndTime),
     endsNextDay: z.boolean(),
     breakMinutes: z
       .number()
-      .int("Break must be whole minutes.")
-      .min(0, "Break cannot be negative."),
+      .int(LOCALE.roster.shiftForm.breakWholeMinutes)
+      .min(0, LOCALE.roster.shiftForm.breakNegative),
   });
 
   /** Form values to absolute instants. Overnight shifts get an explicit next-day end date. */
@@ -111,6 +115,9 @@ export namespace ShiftFormUtils {
 
   export const BREAK_OPTIONS = [0, 15, 30, 45, 60, 90].map((minutes) => ({
     value: minutes,
-    label: minutes === 0 ? "No unpaid break" : `${minutes} minutes`,
+    label:
+      minutes === 0
+        ? LOCALE.roster.shiftForm.noUnpaidBreak
+        : LOCALE.roster.shiftForm.breakOption(minutes),
   }));
 }

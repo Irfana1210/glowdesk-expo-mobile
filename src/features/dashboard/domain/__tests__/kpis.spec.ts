@@ -1,3 +1,5 @@
+import { LOCALE } from "@/constants/locale";
+
 import { KpiUtils } from "@/features/dashboard/domain/kpis";
 
 import { DEMO_SALES_SUMMARY } from "@/mocks/sales";
@@ -85,11 +87,11 @@ describe("zero and invalid denominators", () => {
 
 describe("greetingFor", () => {
   it.each([
-    [8, "Good morning"],
-    [11, "Good morning"],
-    [12, "Good afternoon"],
-    [16, "Good afternoon"],
-    [17, "Good evening"],
+    [8, LOCALE.dashboard.greeting.morning],
+    [11, LOCALE.dashboard.greeting.morning],
+    [12, LOCALE.dashboard.greeting.afternoon],
+    [16, LOCALE.dashboard.greeting.afternoon],
+    [17, LOCALE.dashboard.greeting.evening],
   ])("at %i:00 says %s", (hour, expected) => {
     expect(KpiUtils.greetingFor(new Date(2026, 9, 10, hour, 0))).toBe(expected);
   });

@@ -11,6 +11,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
+import { LOCALE } from "@/constants/locale";
+
 import { FormatUtils } from "@/utils/format-utils";
 
 import { useNow } from "@/hooks/use-now";
@@ -48,6 +50,9 @@ type Feedback = { message: string; tone: "error" | "success" } | null;
 
 const UNASSIGN = "__unassign__";
 
+const L = LOCALE.orders.details;
+const C = LOCALE.orders.common;
+
 export const OrderDetailsScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
   const router = useRouter();
   const liveNow = useNow();
@@ -65,13 +70,13 @@ export const OrderDetailsScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
 
   let content;
   if (!order && (loadStatus === "idle" || loadStatus === "loading")) {
-    content = <LoadingState message="Loading order" />;
+    content = <LoadingState message={C.loadingOrder} />;
   } else if (!order) {
     content = (
       <ErrorState
-        message={`We couldn't find order ${id ?? ""}. It may have been removed.`}
-        retryLabel="Back to orders"
-        title="Order not found"
+        message={L.notFoundMessage(id ?? "")}
+        retryLabel={C.backToOrders}
+        title={C.orderNotFound}
         onRetry={() => router.replace("/orders")}
       />
     );
@@ -94,7 +99,7 @@ export const OrderDetailsScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
         right={
           canCancel ? (
             <Pressable
-              accessibilityLabel="More order actions"
+              accessibilityLabel={L.moreActions}
               accessibilityRole="button"
               style={styles.iconButton}
               testID="more-actions"
@@ -108,7 +113,7 @@ export const OrderDetailsScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
             </Pressable>
           ) : null
         }
-        title="Order details"
+        title={L.title}
         onBack={goBack}
       />
       {content}
@@ -161,8 +166,8 @@ function OrderDetailsContent({
         })),
       {
         value: UNASSIGN,
-        label: "Unassign",
-        description: "Return the order to the unassigned queue",
+        label: L.unassign,
+        description: L.unassignDescription,
       },
     ],
     [employees],
@@ -186,7 +191,7 @@ function OrderDetailsContent({
     const name = employees.find((e) => e.id === employeeId)?.name;
     report(
       assignOrder(order.id, employeeId),
-      name ? `Assigned to ${name}` : "Order unassigned",
+      name ? L.assignedAnnouncement(name) : L.unassignedAnnouncement,
     );
   };
 
@@ -204,9 +209,9 @@ function OrderDetailsContent({
     });
 
   const readyHint = readiness.ok
-    ? "All units verified."
+    ? L.allUnitsVerified
     : readiness.code === "ITEMS_NOT_VERIFIED"
-      ? `Scan ${units.remainingUnits} more ${units.remainingUnits === 1 ? "unit" : "units"} to mark this order ready`
+      ? L.scanMoreUnits(units.remainingUnits)
       : readiness.message;
 
   return (
@@ -223,11 +228,11 @@ function OrderDetailsContent({
         <View style={styles.hero}>
           <View style={styles.heroTop}>
             <AppText
-              accessibilityLabel={`Order ${number}`}
+              accessibilityLabel={L.orderNumberAccessibilityLabel(number)}
               accessibilityRole="header"
               variant="orderNumber"
             >
-              #ORD-{number}
+              {L.orderNumber(number)}
             </AppText>
             <StatusBadge {...ORDER_STATUS_META[order.status]} />
           </View>
@@ -236,20 +241,26 @@ function OrderDetailsContent({
             <InitialsAvatar initials={order.customerInitials} />
             <View
               accessible
-              accessibilityLabel={`Customer ${OrderPresentationUtils.spellInitials(order.customerInitials)}, placed ${OrderPresentationUtils.placedLabel(order, now)}, due ${FormatUtils.formatClockTime(ScheduleUtils.dueAt(order))}`}
+              accessibilityLabel={L.customerAccessibilityLabel(
+                OrderPresentationUtils.spellInitials(order.customerInitials),
+                OrderPresentationUtils.placedLabel(order, now),
+                FormatUtils.formatClockTime(ScheduleUtils.dueAt(order)),
+              )}
               style={styles.flex}
             >
               <AppText style={styles.customer}>
-                Customer {order.customerInitials}
+                {L.customer(order.customerInitials)}
               </AppText>
               <AppText
                 color="textMuted"
                 testID="order-timing"
                 variant="supporting"
               >
-                Placed {OrderPresentationUtils.placedLabel(order, now)}
+                {L.placed(OrderPresentationUtils.placedLabel(order, now))}
                 {ScheduleUtils.isActive(order)
-                  ? ` · due ${FormatUtils.formatClockTime(ScheduleUtils.dueAt(order))}`
+                  ? L.due(
+                      FormatUtils.formatClockTime(ScheduleUtils.dueAt(order)),
+                    )
                   : ""}
               </AppText>
             </View>
@@ -261,9 +272,10 @@ function OrderDetailsContent({
                   size={14}
                 />
                 <AppText style={styles.overdueText}>
-                  Overdue{" "}
-                  {FormatUtils.formatDuration(
-                    ScheduleUtils.minutesOverdue(order, now),
+                  {L.overdue(
+                    FormatUtils.formatDuration(
+                      ScheduleUtils.minutesOverdue(order, now),
+                    ),
                   )}
                 </AppText>
               </View>
@@ -276,8 +288,8 @@ function OrderDetailsContent({
                 <>
                   <AppText color="textMuted" style={styles.small}>
                     {order.status === "READY" || order.status === "COLLECTED"
-                      ? "Packed by "
-                      : "Assigned to "}
+                      ? L.packedByPrefix
+                      : L.assignedToPrefix}
                   </AppText>
                   <AppText style={[styles.small, styles.strong]}>
                     {assignee.name}
@@ -285,7 +297,7 @@ function OrderDetailsContent({
                 </>
               ) : (
                 <AppText color="textMuted" style={styles.small}>
-                  Not assigned yet
+                  {L.notAssigned}
                 </AppText>
               )}
             </AppText>
@@ -293,8 +305,8 @@ function OrderDetailsContent({
               <Pressable
                 accessibilityLabel={
                   assignee
-                    ? `Reassign, currently ${assignee.name}`
-                    : "Assign this order"
+                    ? L.reassignAccessibilityLabel(assignee.name)
+                    : L.assignAccessibilityLabel
                 }
                 accessibilityRole="button"
                 style={styles.textButton}
@@ -302,7 +314,7 @@ function OrderDetailsContent({
                 onPress={() => setAssigning(true)}
               >
                 <AppText style={styles.textButtonLabel}>
-                  {assignee ? "Reassign" : "Assign"}
+                  {assignee ? L.reassign : L.assign}
                 </AppText>
               </Pressable>
             ) : null}
@@ -310,15 +322,17 @@ function OrderDetailsContent({
 
           <View
             accessible
-            accessibilityLabel={`Picking progress: ${units.pickedUnits} of ${units.totalUnits} ${units.totalUnits === 1 ? "unit" : "units"} picked`}
+            accessibilityLabel={L.progressAccessibilityLabel(
+              units.pickedUnits,
+              units.totalUnits,
+            )}
             accessibilityRole="progressbar"
             accessibilityValue={{ min: 0, max: 100, now: units.percent }}
             style={styles.progress}
           >
             <View style={styles.progressLabels}>
               <AppText style={[styles.small, styles.strong]}>
-                {units.pickedUnits} of {units.totalUnits}{" "}
-                {units.totalUnits === 1 ? "unit" : "units"} picked
+                {L.progress(units.pickedUnits, units.totalUnits)}
               </AppText>
               <AppText color="textMuted" style={styles.small}>
                 {units.percent}%
@@ -332,15 +346,22 @@ function OrderDetailsContent({
 
         <View style={styles.products}>
           <AppText accessibilityRole="header" variant="cardTitle">
-            Products · {order.items.length}
+            {L.productsHeading(order.items.length)}
           </AppText>
           {order.items.map((item) => {
             const verified = OrderStateMachine.isItemVerified(item);
             return (
               <ProductRow
-                accessibilityLabel={`${item.brand ?? ""} ${item.name}, SKU ${item.sku}, picked ${item.pickedQuantity} of ${item.requiredQuantity}, ${verified ? "verified" : "still to scan"}`}
+                accessibilityLabel={L.productAccessibilityLabel(
+                  item.brand ?? "",
+                  item.name,
+                  item.sku,
+                  item.pickedQuantity,
+                  item.requiredQuantity,
+                  verified,
+                )}
                 brand={item.brand ?? ""}
-                detail={`SKU ${item.sku} · ${item.barcode}`}
+                detail={L.productDetail(item.sku, item.barcode)}
                 key={item.id}
                 name={item.name}
                 quantity={`${item.pickedQuantity} / ${item.requiredQuantity}`}
@@ -364,7 +385,7 @@ function OrderDetailsContent({
           onMarkReady={openCompletion}
           onScan={() => openScanner()}
           onStartPicking={() =>
-            report(startPicking(order.id), "Picking started")
+            report(startPicking(order.id), L.pickingStartedAnnouncement)
           }
           onTypeCode={() => openScanner(true)}
         />
@@ -374,22 +395,22 @@ function OrderDetailsContent({
         options={staffOptions}
         selected={order.assigneeId}
         testID="assign-sheet"
-        title={assignee ? "Reassign order" : "Assign order"}
+        title={assignee ? L.reassignOrderTitle : L.assignOrderTitle}
         visible={assigning}
         onClose={() => setAssigning(false)}
         onSelect={handleAssign}
       />
       <ConfirmationModal
         destructive
-        cancelLabel="Keep order"
-        confirmLabel="Cancel order"
-        message="The customer's order is cancelled and removed from the picking queue. This cannot be undone."
-        title={`Cancel order #ORD-${number}?`}
+        cancelLabel={L.cancel.cancelLabel}
+        confirmLabel={L.cancel.confirmLabel}
+        message={L.cancel.message}
+        title={L.cancel.title(number)}
         visible={confirmCancel}
         onCancel={onCloseCancel}
         onConfirm={() => {
           onCloseCancel();
-          report(cancelOrder(order.id), `Order ${number} cancelled`);
+          report(cancelOrder(order.id), L.cancel.doneAnnouncement(number));
         }}
       />
     </View>
@@ -419,9 +440,9 @@ function Footer({
     case "NEW":
       return (
         <PrimaryButton
-          accessibilityHint="Moves this order into picking"
+          accessibilityHint={L.footer.startPickingHint}
           icon="play-outline"
-          label="Start picking"
+          label={L.footer.startPicking}
           testID="start-picking"
           onPress={onStartPicking}
         />
@@ -430,9 +451,9 @@ function Footer({
       return readyOk ? (
         <>
           <PrimaryButton
-            accessibilityHint="Opens the completion check for this order"
+            accessibilityHint={L.footer.markReadyHint}
             icon="checkmark-done-outline"
-            label="Mark ready"
+            label={L.footer.markReady}
             testID="mark-ready"
             onPress={onMarkReady}
           />
@@ -448,9 +469,9 @@ function Footer({
       ) : (
         <>
           <PrimaryButton
-            accessibilityHint="Opens the barcode scanner to verify products"
+            accessibilityHint={L.footer.scanProductHint}
             icon="barcode-outline"
-            label="Scan product"
+            label={L.footer.scanProduct}
             testID="scan-product"
             onPress={onScan}
           />
@@ -459,14 +480,14 @@ function Footer({
               disabled
               accessibilityHint={readyHint}
               icon="checkmark-done-outline"
-              label="Mark ready"
+              label={L.footer.markReady}
               style={styles.flex}
               testID="mark-ready"
             />
             <SecondaryButton
-              accessibilityHint="Enter a barcode by hand"
+              accessibilityHint={L.footer.typeCodeHint}
               icon="keypad-outline"
-              label="Type code"
+              label={L.footer.typeCode}
               testID="type-code"
               onPress={onTypeCode}
             />
@@ -482,18 +503,11 @@ function Footer({
         </>
       );
     case "READY":
-      return (
-        <InlineBanner
-          message="Ready for collection. Hand-over flow arrives in a later milestone."
-          tone="success"
-        />
-      );
+      return <InlineBanner message={L.footer.readyBanner} tone="success" />;
     case "COLLECTED":
-      return (
-        <InlineBanner message="This order has been collected." tone="info" />
-      );
+      return <InlineBanner message={L.footer.collectedBanner} tone="info" />;
     case "CANCELLED":
-      return <InlineBanner message="This order was cancelled." tone="info" />;
+      return <InlineBanner message={L.footer.cancelledBanner} tone="info" />;
   }
 }
 

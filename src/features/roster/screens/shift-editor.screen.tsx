@@ -15,6 +15,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
+import { LOCALE } from "@/constants/locale";
+
 import { successHandler } from "@/utils/success-handler";
 
 import {
@@ -42,6 +44,8 @@ import { type ShiftErrors, ShiftUtils } from "../domain/shifts";
 import { useRosterStore } from "../store/roster.store";
 import { type Shift } from "../types";
 
+const L = LOCALE.roster.shiftEditor;
+
 export const ShiftEditorScreen: FC = () => {
   const router = useRouter();
   const params = useLocalSearchParams<{ date?: string; shiftId?: string }>();
@@ -58,11 +62,11 @@ export const ShiftEditorScreen: FC = () => {
   if (params.shiftId && !shift) {
     return (
       <Screen testID="shift-editor-screen">
-        <AppHeader title="Edit Shift" onBack={close} />
+        <AppHeader title={L.editTitle} onBack={close} />
         <ErrorState
-          message="It may have been removed."
-          retryLabel="Back to roster"
-          title="Shift not found"
+          message={L.notFoundMessage}
+          retryLabel={L.backToRoster}
+          title={L.notFoundTitle}
           onRetry={() => router.replace("/roster")}
         />
       </Screen>
@@ -165,7 +169,7 @@ function ShiftEditorForm({
       return;
     }
     AccessibilityInfo.announceForAccessibility(
-      isEditing ? "Shift updated" : "Shift added",
+      isEditing ? L.shiftUpdated : L.shiftAdded,
     );
     successHandler(isEditing ? MessageType.Update : MessageType.Create);
     onDone();
@@ -177,10 +181,7 @@ function ShiftEditorForm({
 
   return (
     <Screen testID="shift-editor-screen">
-      <AppHeader
-        title={isEditing ? "Edit Shift" : "Add Shift"}
-        onBack={onDone}
-      />
+      <AppHeader title={isEditing ? L.editTitle : L.addTitle} onBack={onDone} />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.flex}
@@ -191,10 +192,7 @@ function ShiftEditorForm({
         >
           {isSubmitted && errorMessages.length > 0 ? (
             <InlineBanner
-              message={
-                errors.root?.message ??
-                "Fix the highlighted fields before saving."
-              }
+              message={errors.root?.message ?? L.fixFields}
               testID="form-errors"
               tone="error"
             />
@@ -206,9 +204,9 @@ function ShiftEditorForm({
             render={({ field, fieldState }) => (
               <SelectField
                 error={fieldState.error?.message}
-                label="Employee"
+                label={L.employeeLabel}
                 options={employeeOptions}
-                placeholder="Choose an employee"
+                placeholder={L.employeePlaceholder}
                 testID="field-employee"
                 value={field.value || undefined}
                 onChange={field.onChange}
@@ -221,9 +219,9 @@ function ShiftEditorForm({
             name="date"
             render={({ field }) => (
               <View style={styles.fieldGroup}>
-                <AppText variant="label">Date</AppText>
+                <AppText variant="label">{L.dateLabel}</AppText>
                 <View
-                  accessibilityLabel="Shift date"
+                  accessibilityLabel={L.shiftDate}
                   accessibilityRole="radiogroup"
                   style={styles.dayRow}
                 >
@@ -271,7 +269,7 @@ function ShiftEditorForm({
                 render={({ field, fieldState }) => (
                   <SelectField
                     error={fieldState.error?.message}
-                    label="Start time"
+                    label={L.startTimeLabel}
                     options={ShiftFormUtils.TIME_OPTIONS}
                     testID="field-start"
                     value={field.value}
@@ -286,7 +284,7 @@ function ShiftEditorForm({
                 name="endTime"
                 render={({ field }) => (
                   <SelectField
-                    label="End time"
+                    label={L.endTimeLabel}
                     options={ShiftFormUtils.TIME_OPTIONS}
                     testID="field-end"
                     value={field.value}
@@ -312,13 +310,13 @@ function ShiftEditorForm({
             render={({ field }) => (
               <View style={styles.switchRow}>
                 <View style={styles.flex}>
-                  <AppText variant="bodyStrong">Ends next day</AppText>
+                  <AppText variant="bodyStrong">{L.endsNextDay}</AppText>
                   <AppText color="textMuted" variant="supporting">
-                    For overnight shifts, such as a stocktake.
+                    {L.endsNextDayHint}
                   </AppText>
                 </View>
                 <Switch
-                  accessibilityLabel="Ends next day"
+                  accessibilityLabel={L.endsNextDay}
                   testID="field-next-day"
                   trackColor={{ true: colors.accent, false: colors.border }}
                   value={field.value}
@@ -334,7 +332,7 @@ function ShiftEditorForm({
             render={({ field, fieldState }) => (
               <SelectField
                 error={fieldState.error?.message}
-                label="Unpaid break"
+                label={L.unpaidBreakLabel}
                 options={ShiftFormUtils.BREAK_OPTIONS}
                 testID="field-break"
                 value={field.value}
@@ -344,11 +342,14 @@ function ShiftEditorForm({
           />
 
           <View accessible style={styles.summary} testID="shift-summary">
-            <AppText variant="cardTitle">Summary</AppText>
+            <AppText variant="cardTitle">{L.summaryTitle}</AppText>
             <AppText color="textMuted">
               {draft && duration > 0
-                ? `${ShiftUtils.formatHours(duration)} shift · ${ShiftUtils.formatHours(ShiftUtils.paidMinutes(draft))} paid`
-                : "Choose a valid start and end time."}
+                ? L.summaryHours(
+                    ShiftUtils.formatHours(duration),
+                    ShiftUtils.formatHours(ShiftUtils.paidMinutes(draft)),
+                  )
+                : L.summaryInvalid}
             </AppText>
             {draft &&
             !DateUtils.isSameDay(
@@ -356,7 +357,7 @@ function ShiftEditorForm({
               new Date(draft.endAt),
             ) ? (
               <AppText color="textMuted">
-                Ends {DateUtils.formatDayLabel(new Date(draft.endAt))}
+                {L.endsOn(DateUtils.formatDayLabel(new Date(draft.endAt)))}
               </AppText>
             ) : null}
           </View>
@@ -370,14 +371,14 @@ function ShiftEditorForm({
         >
           <PrimaryButton
             icon="checkmark"
-            label={isEditing ? "Save changes" : "Add shift"}
+            label={isEditing ? L.saveChanges : L.addShift}
             testID="save-shift"
             onPress={onSave}
           />
           {isEditing ? (
             <SecondaryButton
               icon="trash-outline"
-              label="Remove shift"
+              label={L.removeShift}
               testID="delete-shift"
               onPress={() => setConfirmDelete(true)}
             />
@@ -387,9 +388,9 @@ function ShiftEditorForm({
 
       <ConfirmationModal
         destructive
-        confirmLabel="Remove shift"
-        message="The shift is deleted from the roster. This cannot be undone."
-        title="Remove this shift?"
+        confirmLabel={L.removeShift}
+        message={L.removeConfirmMessage}
+        title={L.removeConfirmTitle}
         visible={confirmDelete}
         onCancel={() => setConfirmDelete(false)}
         onConfirm={() => {
@@ -397,7 +398,7 @@ function ShiftEditorForm({
             removeShift(shift.id);
           }
           setConfirmDelete(false);
-          AccessibilityInfo.announceForAccessibility("Shift removed");
+          AccessibilityInfo.announceForAccessibility(L.shiftRemoved);
           successHandler(MessageType.Delete);
           onDone();
         }}

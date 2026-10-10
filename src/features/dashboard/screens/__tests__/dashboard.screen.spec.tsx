@@ -1,5 +1,7 @@
 import { fireEvent, screen } from "@testing-library/react-native";
 
+import { LOCALE } from "@/constants/locale";
+
 import { DashboardScreen } from "@/features/dashboard/screens/dashboard.screen";
 import { SalesService } from "@/features/dashboard/services/sales.service";
 import { InventoryService } from "@/features/inventory/services/inventory.service";
@@ -12,6 +14,8 @@ import { createMockShifts } from "@/mocks/shifts";
 
 import { resetOrdersStore } from "@test/order-test-utils";
 import { renderWithQuery } from "@test/render-with-query";
+
+const L = LOCALE.dashboard;
 
 const mockNavigate = jest.fn();
 const mockPush = jest.fn();
@@ -52,33 +56,46 @@ describe("DashboardScreen", () => {
   it("greets the user and shows their shift", async () => {
     await renderWithQuery(<DashboardScreen now={NOW} />);
 
-    expect(screen.getByRole("header", { name: "Hi, Alex" })).toBeOnTheScreen();
+    expect(
+      screen.getByRole("header", { name: L.screen.greeting("Alex") }),
+    ).toBeOnTheScreen();
     expect(
       screen.getByText("Sat 10 Oct · Melbourne Central"),
     ).toBeOnTheScreen();
     expect(screen.getByTestId("shift-card")).toHaveTextContent(
-      /On shift.*9:00 am – 5:30 pm.*50 min left/,
+      new RegExp(
+        `${L.shiftCard.active.status}.*9:00 am – 5:30 pm.*${L.shiftCard.active.headline("50 min")}`,
+      ),
     );
-    expect(screen.getByLabelText("4 on the floor")).toBeOnTheScreen();
-    expect(screen.getByLabelText("5:00 next break")).toBeOnTheScreen();
-    expect(screen.getByLabelText("7 orders to assign")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(`4 ${L.shiftCard.stats.onTheFloor}`),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(`5:00 ${L.shiftCard.stats.nextBreak}`),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(`7 ${L.shiftCard.stats.ordersToAssign(7)}`),
+    ).toBeOnTheScreen();
   });
 
   it("lists what needs attention and opens the right tab", async () => {
     await renderWithQuery(<DashboardScreen now={NOW} />);
 
     expect(await screen.findByTestId("attention-stock")).toHaveTextContent(
-      /4 products low or out/,
+      L.attention.stock.title(4),
+      { exact: false },
     );
     expect(screen.getByTestId("attention-orders")).toHaveTextContent(
-      /3 orders overdue/,
+      L.attention.orders.title(3),
+      { exact: false },
     );
     expect(screen.getByTestId("attention-breakCover")).toHaveTextContent(
-      /Break cover at 5:00 pm/,
+      L.attention.breakCover.title("5:00 pm"),
+      { exact: false },
     );
     expect(
       screen.getByRole("button", {
-        name: "Notifications, 3 items need attention",
+        name: L.screen.notificationsLabel(3),
       }),
     ).toBeOnTheScreen();
 
@@ -92,16 +109,20 @@ describe("DashboardScreen", () => {
     expect(await screen.findByTestId("sales-total")).toHaveTextContent(
       "$18,500",
     );
-    expect(screen.getByText("$1,500 to go · target $20,000")).toBeOnTheScreen();
+    expect(
+      screen.getByText(L.salesHero.toGo("$1,500", "$20,000")),
+    ).toBeOnTheScreen();
     expect(screen.getByText("92.5%")).toBeOnTheScreen();
     expect(screen.getByTestId("kpi-transactions-value")).toHaveTextContent(
       "215",
     );
     expect(screen.getByTestId("kpi-atv-value")).toHaveTextContent("$86.05");
     expect(screen.getByTestId("kpi-labour-value")).toHaveTextContent("17.0%");
-    expect(screen.getByText("$3,150 of sales")).toBeOnTheScreen();
+    expect(screen.getByText(L.kpis.labour.ofSales("$3,150"))).toBeOnTheScreen();
     expect(screen.getByTestId("kpi-orders-value")).toHaveTextContent("12");
-    expect(screen.getByText("5 ready to collect")).toBeOnTheScreen();
+    expect(
+      screen.getByText(L.kpis.clickAndCollect.readyToCollect(5)),
+    ).toBeOnTheScreen();
   });
 
   it('shows "not available" instead of dividing by zero before the first sale', async () => {
@@ -113,9 +134,13 @@ describe("DashboardScreen", () => {
     });
     await renderWithQuery(<DashboardScreen now={NOW} />);
 
-    expect(await screen.findByTestId("kpi-atv-value")).toHaveTextContent("—");
+    expect(await screen.findByTestId("kpi-atv-value")).toHaveTextContent(
+      L.kpis.noValue,
+    );
     expect(
-      screen.getByLabelText("Average transaction value, not available"),
+      screen.getByLabelText(
+        L.kpis.averageTransaction.accessibilityLabel(L.kpis.notAvailable),
+      ),
     ).toBeOnTheScreen();
     expect(screen.getByTestId("sales-chart-empty")).toBeOnTheScreen();
     expect(screen.queryByText(/NaN|Infinity/)).not.toBeOnTheScreen();
@@ -127,7 +152,7 @@ describe("DashboardScreen", () => {
     );
     await renderWithQuery(<DashboardScreen now={NOW} />);
 
-    expect(await screen.findByText("Couldn't load sales")).toBeOnTheScreen();
+    expect(await screen.findByText(L.today.errorTitle)).toBeOnTheScreen();
     expect(screen.getByTestId("kpi-orders-value")).toHaveTextContent("12");
 
     await fireEvent.press(screen.getByRole("button", { name: "Try again" }));

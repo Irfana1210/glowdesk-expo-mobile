@@ -11,6 +11,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 
+import { LOCALE } from "@/constants/locale";
+
 import { FormatUtils } from "@/utils/format-utils";
 
 import { useOrdersStore } from "@/features/orders/store/orders.store";
@@ -36,29 +38,18 @@ import {
   usePreferencesStore,
 } from "../preferences.store";
 
+const L = LOCALE.settings;
+
 type PendingAction = "reset" | "signOut" | null;
 
 const NOTIFICATION_ROWS: Array<{
   description: string;
   key: keyof NotificationPreferences;
   label: string;
-}> = [
-  {
-    key: "newOrders",
-    label: "New Click & Collect orders",
-    description: "When a customer places an order",
-  },
-  {
-    key: "lowStock",
-    label: "Low stock alerts",
-    description: "When a product reaches its reorder point",
-  },
-  {
-    key: "rosterChanges",
-    label: "Roster changes",
-    description: "When your shifts are added or changed",
-  },
-];
+}> = (["newOrders", "lowStock", "rosterChanges"] as const).map((key) => ({
+  key,
+  ...L.notifications[key],
+}));
 
 function Section({ title, children }: { children: ReactNode; title: string }) {
   return (
@@ -83,7 +74,7 @@ function InfoRow({
   return (
     <View
       accessible
-      accessibilityLabel={`${label}: ${value}`}
+      accessibilityLabel={L.screen.rowLabel(label, value)}
       style={[styles.row, !first && styles.divider]}
     >
       <AppText color="textMuted">{label}</AppText>
@@ -176,21 +167,17 @@ export const SettingsScreen: FC = () => {
     setPending(null);
 
     if (action === "signOut") {
-      AccessibilityInfo.announceForAccessibility(
-        "Signed out. Demo data cleared.",
-      );
+      AccessibilityInfo.announceForAccessibility(L.signOut.announcement);
       router.dismissTo("/dashboard");
       return;
     }
-    setMessage("Demo orders and roster restored.");
-    AccessibilityInfo.announceForAccessibility(
-      "Demo orders and roster restored.",
-    );
+    setMessage(L.reset.done);
+    AccessibilityInfo.announceForAccessibility(L.reset.done);
   };
 
   return (
     <Screen testID="settings-screen">
-      <AppHeader title="Settings" onBack={goBack} />
+      <AppHeader title={L.screen.title} onBack={goBack} />
       <ScrollView
         contentContainerStyle={[
           styles.content,
@@ -199,7 +186,10 @@ export const SettingsScreen: FC = () => {
       >
         <View
           accessible
-          accessibilityLabel={`${DEMO_USER.firstName}, ${DEMO_USER.role}, demo account`}
+          accessibilityLabel={L.profile.accessibilityLabel(
+            DEMO_USER.firstName,
+            DEMO_USER.role,
+          )}
           style={styles.profile}
         >
           <InitialsAvatar
@@ -208,28 +198,30 @@ export const SettingsScreen: FC = () => {
           />
           <View style={styles.flex}>
             <AppText variant="sectionTitle">{DEMO_USER.firstName}</AppText>
-            <AppText color="textMuted">{DEMO_USER.role} · Demo account</AppText>
+            <AppText color="textMuted">
+              {L.profile.role(DEMO_USER.role)}
+            </AppText>
           </View>
         </View>
 
-        <Section title="Assigned store">
-          <InfoRow first label="Store" value={DEMO_STORE_NAME} />
-          <InfoRow label="Store ID" value={DEMO_STORE_ID} />
-          <InfoRow label="Trading hours" value={tradingHours} />
+        <Section title={L.store.title}>
+          <InfoRow first label={L.store.store} value={DEMO_STORE_NAME} />
+          <InfoRow label={L.store.storeId} value={DEMO_STORE_ID} />
+          <InfoRow label={L.store.tradingHours} value={tradingHours} />
         </Section>
 
-        <Section title="App preferences">
+        <Section title={L.preferences.title}>
           <SwitchRow
             first
-            description="A short vibration when a barcode is wrong or already picked"
-            label="Vibrate on scan errors"
+            description={L.preferences.vibrate.description}
+            label={L.preferences.vibrate.label}
             testID="pref-vibrate"
             value={vibrateOnScanError}
             onChange={setVibrateOnScanError}
           />
         </Section>
 
-        <Section title="Notifications">
+        <Section title={L.notifications.title}>
           {NOTIFICATION_ROWS.map((row, index) => (
             <SwitchRow
               description={row.description}
@@ -247,14 +239,16 @@ export const SettingsScreen: FC = () => {
           testID="notifications-note"
           variant="supporting"
         >
-          Your choices are saved on this device. Push notifications are not sent
-          yet; they arrive in a later release.
+          {L.notifications.note}
         </AppText>
 
-        <Section title="About">
-          <InfoRow first label="App version" value={version} />
-          <InfoRow label="Platform" value={`Expo SDK ${sdkMajor}`} />
-          <InfoRow label="Data" value="Fictional demo data" />
+        <Section title={L.about.title}>
+          <InfoRow first label={L.about.appVersion} value={version} />
+          <InfoRow
+            label={L.about.platform}
+            value={L.about.platformValue(sdkMajor)}
+          />
+          <InfoRow label={L.about.data} value={L.about.dataValue} />
         </Section>
 
         {message ? (
@@ -266,9 +260,9 @@ export const SettingsScreen: FC = () => {
         ) : null}
 
         <SecondaryButton
-          accessibilityHint="Restores orders and the roster to their original demo state"
+          accessibilityHint={L.reset.hint}
           icon="refresh"
-          label="Reset demo data"
+          label={L.reset.label}
           testID="reset-demo-data"
           onPress={() => {
             setMessage(null);
@@ -276,9 +270,9 @@ export const SettingsScreen: FC = () => {
           }}
         />
         <PrimaryButton
-          accessibilityHint="Clears data saved on this device and returns to the dashboard"
+          accessibilityHint={L.signOut.hint}
           icon="log-out-outline"
-          label="Sign out"
+          label={L.signOut.label}
           testID="sign-out"
           onPress={() => setPending("signOut")}
         />
@@ -286,14 +280,18 @@ export const SettingsScreen: FC = () => {
 
       <ConfirmationModal
         destructive
-        confirmLabel={pending === "signOut" ? "Sign out" : "Reset data"}
+        confirmLabel={
+          pending === "signOut" ? L.signOut.confirmLabel : L.reset.confirmLabel
+        }
         loading={busy}
         message={
           pending === "signOut"
-            ? "This is a demo account, so signing out clears the orders, roster changes and preferences saved on this device."
-            : "All order progress and roster changes saved on this device will be lost."
+            ? L.signOut.confirmMessage
+            : L.reset.confirmMessage
         }
-        title={pending === "signOut" ? "Sign out?" : "Reset demo data?"}
+        title={
+          pending === "signOut" ? L.signOut.confirmTitle : L.reset.confirmTitle
+        }
         visible={pending !== null}
         onCancel={() => setPending(null)}
         onConfirm={() => void confirm()}

@@ -3,6 +3,8 @@ import { Vibration } from "react-native";
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import Storage from "expo-sqlite/kv-store";
 
+import { LOCALE } from "@/constants/locale";
+
 import { useOrdersStore } from "@/features/orders/store/orders.store";
 import { useRosterStore } from "@/features/roster/store/roster.store";
 import {
@@ -14,6 +16,8 @@ import { SettingsScreen } from "@/features/settings/screens/settings.screen";
 
 import { mockOrders, resetOrdersStore } from "@test/order-test-utils";
 import { resetRosterStore } from "@test/roster-test-utils";
+
+const L = LOCALE.settings;
 
 const mockDismissTo = jest.fn();
 jest.mock("expo-router", () => ({
@@ -46,15 +50,25 @@ describe("SettingsScreen", () => {
     await render(<SettingsScreen />);
 
     expect(
-      screen.getByLabelText("Alex, Store Manager, demo account"),
+      screen.getByLabelText(
+        L.profile.accessibilityLabel("Alex", "Store Manager"),
+      ),
     ).toBeOnTheScreen();
     expect(
-      screen.getByLabelText("Store: RetailOS Melbourne Central"),
+      screen.getByLabelText(
+        L.screen.rowLabel(L.store.store, "RetailOS Melbourne Central"),
+      ),
     ).toBeOnTheScreen();
     expect(
-      screen.getByLabelText("Trading hours: 9:00 am – 9:00 pm"),
+      screen.getByLabelText(
+        L.screen.rowLabel(L.store.tradingHours, "9:00 am – 9:00 pm"),
+      ),
     ).toBeOnTheScreen();
-    expect(screen.getByLabelText(/^App version: /)).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(
+        new RegExp(`^${L.screen.rowLabel(L.about.appVersion, "")}`),
+      ),
+    ).toBeOnTheScreen();
     expect(screen.queryByText(/Team Member/)).not.toBeOnTheScreen();
   });
 
@@ -75,7 +89,7 @@ describe("SettingsScreen", () => {
     );
     expect(saved.state.notifications.rosterChanges).toBe(true);
     expect(screen.getByTestId("notifications-note")).toHaveTextContent(
-      /not sent yet/,
+      L.notifications.note,
     );
   });
 
@@ -98,11 +112,12 @@ describe("SettingsScreen", () => {
     await render(<SettingsScreen />);
 
     await fireEvent.press(screen.getByTestId("reset-demo-data"));
-    expect(screen.getByText("Reset demo data?")).toBeOnTheScreen();
+    expect(screen.getByText(L.reset.confirmTitle)).toBeOnTheScreen();
     await fireEvent.press(screen.getByTestId("confirm-action"));
 
     expect(await screen.findByTestId("settings-message")).toHaveTextContent(
-      /Demo orders and roster restored/,
+      L.reset.done,
+      { exact: false },
     );
     expect(
       useOrdersStore.getState().orders.find((o) => o.id === "ORD-7846")?.status,
@@ -115,7 +130,7 @@ describe("SettingsScreen", () => {
     await render(<SettingsScreen />);
 
     await fireEvent.press(screen.getByTestId("sign-out"));
-    expect(screen.getByText("Sign out?")).toBeOnTheScreen();
+    expect(screen.getByText(L.signOut.confirmTitle)).toBeOnTheScreen();
     await fireEvent.press(screen.getByTestId("confirm-action"));
 
     expect(mockDismissTo).toHaveBeenCalledWith("/dashboard");

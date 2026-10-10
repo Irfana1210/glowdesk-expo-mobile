@@ -1,6 +1,8 @@
 /**
  * Content of the dark "your shift" card, from the signed-in person's shift today. Pure function.
  */
+import { LOCALE } from "@/constants/locale";
+
 import { FormatUtils } from "@/utils/format-utils";
 
 import { CoverUtils } from "@/features/roster/domain/cover";
@@ -25,23 +27,28 @@ export namespace ShiftCardUtils {
     ordersToAssign,
   }: ShiftCardInput): ShiftCardProps {
     const stats = [
-      { value: String(staffOnFloor), label: "on the floor" },
       {
-        value: nextBreakAt ? FormatUtils.formatClockCompact(nextBreakAt) : "—",
-        label: "next break",
+        value: String(staffOnFloor),
+        label: LOCALE.dashboard.shiftCard.stats.onTheFloor,
+      },
+      {
+        value: nextBreakAt
+          ? FormatUtils.formatClockCompact(nextBreakAt)
+          : LOCALE.dashboard.shiftCard.noValue,
+        label: LOCALE.dashboard.shiftCard.stats.nextBreak,
       },
       {
         value: String(ordersToAssign),
-        label: ordersToAssign === 1 ? "order to assign" : "orders to assign",
+        label: LOCALE.dashboard.shiftCard.stats.ordersToAssign(ordersToAssign),
       },
     ];
 
     if (!myShift) {
       return {
-        statusLabel: "Not rostered",
+        statusLabel: LOCALE.dashboard.shiftCard.notRostered.status,
         live: false,
-        timeRange: "No shift today",
-        headline: "Day off",
+        timeRange: LOCALE.dashboard.shiftCard.notRostered.timeRange,
+        headline: LOCALE.dashboard.shiftCard.notRostered.headline,
         percent: null,
         stats,
       };
@@ -55,28 +62,32 @@ export namespace ShiftCardUtils {
     switch (progress.phase) {
       case "upcoming":
         return {
-          statusLabel: "Starts later",
+          statusLabel: LOCALE.dashboard.shiftCard.upcoming.status,
           live: false,
           timeRange,
-          headline: `Starts in ${FormatUtils.formatDuration(progress.minutesRemaining)}`,
+          headline: LOCALE.dashboard.shiftCard.upcoming.headline(
+            FormatUtils.formatDuration(progress.minutesRemaining),
+          ),
           percent: null,
           stats,
         };
       case "finished":
         return {
-          statusLabel: "Shift finished",
+          statusLabel: LOCALE.dashboard.shiftCard.finished.status,
           live: false,
           timeRange,
-          headline: "All done today",
+          headline: LOCALE.dashboard.shiftCard.finished.headline,
           percent: 100,
           stats,
         };
       case "active":
         return {
-          statusLabel: "On shift",
+          statusLabel: LOCALE.dashboard.shiftCard.active.status,
           live: true,
           timeRange,
-          headline: `${FormatUtils.formatDuration(progress.minutesRemaining)} left`,
+          headline: LOCALE.dashboard.shiftCard.active.headline(
+            FormatUtils.formatDuration(progress.minutesRemaining),
+          ),
           percent: progress.percent,
           stats,
         };

@@ -1,8 +1,12 @@
 import { Pressable, ScrollView, StyleSheet } from "react-native";
 
+import { LOCALE } from "@/constants/locale";
+
 import { colors, fontFamily, radius, spacing } from "@/theme";
 
 import { AppText } from "./app-text";
+
+const L = LOCALE.components.filterChips;
 
 export type FilterOption<T extends string> = {
   count?: number;
@@ -40,7 +44,7 @@ export function FilterChips<T extends string>({
             accessibilityLabel={
               option.count === undefined
                 ? option.label
-                : `${option.label}, ${option.count} orders`
+                : L.optionWithCount(option.label, option.count)
             }
             accessibilityRole="tab"
             accessibilityState={{ selected: isSelected }}

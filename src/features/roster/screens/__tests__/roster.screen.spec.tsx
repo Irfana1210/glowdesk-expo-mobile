@@ -1,11 +1,18 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
+import { LOCALE } from "@/constants/locale";
+
 import { ShiftUtils } from "@/features/roster/domain/shifts";
 import { RosterScreen } from "@/features/roster/screens/roster.screen";
 
 import { createMockShifts } from "@/mocks/shifts";
 
 import { resetRosterStore } from "@test/roster-test-utils";
+
+const L = LOCALE.roster.roster;
+const ROW = LOCALE.roster.rosterRow;
+const COVER = LOCALE.roster.cover;
+const FLOOR = LOCALE.roster.floorCover;
 
 const mockPush = jest.fn();
 jest.mock("expo-router", () => ({ useRouter: () => ({ push: mockPush }) }));
@@ -24,10 +31,14 @@ describe("RosterScreen", () => {
 
     expect(screen.getByTestId("week-range")).toHaveTextContent("5 – 11 Oct");
     expect(screen.getByTestId("day-2026-10-10")).toBeSelected();
-    expect(screen.getByLabelText("Sat 10 Oct, today")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(
+        LOCALE.roster.weekDaySelector.day("Sat 10 Oct", true),
+      ),
+    ).toBeOnTheScreen();
     // The designed Saturday plus the weekday pattern: 191.5 paid hours.
     expect(screen.getByTestId("week-total")).toHaveTextContent(
-      /191\.5 h scheduled this week/,
+      L.weekTotal("191.5 h"),
     );
   });
 
@@ -35,16 +46,16 @@ describe("RosterScreen", () => {
     await render(<RosterScreen now={NOW} />);
 
     expect(screen.getByTestId("day-totals")).toHaveTextContent(
-      "6 staff · 37.5 h",
+      L.dayTotals(6, "37.5 h"),
     );
     expect(screen.getByTestId("cover-11-2-low")).toBeOnTheScreen();
     expect(screen.getByTestId("cover-13-4")).toBeOnTheScreen();
     expect(screen.getByTestId("cover-note")).toHaveTextContent(
-      "Below minimum of 3 at 11 am",
+      FLOOR.belowMinimumNote(3, "11 am"),
     );
     expect(
       screen.getByRole("image", {
-        name: "Staff on the floor by hour, 9 am to 8 pm. Lowest is 2 people at 11 am, below the minimum of 3.",
+        name: FLOOR.belowMinimum(FLOOR.range("9 am", "8 pm"), 2, "11 am", 3),
       }),
     ).toBeOnTheScreen();
   });
@@ -59,17 +70,35 @@ describe("RosterScreen", () => {
     expect(rows).toHaveLength(6);
     expect(
       screen.getByLabelText(
-        /^Alex Morgan, Store Manager · Full time, 9:00 am – 5:30 pm, 30m break · 8h, On the floor \(you\)$/,
+        [
+          "Alex Morgan",
+          "Store Manager · Full time",
+          "9:00 am – 5:30 pm",
+          `${ROW.breakMinutes(30)} · 8h`,
+          COVER.onTheFloorYou,
+        ].join(", "),
       ),
     ).toBeOnTheScreen();
     expect(
       screen.getByLabelText(
-        /^Grace Liu, Beauty Advisor · Casual, 1:00 – 9:00 pm, 30m break · 7\.5h, Break at 5:00 pm · needs cover$/,
+        [
+          "Grace Liu",
+          "Beauty Advisor · Casual",
+          "1:00 – 9:00 pm",
+          `${ROW.breakMinutes(30)} · 7.5h`,
+          COVER.breakNeedsCover("5:00 pm"),
+        ].join(", "),
       ),
     ).toBeOnTheScreen();
     expect(
       screen.getByLabelText(
-        /^Tom Becker, Stock Associate · Part time, 7:00 – 11:00 am, No break · 4h, Finished$/,
+        [
+          "Tom Becker",
+          "Stock Associate · Part time",
+          "7:00 – 11:00 am",
+          `${ROW.noBreak} · 4h`,
+          COVER.finished,
+        ].join(", "),
       ),
     ).toBeOnTheScreen();
     expect(rows.indexOf("shift-row-" + todayShiftId("emp-06"))).toBe(5);
@@ -79,9 +108,12 @@ describe("RosterScreen", () => {
     await render(<RosterScreen now={NOW} />);
     await fireEvent.press(screen.getByTestId("day-2026-10-11"));
 
-    expect(screen.queryByText(/On the floor/)).not.toBeOnTheScreen();
+    expect(
+      screen.queryByText(COVER.onTheFloor, { exact: false }),
+    ).not.toBeOnTheScreen();
     expect(screen.getByTestId("cover-note")).toHaveTextContent(
-      /Below minimum of 3 at/,
+      FLOOR.belowMinimumNote(3, ""),
+      { exact: false },
     );
     expect(
       screen.getByLabelText(
@@ -96,7 +128,13 @@ describe("RosterScreen", () => {
 
     expect(
       screen.getByLabelText(
-        /Tom Becker, Stock Associate · Part time, 10:00 pm – 6:00 am, overnight, ends Fri 9 Oct/,
+        [
+          "Tom Becker",
+          "Stock Associate · Part time",
+          "10:00 pm – 6:00 am",
+          ROW.overnightEnds("Fri 9 Oct"),
+        ].join(", "),
+        { exact: false },
       ),
     ).toBeOnTheScreen();
   });
@@ -106,10 +144,10 @@ describe("RosterScreen", () => {
 
     await fireEvent.press(screen.getByTestId("next-week"));
     expect(screen.getByTestId("week-range")).toHaveTextContent(/^12 – 18 Oct/);
-    expect(screen.getByText("This week")).toBeOnTheScreen();
-    expect(screen.getByText("No shifts")).toBeOnTheScreen();
+    expect(screen.getByText(L.thisWeek)).toBeOnTheScreen();
+    expect(screen.getByText(L.noShiftsTitle)).toBeOnTheScreen();
     expect(screen.getByTestId("week-total")).toHaveTextContent(
-      /0 h scheduled this week/,
+      L.weekTotal("0 h"),
     );
 
     await fireEvent.press(screen.getByTestId("week-range"));

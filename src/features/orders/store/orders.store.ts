@@ -8,6 +8,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+import { LOCALE } from "@/constants/locale";
+
 import { persistStorage, STORAGE_KEYS } from "@/utils/storage";
 
 import { AssignmentUtils } from "@/features/orders/domain/assignment";
@@ -130,7 +132,7 @@ function errorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
   }
-  return "Something went wrong. Please try again.";
+  return LOCALE.orders.store.genericError;
 }
 
 /** Resolves once saved orders have been read from disk, so a fetch never races hydration. */
@@ -162,7 +164,7 @@ export const useOrdersStore = create<States & Actions>()(
       ): ActionResult => {
         const current = get().orders.find((order) => order.id === orderId);
         if (!current) {
-          return { ok: false, message: "Order not found." };
+          return { ok: false, message: LOCALE.orders.store.orderNotFound };
         }
         try {
           replaceOrder(transition(current));
@@ -235,7 +237,7 @@ export const useOrdersStore = create<States & Actions>()(
             return {
               ok: false,
               code: "ORDER_NOT_PICKING",
-              message: "Order not found.",
+              message: LOCALE.orders.store.orderNotFound,
             };
           }
           const result = PickingUtils.recordPick(current, barcode);

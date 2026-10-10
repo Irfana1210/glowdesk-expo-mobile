@@ -3,6 +3,8 @@ import { StyleSheet, View } from "react-native";
 
 import Ionicons from "@expo/vector-icons/Ionicons";
 
+import { LOCALE } from "@/constants/locale";
+
 import {
   fontFamily,
   radius,
@@ -13,6 +15,8 @@ import {
 
 import { AppText } from "./app-text";
 import { type IconName } from "./button";
+
+const L = LOCALE.components.statusBadge;
 
 export type StatusBadgeProps = {
   icon: IconName;
@@ -34,7 +38,7 @@ export const StatusBadge: FC<StatusBadgeProps> = ({
   return (
     <View
       accessible
-      accessibilityLabel={`Status: ${label}`}
+      accessibilityLabel={L.label(label)}
       style={[
         styles.badge,
         small && styles.small,

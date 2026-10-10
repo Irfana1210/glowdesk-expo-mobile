@@ -11,6 +11,8 @@ import {
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 
+import { LOCALE } from "@/constants/locale";
+
 import { Screen } from "@/components/layout/screen";
 import { AppText } from "@/components/ui/app-text";
 import { ErrorState } from "@/components/ui/error-state";
@@ -32,10 +34,12 @@ import { type InventoryFilter, StockUtils } from "../domain/stock";
 import { useInventory } from "../hooks/use-inventory";
 import { type InventoryItem } from "../types";
 
+const L = LOCALE.inventory.list;
+
 type CategoryFilter = ProductCategory | "ALL";
 
 const CATEGORY_OPTIONS: Array<FilterOption<CategoryFilter>> = [
-  { value: "ALL", label: "All" },
+  { value: "ALL", label: L.allCategories },
   ...PRODUCT_CATEGORIES.map((category) => ({
     value: category,
     label: CATEGORY_LABELS[category],
@@ -85,21 +89,21 @@ export const InventoryScreen: FC = () => {
 
   let body;
   if (inventory.isPending) {
-    body = <LoadingState message="Loading inventory" />;
+    body = <LoadingState message={L.loading} />;
   } else if (inventory.isError) {
     body = (
       <ErrorState
         message={inventory.error.message}
-        title="Couldn't load inventory"
+        title={L.errorTitle}
         onRetry={() => void inventory.refetch()}
       />
     );
   } else {
     const emptyMessage = filter.query
-      ? `No products match "${filter.query}".`
+      ? L.empty.noMatch(filter.query)
       : filter.lowStockOnly
-        ? "Nothing is low or out of stock."
-        : "No products in this category yet.";
+        ? L.empty.noLowStock
+        : L.empty.noProducts;
     body = (
       <FlatList
         ItemSeparatorComponent={Separator}
@@ -115,7 +119,7 @@ export const InventoryScreen: FC = () => {
             {hasFilters ? (
               <SecondaryButton
                 icon="close"
-                label="Clear filters"
+                label={L.clearFilters}
                 onPress={() => setFilter(StockUtils.EMPTY_FILTER)}
               />
             ) : null}
@@ -123,21 +127,24 @@ export const InventoryScreen: FC = () => {
         }
         ListHeaderComponent={
           <View
-            accessibilityLabel="Stock summary"
+            accessibilityLabel={L.summary.label}
             accessibilityRole="toolbar"
             style={styles.summary}
           >
             <View
               accessible
-              accessibilityLabel={`${counts.products} products`}
+              accessibilityLabel={L.summary.countLabel(
+                counts.products,
+                L.summary.products,
+              )}
               style={[styles.tile, styles.tileNeutral]}
               testID="summary-products"
             >
               <AppText style={styles.tileValue}>{counts.products}</AppText>
-              <AppText style={styles.tileLabel}>products</AppText>
+              <AppText style={styles.tileLabel}>{L.summary.products}</AppText>
             </View>
             <SummaryToggle
-              label="low stock"
+              label={L.summary.lowStock}
               selected={filter.lowStockOnly}
               testID="summary-low"
               tone="lowStock"
@@ -145,7 +152,7 @@ export const InventoryScreen: FC = () => {
               onPress={toggleLowStock}
             />
             <SummaryToggle
-              label="out of stock"
+              label={L.summary.outOfStock}
               selected={filter.lowStockOnly}
               testID="summary-out"
               tone="outOfStock"
@@ -176,17 +183,17 @@ export const InventoryScreen: FC = () => {
 
   return (
     <Screen testID="inventory-screen">
-      <ScreenTitle eyebrow="Stock on hand" title="Inventory" />
+      <ScreenTitle eyebrow={L.eyebrow} title={L.title} />
       <View style={styles.searchRow}>
         <SearchBar
-          accessibilityLabel="Search inventory by product, SKU or barcode"
-          placeholder="Product, SKU or barcode"
+          accessibilityLabel={L.searchLabel}
+          placeholder={L.searchPlaceholder}
           testID="inventory-search"
           value={filter.query}
           onChangeText={(query) => setFilter((f) => ({ ...f, query }))}
         />
         <Pressable
-          accessibilityLabel="Scan a barcode"
+          accessibilityLabel={L.scanLabel}
           accessibilityRole="button"
           style={({ pressed }) => [
             styles.scanButton,
@@ -200,7 +207,7 @@ export const InventoryScreen: FC = () => {
       </View>
       <View style={styles.chips}>
         <FilterChips
-          accessibilityLabel="Filter by category"
+          accessibilityLabel={L.categoryFilterLabel}
           options={CATEGORY_OPTIONS}
           selected={filter.category}
           onChange={(category) => setFilter((f) => ({ ...f, category }))}
@@ -233,11 +240,9 @@ function SummaryToggle({
   return (
     <Pressable
       accessibilityHint={
-        selected
-          ? "Shows all products again"
-          : "Shows only products that need restocking"
+        selected ? L.summary.showAllHint : L.summary.showRestockHint
       }
-      accessibilityLabel={`${value} ${label}`}
+      accessibilityLabel={L.summary.countLabel(value, label)}
       accessibilityRole="button"
       accessibilityState={{ selected }}
       style={({ pressed }) => [

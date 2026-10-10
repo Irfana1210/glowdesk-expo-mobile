@@ -1,11 +1,15 @@
 import { type FC } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
+import { LOCALE } from "@/constants/locale";
+
 import { AppText } from "@/components/ui/app-text";
 
 import { colors, fontFamily } from "@/theme";
 
 import { DateUtils } from "../domain/dates";
+
+const L = LOCALE.roster.weekDaySelector;
 
 type Props = {
   days: Array<Date>;
@@ -23,7 +27,7 @@ export const WeekDaySelector: FC<Props> = ({
 }) => {
   return (
     <View
-      accessibilityLabel="Choose a day"
+      accessibilityLabel={L.label}
       accessibilityRole="tablist"
       style={styles.row}
     >
@@ -33,7 +37,7 @@ export const WeekDaySelector: FC<Props> = ({
         const textColor = isSelected ? colors.textOnDark : colors.text;
         return (
           <Pressable
-            accessibilityLabel={`${DateUtils.formatDayLabel(date)}${isToday ? ", today" : ""}`}
+            accessibilityLabel={L.day(DateUtils.formatDayLabel(date), isToday)}
             accessibilityRole="tab"
             accessibilityState={{ selected: isSelected }}
             key={DateUtils.toDateKey(date)}

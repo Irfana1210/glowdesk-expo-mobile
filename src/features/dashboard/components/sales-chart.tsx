@@ -1,6 +1,8 @@
 import { type FC } from "react";
 import { StyleSheet, View } from "react-native";
 
+import { LOCALE } from "@/constants/locale";
+
 import { FormatUtils } from "@/utils/format-utils";
 
 import { AppText } from "@/components/ui/app-text";
@@ -8,6 +10,8 @@ import { AppText } from "@/components/ui/app-text";
 import { colors, fontFamily, spacing } from "@/theme";
 
 import { type HourlySales } from "../types";
+
+const L = LOCALE.dashboard.salesChart;
 
 type Props = {
   data: Array<HourlySales>;
@@ -46,12 +50,21 @@ export function describeChart(data: Array<HourlySales>): string {
   const traded = data.filter((_, i) => kinds[i] !== "upcoming");
   const upcoming = data.filter((_, i) => kinds[i] === "upcoming");
   if (!peak || traded.length === 0) {
-    return "No sales recorded yet today.";
+    return L.noSalesSummary;
   }
   const range = (points: Array<HourlySales>) =>
-    `${FormatUtils.formatHour(points[0]!.hour)} to ${FormatUtils.formatHour(points[points.length - 1]!.hour)}`;
-  const rest = upcoming.length > 0 ? ` ${range(upcoming)} still to come.` : "";
-  return `Hourly sales from ${range(traded)}, peaking at ${FormatUtils.formatCurrency(peak.sales)} at ${FormatUtils.formatHour(peak.hour)}.${rest}`;
+    L.hourRange(
+      FormatUtils.formatHour(points[0]!.hour),
+      FormatUtils.formatHour(points[points.length - 1]!.hour),
+    );
+  const summary = L.summary(
+    range(traded),
+    FormatUtils.formatCurrency(peak.sales),
+    FormatUtils.formatHour(peak.hour),
+  );
+  return upcoming.length > 0
+    ? `${summary} ${L.stillToCome(range(upcoming))}`
+    : summary;
 }
 
 /**
@@ -63,10 +76,10 @@ export const SalesChart: FC<Props> = ({ data, height = 92 }) => {
     return (
       <View style={styles.container}>
         <AppText accessibilityRole="header" variant="cardTitle">
-          Sales by hour
+          {L.title}
         </AppText>
         <AppText color="textMuted" testID="sales-chart-empty">
-          No hourly sales recorded yet today.
+          {L.empty}
         </AppText>
       </View>
     );
@@ -80,7 +93,7 @@ export const SalesChart: FC<Props> = ({ data, height = 92 }) => {
     <View style={styles.container} testID="sales-chart">
       <View style={styles.header}>
         <AppText accessibilityRole="header" variant="cardTitle">
-          Sales by hour
+          {L.title}
         </AppText>
         {peak ? (
           <AppText
@@ -88,8 +101,10 @@ export const SalesChart: FC<Props> = ({ data, height = 92 }) => {
             testID="sales-chart-peak"
             variant="supporting"
           >
-            Peak {FormatUtils.formatHour(peak.hour).replace(/(am|pm)$/, " $1")}{" "}
-            · {FormatUtils.formatCurrency(peak.sales)}
+            {L.peak(
+              FormatUtils.formatHour(peak.hour).replace(/(am|pm)$/, " $1"),
+              FormatUtils.formatCurrency(peak.sales),
+            )}
           </AppText>
         ) : null}
       </View>
@@ -138,9 +153,12 @@ export const SalesChart: FC<Props> = ({ data, height = 92 }) => {
         importantForAccessibility="no-hide-descendants"
         style={styles.legend}
       >
-        <LegendKey label="Done" swatch={styles.done} />
-        <LegendKey label="This hour" swatch={styles.current} />
-        <LegendKey label="Still to come" swatch={styles.legendUpcoming} />
+        <LegendKey label={L.legend.done} swatch={styles.done} />
+        <LegendKey label={L.legend.thisHour} swatch={styles.current} />
+        <LegendKey
+          label={L.legend.stillToCome}
+          swatch={styles.legendUpcoming}
+        />
       </View>
     </View>
   );

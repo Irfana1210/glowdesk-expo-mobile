@@ -1,3 +1,5 @@
+import { LOCALE } from "@/constants/locale";
+
 import { CoverUtils } from "@/features/roster/domain/cover";
 import { ShiftUtils } from "@/features/roster/domain/shifts";
 import { type Shift } from "@/features/roster/types";
@@ -6,6 +8,7 @@ import { createMockShifts } from "@/mocks/shifts";
 
 /** Saturday 10 October 2026 at 4:40 pm, the moment the mockups show. */
 const NOW = new Date(2026, 9, 10, 16, 40);
+const COVER = LOCALE.roster.cover;
 const today = ShiftUtils.shiftsOnDay(createMockShifts(NOW), NOW);
 const at = (h: number, m = 0) => new Date(2026, 9, 10, h, m);
 const byName = (id: string) => {
@@ -104,26 +107,26 @@ describe("shiftState", () => {
     expect(
       CoverUtils.shiftState(byName("emp-01"), NOW, { isCurrentUser: true }),
     ).toEqual({
-      label: "On the floor (you)",
+      label: COVER.onTheFloorYou,
       tone: "on",
     });
     expect(CoverUtils.shiftState(byName("emp-03"), NOW)).toEqual({
-      label: "Break at 5:00 pm · needs cover",
+      label: COVER.breakNeedsCover("5:00 pm"),
       tone: "warn",
     });
     expect(CoverUtils.shiftState(byName("emp-05"), NOW)).toEqual({
-      label: "Finished",
+      label: COVER.finished,
       tone: "off",
     });
   });
 
   it("shows breaks in progress and shifts not yet started", () => {
     expect(CoverUtils.shiftState(byName("emp-03"), at(17, 10))).toEqual({
-      label: "On break until 5:30 pm",
+      label: COVER.onBreakUntil("5:30 pm"),
       tone: "warn",
     });
     expect(CoverUtils.shiftState(byName("emp-04"), at(10))).toEqual({
-      label: "Starts 4:00 pm",
+      label: COVER.starts("4:00 pm"),
       tone: "off",
     });
   });

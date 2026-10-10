@@ -4,6 +4,8 @@ import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 
+import { LOCALE } from "@/constants/locale";
+
 import { FormatUtils } from "@/utils/format-utils";
 
 import { useNow } from "@/hooks/use-now";
@@ -38,6 +40,9 @@ import { DateUtils } from "../domain/dates";
 import { ShiftUtils } from "../domain/shifts";
 import { useRosterStore } from "../store/roster.store";
 import { type Shift } from "../types";
+
+const L = LOCALE.roster.roster;
+const ROW = LOCALE.roster.rosterRow;
 
 function initialsOf(name: string): string {
   return name
@@ -116,11 +121,11 @@ export const RosterScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
   return (
     <Screen testID="roster-screen">
       <ScreenTitle
-        eyebrow="Team"
+        eyebrow={L.eyebrow}
         right={
           <View style={styles.weekNav}>
             <Pressable
-              accessibilityLabel="Previous week"
+              accessibilityLabel={L.previousWeek}
               accessibilityRole="button"
               style={styles.navButton}
               testID="previous-week"
@@ -130,9 +135,12 @@ export const RosterScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
             </Pressable>
             <Pressable
               accessibilityHint={
-                isCurrentWeek ? undefined : "Returns to this week"
+                isCurrentWeek ? undefined : L.returnToThisWeekHint
               }
-              accessibilityLabel={`Week of ${DateUtils.formatWeekRangeShort(weekStart)}${isCurrentWeek ? ", this week" : ""}`}
+              accessibilityLabel={L.weekOf(
+                DateUtils.formatWeekRangeShort(weekStart),
+                isCurrentWeek,
+              )}
               accessibilityRole="button"
               disabled={isCurrentWeek}
               style={styles.weekLabel}
@@ -143,11 +151,11 @@ export const RosterScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
                 {DateUtils.formatWeekRangeShort(weekStart)}
               </AppText>
               {!isCurrentWeek ? (
-                <AppText style={styles.thisWeek}>This week</AppText>
+                <AppText style={styles.thisWeek}>{L.thisWeek}</AppText>
               ) : null}
             </Pressable>
             <Pressable
-              accessibilityLabel="Next week"
+              accessibilityLabel={L.nextWeek}
               accessibilityRole="button"
               style={styles.navButton}
               testID="next-week"
@@ -157,7 +165,7 @@ export const RosterScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
             </Pressable>
           </View>
         }
-        title="Roster"
+        title={L.title}
       />
 
       <View style={styles.days}>
@@ -177,13 +185,15 @@ export const RosterScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
               style={styles.flex}
               variant="cardTitle"
             >
-              Floor cover · {DateUtils.formatDayLabel(selected)}
+              {L.floorCoverTitle(DateUtils.formatDayLabel(selected))}
             </AppText>
             <AppText color="textMuted" testID="day-totals" variant="supporting">
-              {ShiftUtils.staffCount(dayShifts)} staff ·{" "}
-              {ShiftUtils.formatHours(
-                ShiftUtils.totalPaidMinutes(dayShifts),
-              ).replace("h", " h")}
+              {L.dayTotals(
+                ShiftUtils.staffCount(dayShifts),
+                ShiftUtils.formatHours(
+                  ShiftUtils.totalPaidMinutes(dayShifts),
+                ).replace("h", " h"),
+              )}
             </AppText>
           </View>
           <FloorCoverChart cover={cover} />
@@ -192,8 +202,8 @@ export const RosterScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
         {dayShifts.length === 0 ? (
           <EmptyState
             icon="calendar-clear-outline"
-            message={`Nobody is rostered on ${DateUtils.formatDayLabel(selected)}.`}
-            title="No shifts"
+            message={L.noShiftsMessage(DateUtils.formatDayLabel(selected))}
+            title={L.noShiftsTitle}
           />
         ) : (
           dayShifts.map((shift) => (
@@ -215,15 +225,14 @@ export const RosterScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
           testID="week-total"
           variant="supporting"
         >
-          {ShiftUtils.formatHours(weekTotal).replace("h", " h")} scheduled this
-          week. Hours only. Pay rates are visible to managers.
+          {L.weekTotal(ShiftUtils.formatHours(weekTotal).replace("h", " h"))}
         </AppText>
       </ScrollView>
 
       <View style={styles.footer}>
         <PrimaryButton
           icon="add"
-          label="Add shift"
+          label={L.addShift}
           testID="add-shift"
           onPress={addShift}
         />
@@ -249,7 +258,7 @@ function RosterRow({
   showState,
   onEdit,
 }: RosterRowProps) {
-  const name = employee?.name ?? "Unknown employee";
+  const name = employee?.name ?? ROW.unknownEmployee;
   const role = employee
     ? `${ROLE_LABELS[employee.role]} · ${EMPLOYMENT_TYPE_LABELS[employee.employmentType]}`
     : "";
@@ -264,8 +273,8 @@ function RosterRow({
   );
   const breakText =
     shift.unpaidBreakMinutes > 0
-      ? `${shift.unpaidBreakMinutes}m break`
-      : "No break";
+      ? ROW.breakMinutes(shift.unpaidBreakMinutes)
+      : ROW.noBreak;
   const meta = `${breakText} · ${ShiftUtils.formatHours(ShiftUtils.paidMinutes(shift))}`;
   const overnight = !DateUtils.isSameDay(
     new Date(shift.startAt),
@@ -279,7 +288,7 @@ function RosterRow({
         role,
         time,
         overnight
-          ? `overnight, ends ${DateUtils.formatDayLabel(new Date(shift.endAt))}`
+          ? ROW.overnightEnds(DateUtils.formatDayLabel(new Date(shift.endAt)))
           : null,
         meta,
         state?.label,

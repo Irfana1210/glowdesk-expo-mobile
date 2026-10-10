@@ -1,7 +1,10 @@
+import { LOCALE } from "@/constants/locale";
+
 import { type Employee } from "@/features/employees/types";
 import { ShiftUtils } from "@/features/roster/domain/shifts";
 import { type Shift, type ShiftDraft } from "@/features/roster/types";
 
+const V = LOCALE.roster.validation;
 const STORE = "store-1";
 const at = (day: number, h: number, m = 0) =>
   new Date(2026, 9, day, h, m).toISOString();
@@ -133,36 +136,36 @@ describe("validateShift", () => {
   it("requires an end time after the start time", () => {
     expect(
       ShiftUtils.validateShift(draft({ endAt: at(6, 9) }), context()).endAt,
-    ).toMatch(/after the start time/);
+    ).toBe(V.endBeforeStart);
     expect(
       ShiftUtils.validateShift(
         draft({ startAt: at(6, 22), endAt: at(6, 6) }),
         context(),
       ).endAt,
-    ).toMatch(/Ends next day/);
+    ).toBe(V.endBeforeStart);
   });
 
   it("rejects implausibly long shifts", () => {
     expect(
       ShiftUtils.validateShift(draft({ endAt: at(7, 17) }), context()).endAt,
-    ).toMatch(/longer than 14 hours/);
+    ).toBe(V.tooLong(14));
   });
 
   it("rejects invalid timestamps", () => {
     expect(
       ShiftUtils.validateShift(draft({ startAt: "bad" }), context()).startAt,
-    ).toBe("Enter a valid start time.");
+    ).toBe(V.invalidStartTime);
   });
 
   it("rejects a break that is as long as the shift or longer", () => {
     expect(
       ShiftUtils.validateShift(draft({ unpaidBreakMinutes: 480 }), context())
         .unpaidBreakMinutes,
-    ).toMatch(/cannot be as long/);
+    ).toBe(V.breakTooLong);
     expect(
       ShiftUtils.validateShift(draft({ unpaidBreakMinutes: -5 }), context())
         .unpaidBreakMinutes,
-    ).toMatch(/zero or more/);
+    ).toBe(V.breakNotWhole);
     expect(
       ShiftUtils.validateShift(draft({ unpaidBreakMinutes: 0 }), context()),
     ).toEqual({});
@@ -171,25 +174,25 @@ describe("validateShift", () => {
   it("prevents invalid employee assignments", () => {
     expect(
       ShiftUtils.validateShift(draft({ employeeId: "" }), context()).employeeId,
-    ).toBe("Choose an employee.");
+    ).toBe(V.chooseEmployee);
     expect(
       ShiftUtils.validateShift(draft({ employeeId: "ghost" }), context())
         .employeeId,
-    ).toMatch(/does not exist/);
+    ).toBe(V.employeeMissing);
     expect(
       ShiftUtils.validateShift(draft({ employeeId: "e3" }), context())
         .employeeId,
-    ).toMatch(/inactive/);
+    ).toBe(V.employeeInactive("Jack Wilson"));
     expect(
       ShiftUtils.validateShift(draft({ employeeId: "e4" }), context())
         .employeeId,
-    ).toMatch(/not assigned to this store/);
+    ).toBe(V.employeeNotAssigned("Grace Lee"));
   });
 
   it("detects overlapping shifts for the same employee only", () => {
     const existing = [shift("s1", { startAt: at(6, 16), endAt: at(6, 21) })];
     expect(ShiftUtils.validateShift(draft(), context(existing)).form).toBe(
-      "Olivia Carter already works 4:00 pm – 9:00 pm on Tue 6 Oct.",
+      V.alreadyWorks("Olivia Carter", "4:00 pm – 9:00 pm", "Tue 6 Oct"),
     );
     expect(
       ShiftUtils.validateShift(draft({ employeeId: "e2" }), context(existing)),

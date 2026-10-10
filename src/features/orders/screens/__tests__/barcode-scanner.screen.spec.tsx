@@ -1,11 +1,16 @@
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
 
+import { LOCALE } from "@/constants/locale";
+
 import { BarcodeScannerScreen } from "@/features/orders/screens/barcode-scanner.screen";
 import { useOrdersStore } from "@/features/orders/store/orders.store";
 
 import { MOCK_PRODUCTS } from "@/mocks/products";
 
 import { mockOrders, resetOrdersStore } from "@test/order-test-utils";
+
+const L = LOCALE.orders.scanner;
+const PICKING = LOCALE.orders.picking;
 
 let mockParams: { manual?: string; orderId?: string } = {};
 const mockReplace = jest.fn();
@@ -75,7 +80,8 @@ describe("BarcodeScannerScreen", () => {
     await typeBarcode(P.velourBlush.barcode);
 
     expect(screen.getByTestId("scan-feedback")).toHaveTextContent(
-      /Verified Soft Focus Blush · Rosewood\. 1 of 2 picked\./,
+      L.verified(P.velourBlush.name, 1, 2),
+      { exact: false },
     );
     expect(pickedQuantity("ORD-7841", P.velourBlush.sku)).toBe(1);
     expect(screen.getByTestId("manual-barcode").props.value).toBe("");
@@ -87,7 +93,8 @@ describe("BarcodeScannerScreen", () => {
     await typeBarcode(P.irisParfum.barcode);
 
     expect(screen.getByTestId("scan-feedback")).toHaveTextContent(
-      /Wrong product/,
+      PICKING.notInOrder(P.irisParfum.barcode),
+      { exact: false },
     );
     expect(screen.getByRole("alert")).toBeOnTheScreen();
   });
@@ -98,7 +105,8 @@ describe("BarcodeScannerScreen", () => {
     await typeBarcode(P.lumenCream.barcode);
 
     expect(screen.getByTestId("scan-feedback")).toHaveTextContent(
-      /already fully picked/,
+      PICKING.alreadyPicked(P.lumenCream.name, 1, 1),
+      { exact: false },
     );
     expect(pickedQuantity("ORD-7841", P.lumenCream.sku)).toBe(1);
   });
@@ -109,7 +117,8 @@ describe("BarcodeScannerScreen", () => {
     await typeBarcode("12ab");
 
     expect(screen.getByTestId("scan-feedback")).toHaveTextContent(
-      /valid barcode of 8 to 14 digits/,
+      PICKING.invalidBarcode,
+      { exact: false },
     );
   });
 
@@ -165,9 +174,7 @@ describe("BarcodeScannerScreen", () => {
   it("blocks scanning for an order that has not started picking", async () => {
     await renderScanner("ORD-7846");
 
-    expect(
-      screen.getByText("Start picking this order before scanning products."),
-    ).toBeOnTheScreen();
+    expect(screen.getByText(L.notStarted)).toBeOnTheScreen();
     expect(screen.queryByTestId("manual-barcode")).not.toBeOnTheScreen();
   });
 

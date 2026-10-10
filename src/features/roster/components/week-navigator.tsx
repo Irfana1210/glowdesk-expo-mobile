@@ -3,11 +3,15 @@ import { Pressable, StyleSheet, View } from "react-native";
 
 import Ionicons from "@expo/vector-icons/Ionicons";
 
+import { LOCALE } from "@/constants/locale";
+
 import { AppText } from "@/components/ui/app-text";
 
 import { colors, spacing, touchTarget } from "@/theme";
 
 import { DateUtils } from "../domain/dates";
+
+const L = LOCALE.roster.weekNavigator;
 
 type Props = {
   now: Date;
@@ -23,7 +27,7 @@ export const WeekNavigator: FC<Props> = ({ weekStart, now, onChange }) => {
   return (
     <View style={styles.row}>
       <Pressable
-        accessibilityLabel="Previous week"
+        accessibilityLabel={L.previousWeek}
         accessibilityRole="button"
         style={styles.button}
         testID="previous-week"
@@ -46,13 +50,13 @@ export const WeekNavigator: FC<Props> = ({ weekStart, now, onChange }) => {
             onPress={() => onChange(DateUtils.startOfWeek(now))}
           >
             <AppText color="accent" variant="label">
-              Back to this week
+              {L.backToThisWeek}
             </AppText>
           </Pressable>
         ) : null}
       </View>
       <Pressable
-        accessibilityLabel="Next week"
+        accessibilityLabel={L.nextWeek}
         accessibilityRole="button"
         style={styles.button}
         testID="next-week"

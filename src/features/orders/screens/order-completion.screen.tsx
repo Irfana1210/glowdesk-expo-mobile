@@ -5,6 +5,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
+import { LOCALE } from "@/constants/locale";
+
 import { FormatUtils } from "@/utils/format-utils";
 
 import { AppHeader } from "@/components/layout/app-header";
@@ -25,6 +27,9 @@ import { useEnsureOrdersLoaded } from "../hooks/use-ensure-orders-loaded";
 import { OrderPresentationUtils } from "../presentation";
 import { selectOrderById, useOrdersStore } from "../store/orders.store";
 
+const L = LOCALE.orders.completion;
+const C = LOCALE.orders.common;
+
 export const OrderCompletionScreen: FC = () => {
   const router = useRouter();
   const { orderId } = useLocalSearchParams<{ orderId: string }>();
@@ -39,16 +44,16 @@ export const OrderCompletionScreen: FC = () => {
 
   return (
     <Screen edges={["top", "left", "right"]} testID="completion-screen">
-      <AppHeader title="Order Completion" onBack={goBack} />
+      <AppHeader title={L.title} onBack={goBack} />
       {order ? (
         <CompletionContent order={order} onBack={goBack} />
       ) : loadStatus === "idle" || loadStatus === "loading" ? (
-        <LoadingState message="Loading order" />
+        <LoadingState message={C.loadingOrder} />
       ) : (
         <ErrorState
-          message={`We couldn't find order ${orderId ?? ""}.`}
-          retryLabel="Back to orders"
-          title="Order not found"
+          message={L.notFoundMessage(orderId ?? "")}
+          retryLabel={C.backToOrders}
+          title={C.orderNotFound}
           onRetry={() => router.replace("/orders")}
         />
       )}
@@ -60,7 +65,7 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <View
       accessible
-      accessibilityLabel={`${label}: ${value}`}
+      accessibilityLabel={L.summaryAccessibilityLabel(label, value)}
       style={styles.summaryRow}
     >
       <AppText color="textMuted">{label}</AppText>
@@ -95,7 +100,7 @@ function CompletionContent({
     if (result.ok) {
       setError(null);
       AccessibilityInfo.announceForAccessibility(
-        `${FormatUtils.formatOrderNumber(order.id)} is ready for collection.`,
+        L.readyAnnouncement(FormatUtils.formatOrderNumber(order.id)),
       );
     } else {
       setError(result.message);
@@ -124,12 +129,12 @@ function CompletionContent({
             testID="completion-title"
             variant="pageTitle"
           >
-            {isComplete ? "Ready for collection" : "Confirm order is ready"}
+            {isComplete ? L.readyTitle : L.confirmTitle}
           </AppText>
           <AppText color="textMuted" style={styles.center}>
             {isComplete
-              ? `${FormatUtils.formatOrderNumber(order.id)} can be handed to the customer.`
-              : "Check every product is bagged before confirming."}
+              ? L.readySubtitle(FormatUtils.formatOrderNumber(order.id))
+              : L.confirmSubtitle}
           </AppText>
         </View>
 
@@ -141,26 +146,26 @@ function CompletionContent({
             <OrderStatusBadge status={order.status} />
           </View>
           <SummaryRow
-            label="Customer"
+            label={L.customer}
             value={OrderPresentationUtils.spellInitials(order.customerInitials)}
           />
           <SummaryRow
-            label="Verified products"
-            value={`${progress.verifiedItems} of ${progress.totalItems}`}
+            label={L.verifiedProducts}
+            value={L.ratio(progress.verifiedItems, progress.totalItems)}
           />
           <SummaryRow
-            label="Units picked"
-            value={`${pickedUnits} of ${totalUnits}`}
+            label={L.unitsPicked}
+            value={L.ratio(pickedUnits, totalUnits)}
           />
           <SummaryRow
-            label="Final status"
-            value={isComplete ? "Ready" : "Picking (not yet confirmed)"}
+            label={L.finalStatus}
+            value={isComplete ? L.finalReady : L.finalPending}
           />
         </View>
 
         {!isComplete && !readiness.ok ? (
           <InlineBanner
-            message={`This order can't be marked ready yet. ${readiness.message}`}
+            message={L.cannotMarkReady(readiness.message)}
             testID="completion-error"
             tone="error"
           />
@@ -183,7 +188,7 @@ function CompletionContent({
         {isComplete ? (
           <PrimaryButton
             icon="bag-handle-outline"
-            label="Back to orders"
+            label={C.backToOrders}
             testID="back-to-orders"
             onPress={() => router.dismissTo("/orders")}
           />
@@ -191,15 +196,15 @@ function CompletionContent({
           <>
             <PrimaryButton
               accessibilityHint={
-                readiness.ok ? "Moves the order to Ready" : readiness.message
+                readiness.ok ? L.confirmReadyHint : readiness.message
               }
               disabled={!readiness.ok}
               icon="checkmark-done-outline"
-              label="Confirm ready for collection"
+              label={L.confirmReady}
               testID="confirm-ready"
               onPress={confirm}
             />
-            <SecondaryButton label="Back to order" onPress={onBack} />
+            <SecondaryButton label={C.backToOrder} onPress={onBack} />
           </>
         )}
       </View>

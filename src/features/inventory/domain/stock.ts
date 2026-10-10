@@ -1,4 +1,6 @@
 /** Inventory rules: stock status, search, filtering and barcode lookup. Pure functions. */
+import { LOCALE } from "@/constants/locale";
+
 import { BarcodeUtils } from "@/utils/barcode-utils";
 
 import { type ProductCategory } from "@/types/product";
@@ -99,7 +101,7 @@ export namespace StockUtils {
       return {
         ok: false,
         code: "INVALID_BARCODE",
-        message: "Enter a valid barcode of 8 to 14 digits.",
+        message: LOCALE.inventory.barcodeLookup.invalid,
       };
     }
     const item = items.find((candidate) =>
@@ -110,7 +112,7 @@ export namespace StockUtils {
       : {
           ok: false,
           code: "NOT_FOUND",
-          message: `No product in this store has barcode ${barcode}.`,
+          message: LOCALE.inventory.barcodeLookup.notFound(barcode),
         };
   }
 }

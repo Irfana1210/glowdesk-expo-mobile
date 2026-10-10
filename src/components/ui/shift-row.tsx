@@ -3,10 +3,14 @@ import { Pressable, StyleSheet, View } from "react-native";
 
 import Ionicons from "@expo/vector-icons/Ionicons";
 
+import { LOCALE } from "@/constants/locale";
+
 import { colors, fontFamily, shiftStateColors, spacing } from "@/theme";
 
 import { AppText } from "./app-text";
 import { InitialsAvatar } from "./initials-avatar";
+
+const L = LOCALE.components.shiftRow;
 
 export type ShiftStateTone = keyof typeof shiftStateColors;
 
@@ -76,7 +80,7 @@ function ShiftRowComponent({
         </View>
       </View>
       <Pressable
-        accessibilityLabel={`Edit shift for ${name}`}
+        accessibilityLabel={L.edit(name)}
         accessibilityRole="button"
         hitSlop={{ left: 4, right: 4 }}
         style={styles.edit}

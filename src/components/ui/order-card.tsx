@@ -3,11 +3,15 @@ import { Pressable, StyleSheet, View } from "react-native";
 
 import Ionicons from "@expo/vector-icons/Ionicons";
 
+import { LOCALE } from "@/constants/locale";
+
 import { colors, fontFamily, radius, spacing } from "@/theme";
 
 import { AppText } from "./app-text";
 import { InitialsAvatar } from "./initials-avatar";
 import { StatusBadge, type StatusBadgeProps } from "./status-badge";
+
+const L = LOCALE.components.orderCard;
 
 export type OrderCardProps = {
   accessibilityLabel: string;
@@ -42,7 +46,7 @@ function OrderCardComponent({
   const timingColor = overdue ? colors.errorText : colors.textMuted;
   return (
     <Pressable
-      accessibilityHint="Opens order details"
+      accessibilityHint={L.hint}
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
@@ -52,7 +56,7 @@ function OrderCardComponent({
       <View style={styles.top}>
         <InitialsAvatar initials={initials} />
         <View style={styles.body}>
-          <AppText style={styles.number}>#ORD-{orderNumber}</AppText>
+          <AppText style={styles.number}>{L.orderNumber(orderNumber)}</AppText>
           <AppText color="textMuted" variant="supporting">
             {summary}
           </AppText>

@@ -1,6 +1,7 @@
 /**
  * Live floor-cover rules for the dashboard and roster. Pure functions; `now` is always passed in.
  */
+import { LOCALE } from "@/constants/locale";
 import { MS_IN_MINUTE } from "@/constants/primitives";
 
 import { FormatUtils } from "@/utils/format-utils";
@@ -163,11 +164,13 @@ export namespace CoverUtils {
   ): ShiftState {
     const progress = shiftProgress(shift, now);
     if (progress.phase === "finished") {
-      return { label: "Finished", tone: "off" };
+      return { label: LOCALE.roster.cover.finished, tone: "off" };
     }
     if (progress.phase === "upcoming") {
       return {
-        label: `Starts ${FormatUtils.formatClockTime(new Date(shift.startAt))}`,
+        label: LOCALE.roster.cover.starts(
+          FormatUtils.formatClockTime(new Date(shift.startAt)),
+        ),
         tone: "off",
       };
     }
@@ -175,7 +178,9 @@ export namespace CoverUtils {
     const window = breakWindow(shift);
     if (window && isOnBreak(shift, now)) {
       return {
-        label: `On break until ${FormatUtils.formatClockTime(new Date(window.end))}`,
+        label: LOCALE.roster.cover.onBreakUntil(
+          FormatUtils.formatClockTime(new Date(window.end)),
+        ),
         tone: "warn",
       };
     }
@@ -183,13 +188,17 @@ export namespace CoverUtils {
       const startsAt = new Date(window.start);
       if (breakNeedsCover({ shift, startsAt }, now)) {
         return {
-          label: `Break at ${FormatUtils.formatClockTime(startsAt)} · needs cover`,
+          label: LOCALE.roster.cover.breakNeedsCover(
+            FormatUtils.formatClockTime(startsAt),
+          ),
           tone: "warn",
         };
       }
     }
     return {
-      label: isCurrentUser ? "On the floor (you)" : "On the floor",
+      label: isCurrentUser
+        ? LOCALE.roster.cover.onTheFloorYou
+        : LOCALE.roster.cover.onTheFloor,
       tone: "on",
     };
   }

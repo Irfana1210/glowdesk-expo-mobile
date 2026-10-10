@@ -3,9 +3,13 @@ import { Pressable, StyleSheet, View } from "react-native";
 
 import Ionicons from "@expo/vector-icons/Ionicons";
 
+import { LOCALE } from "@/constants/locale";
+
 import { AppText } from "@/components/ui/app-text";
 
 import { colors, spacing, touchTarget } from "@/theme";
+
+const L = LOCALE.components.appHeader;
 
 type Props = {
   /** Shows a back button. Uses a compact centred title, as on a detail screen. */
@@ -20,7 +24,7 @@ export const AppHeader: FC<Props> = ({ title, subtitle, onBack, right }) => {
     return (
       <View style={styles.compact}>
         <Pressable
-          accessibilityLabel="Go back"
+          accessibilityLabel={L.back}
           accessibilityRole="button"
           hitSlop={4}
           style={styles.iconButton}

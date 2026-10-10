@@ -6,6 +6,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+import { LOCALE } from "@/constants/locale";
+
 import { persistStorage, STORAGE_KEYS } from "@/utils/storage";
 
 import { type Employee } from "@/features/employees/types";
@@ -95,7 +97,7 @@ export const useRosterStore = create<States & Actions>()(
           if (!existing) {
             return {
               ok: false,
-              errors: { form: "This shift no longer exists." },
+              errors: { form: LOCALE.roster.validation.shiftMissing },
             };
           }
           const errors = ShiftUtils.validateShift(draft, context(shiftId));

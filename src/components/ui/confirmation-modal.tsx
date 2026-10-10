@@ -1,11 +1,15 @@
 import { type FC } from "react";
 import { Modal, Pressable, StyleSheet, View } from "react-native";
 
+import { LOCALE } from "@/constants/locale";
+
 import { colors, radius, spacing } from "@/theme";
 
 import { AppText } from "./app-text";
 import { PrimaryButton } from "./primary-button";
 import { SecondaryButton } from "./secondary-button";
+
+const L = LOCALE.components.confirmationModal;
 
 type Props = {
   cancelLabel?: string;
@@ -24,7 +28,7 @@ export const ConfirmationModal: FC<Props> = ({
   title,
   message,
   confirmLabel,
-  cancelLabel = "Cancel",
+  cancelLabel = L.cancel,
   destructive = false,
   loading = false,
   onConfirm,
@@ -40,7 +44,7 @@ export const ConfirmationModal: FC<Props> = ({
     >
       <View style={styles.backdrop}>
         <Pressable
-          accessibilityLabel="Dismiss"
+          accessibilityLabel={L.dismiss}
           accessibilityRole="button"
           style={StyleSheet.absoluteFill}
           onPress={onCancel}

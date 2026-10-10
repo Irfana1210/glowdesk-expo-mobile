@@ -1,5 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
+import { LOCALE } from "@/constants/locale";
+
 import { OrderDetailsScreen } from "@/features/orders/screens/order-details.screen";
 import { useOrdersStore } from "@/features/orders/store/orders.store";
 
@@ -7,6 +9,8 @@ import { createMockOrders } from "@/mocks/orders";
 
 import { resetOrdersStore } from "@test/order-test-utils";
 import { resetRosterStore } from "@test/roster-test-utils";
+
+const L = LOCALE.orders.details;
 
 let mockParams: { id?: string } = {};
 const mockPush = jest.fn();
@@ -46,22 +50,25 @@ describe("OrderDetailsScreen", () => {
     await renderOrder("ORD-7841");
 
     expect(
-      screen.getByRole("header", { name: "Order 7841" }),
-    ).toHaveTextContent("#ORD-7841");
+      screen.getByRole("header", {
+        name: L.orderNumberAccessibilityLabel("7841"),
+      }),
+    ).toHaveTextContent(L.orderNumber("7841"));
     expect(screen.getByLabelText("Status: Picking")).toBeOnTheScreen();
-    expect(screen.getByText("Customer J.L.")).toBeOnTheScreen();
+    expect(screen.getByText(L.customer("J.L."))).toBeOnTheScreen();
     expect(screen.getByTestId("order-timing")).toHaveTextContent(
-      "Placed 1:47 pm · due 3:47 pm",
+      L.placed("1:47 pm") + L.due("3:47 pm"),
     );
     expect(screen.getByTestId("overdue-pill")).toHaveTextContent(
-      /Overdue 53 min/,
+      L.overdue("53 min"),
+      { exact: false },
     );
     expect(screen.getByTestId("assignee")).toHaveTextContent(
-      "Assigned to Jordan Lee",
+      `${L.assignedToPrefix}Jordan Lee`,
     );
     expect(
       screen.getByRole("progressbar", {
-        name: "Picking progress: 2 of 6 units picked",
+        name: L.progressAccessibilityLabel(2, 6),
       }),
     ).toHaveAccessibilityValue({ now: 33 });
   });
@@ -69,10 +76,14 @@ describe("OrderDetailsScreen", () => {
   it("lists every product with Verified or To scan", async () => {
     await renderOrder("ORD-7841");
 
-    expect(screen.getByText("Products · 5")).toBeOnTheScreen();
+    expect(screen.getByText(L.productsHeading(5))).toBeOnTheScreen();
     expect(screen.getAllByTestId(/^order-item-/)).toHaveLength(5);
     expect(screen.getByTestId("order-item-ORD-7841-L1")).toHaveTextContent(
-      /LUMEN SKIN.*Dewy Barrier Cream 50ml.*SKU LS-1042 · 9300601042118.*1 \/ 1.*Verified/,
+      L.productDetail("LS-1042", "9300601042118"),
+      { exact: false },
+    );
+    expect(screen.getByTestId("order-item-ORD-7841-L1")).toHaveTextContent(
+      /LUMEN SKIN.*Dewy Barrier Cream 50ml.*1 \/ 1.*Verified/,
     );
     expect(screen.getByTestId("order-item-ORD-7841-L2")).toHaveTextContent(
       /0 \/ 2.*To scan/,
@@ -84,7 +95,7 @@ describe("OrderDetailsScreen", () => {
 
     expect(screen.getByTestId("mark-ready")).toBeDisabled();
     expect(screen.getByTestId("ready-helper")).toHaveTextContent(
-      "Scan 4 more units to mark this order ready",
+      L.scanMoreUnits(4),
     );
   });
 
@@ -110,7 +121,7 @@ describe("OrderDetailsScreen", () => {
     expect(screen.getByTestId("mark-ready")).toBeEnabled();
     expect(screen.queryByTestId("scan-product")).not.toBeOnTheScreen();
     expect(screen.getByTestId("ready-helper")).toHaveTextContent(
-      "All units verified.",
+      L.allUnitsVerified,
     );
 
     await fireEvent.press(screen.getByTestId("mark-ready"));
@@ -123,9 +134,7 @@ describe("OrderDetailsScreen", () => {
 
   it("starts picking a New order", async () => {
     await renderOrder("ORD-7846");
-    expect(screen.getByTestId("assignee")).toHaveTextContent(
-      "Not assigned yet",
-    );
+    expect(screen.getByTestId("assignee")).toHaveTextContent(L.notAssigned);
 
     await fireEvent.press(screen.getByTestId("start-picking"));
 
@@ -143,7 +152,7 @@ describe("OrderDetailsScreen", () => {
     await fireEvent.press(screen.getByTestId("assign-sheet-option-emp-03"));
 
     expect(screen.getByTestId("assignee")).toHaveTextContent(
-      "Assigned to Grace Liu",
+      `${L.assignedToPrefix}Grace Liu`,
     );
     expect(orderOf("ORD-7841")?.assigneeId).toBe("emp-03");
   });
@@ -152,7 +161,7 @@ describe("OrderDetailsScreen", () => {
     await renderOrder("ORD-7846");
 
     await fireEvent.press(screen.getByTestId("more-actions"));
-    expect(screen.getByText("Cancel order #ORD-7846?")).toBeOnTheScreen();
+    expect(screen.getByText(L.cancel.title("7846"))).toBeOnTheScreen();
     await fireEvent.press(screen.getByTestId("confirm-action"));
 
     expect(orderOf("ORD-7846")?.status).toBe("CANCELLED");
@@ -166,14 +175,16 @@ describe("OrderDetailsScreen", () => {
     expect(screen.queryByTestId("more-actions")).not.toBeOnTheScreen();
     expect(screen.queryByTestId("reassign")).not.toBeOnTheScreen();
     expect(screen.getByTestId("assignee")).toHaveTextContent(
-      "Packed by Aisha Rahman",
+      `${L.packedByPrefix}Aisha Rahman`,
     );
     expect(screen.queryByTestId("overdue-pill")).not.toBeOnTheScreen();
   });
 
   it("shows not found for an unknown order id", async () => {
     await renderOrder("ORD-0000");
-    expect(screen.getByText("Order not found")).toBeOnTheScreen();
+    expect(
+      screen.getByText(LOCALE.orders.common.orderNotFound),
+    ).toBeOnTheScreen();
   });
 });
 
@@ -182,7 +193,7 @@ describe("OrderDetailsScreen wording", () => {
     await renderOrder("ORD-7842");
     expect(
       screen.getByRole("progressbar", {
-        name: "Picking progress: 1 of 1 unit picked",
+        name: L.progressAccessibilityLabel(1, 1),
       }),
     ).toBeOnTheScreen();
   });

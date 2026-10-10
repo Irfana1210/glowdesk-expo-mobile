@@ -1,18 +1,9 @@
+import { LOCALE } from "@/constants/locale";
+
+const L = LOCALE.app.format;
+
 export namespace FormatUtils {
-  const MONTHS = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
+  const MONTHS = L.months;
 
   export function pluralise(
     count: number,
@@ -22,13 +13,13 @@ export namespace FormatUtils {
     return `${count} ${count === 1 ? singular : plural}`;
   }
 
-  function clockParts(date: Date): { suffix: "am" | "pm"; time: string } {
+  function clockParts(date: Date): { suffix: string; time: string } {
     const hours = date.getHours();
     const minutes = date.getMinutes().toString().padStart(2, "0");
     const displayHour = hours % 12 === 0 ? 12 : hours % 12;
     return {
       time: `${displayHour}:${minutes}`,
-      suffix: hours < 12 ? "am" : "pm",
+      suffix: hours < 12 ? L.am : L.pm,
     };
   }
 
@@ -47,7 +38,7 @@ export namespace FormatUtils {
   export function formatHourShort(hour: number, isFirst = false): string {
     const display = hour % 12 === 0 ? 12 : hour % 12;
     if (isFirst || hour === 12) {
-      return `${display}${hour < 12 ? "a" : "p"}`;
+      return `${display}${hour < 12 ? L.amShort : L.pmShort}`;
     }
     return String(display);
   }
@@ -65,30 +56,28 @@ export namespace FormatUtils {
   export function formatDuration(totalMinutes: number): string {
     const minutes = Math.max(0, Math.round(totalMinutes));
     if (minutes < 60) {
-      return `${minutes} min`;
+      return L.minutes(minutes);
     }
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
-    return m === 0 ? `${h}h` : `${h}h ${m}m`;
+    return m === 0 ? L.hours(h) : L.hoursMinutes(h, m);
   }
 
   /** Coarse elapsed time for waiting orders: "12 min", "3h", "1 day", "2 days". */
   export function formatWaiting(totalMinutes: number): string {
     const minutes = Math.max(0, Math.round(totalMinutes));
     if (minutes < 60) {
-      return `${minutes} min`;
+      return L.minutes(minutes);
     }
     if (minutes < 24 * 60) {
-      return `${Math.floor(minutes / 60)}h`;
+      return L.hours(Math.floor(minutes / 60));
     }
-    const days = Math.floor(minutes / (24 * 60));
-    return `${days} ${days === 1 ? "day" : "days"}`;
+    return L.days(Math.floor(minutes / (24 * 60)));
   }
 
   /** "SAT 10 OCT" style date for eyebrows (the eyebrow style uppercases it). */
   export function formatShortDate(date: Date): string {
-    const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    return `${DAYS[date.getDay()]} ${date.getDate()} ${MONTHS[date.getMonth()]}`;
+    return `${L.weekdays[date.getDay()]} ${date.getDate()} ${MONTHS[date.getMonth()]}`;
   }
 
   function startOfDay(date: Date): number {
@@ -103,7 +92,7 @@ export namespace FormatUtils {
   export function formatOrderTime(iso: string, now: Date = new Date()): string {
     const date = new Date(iso);
     if (Number.isNaN(date.getTime())) {
-      return "Unknown time";
+      return L.unknownTime;
     }
 
     const dayDiff = Math.round(
@@ -111,10 +100,10 @@ export namespace FormatUtils {
     );
     const time = formatClockTime(date);
     if (dayDiff === 0) {
-      return `Today, ${time}`;
+      return L.today(time);
     }
     if (dayDiff === 1) {
-      return `Yesterday, ${time}`;
+      return L.yesterday(time);
     }
     return `${date.getDate()} ${MONTHS[date.getMonth()]}, ${time}`;
   }
@@ -136,7 +125,7 @@ export namespace FormatUtils {
     { cents = false }: { cents?: boolean } = {},
   ): string {
     if (!Number.isFinite(amount)) {
-      return "—";
+      return L.notAvailable;
     }
     const sign = amount < 0 ? "-" : "";
     const fixed = Math.abs(amount).toFixed(cents ? 2 : 0);
@@ -147,7 +136,7 @@ export namespace FormatUtils {
   /** Short form for chart labels, e.g. "$2.4K" or "$950". */
   export function formatCompactCurrency(amount: number): string {
     if (!Number.isFinite(amount)) {
-      return "—";
+      return L.notAvailable;
     }
     if (Math.abs(amount) < 1000) {
       return formatCurrency(amount);
@@ -162,13 +151,13 @@ export namespace FormatUtils {
   /** Whole or one-decimal percentage. Null means the value could not be calculated. */
   export function formatPercent(value: number | null, decimals = 0): string {
     return value === null || !Number.isFinite(value)
-      ? "—"
+      ? L.notAvailable
       : `${value.toFixed(decimals)}%`;
   }
 
   /** "9am", "12pm", "3pm". */
   export function formatHour(hour: number): string {
-    const suffix = hour < 12 ? "am" : "pm";
+    const suffix = hour < 12 ? L.am : L.pm;
     const display = hour % 12 === 0 ? 12 : hour % 12;
     return `${display}${suffix}`;
   }

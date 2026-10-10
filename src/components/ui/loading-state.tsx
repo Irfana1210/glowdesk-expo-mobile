@@ -6,12 +6,16 @@ import {
   View,
 } from "react-native";
 
+import { LOCALE } from "@/constants/locale";
+
 import { colors, spacing } from "@/theme";
 
 import { AppText } from "./app-text";
 
+const L = LOCALE.components.loadingState;
+
 export const LoadingState: FC<{ message?: string }> = ({
-  message = "Loading…",
+  message = L.message,
 }) => {
   useEffect(() => {
     AccessibilityInfo.announceForAccessibility(message);

@@ -1,7 +1,11 @@
 import { type FC } from "react";
 
+import { LOCALE } from "@/constants/locale";
+
 import { EmptyState } from "./empty-state";
 import { PrimaryButton } from "./primary-button";
+
+const L = LOCALE.components.errorState;
 
 type Props = {
   message: string;
@@ -11,10 +15,10 @@ type Props = {
 };
 
 export const ErrorState: FC<Props> = ({
-  title = "Something went wrong",
+  title = L.title,
   message,
   onRetry,
-  retryLabel = "Try again",
+  retryLabel = L.retry,
 }) => {
   return (
     <EmptyState

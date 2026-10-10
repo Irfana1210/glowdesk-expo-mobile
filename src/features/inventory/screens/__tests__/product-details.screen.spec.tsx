@@ -1,8 +1,12 @@
 import { screen } from "@testing-library/react-native";
 
+import { LOCALE } from "@/constants/locale";
+
 import { ProductDetailsScreen } from "@/features/inventory/screens/product-details.screen";
 
 import { renderWithQuery } from "@test/render-with-query";
+
+const L = LOCALE.inventory.productDetails;
 
 let mockParams: { id?: string } = {};
 jest.mock("expo-router", () => ({
@@ -37,26 +41,36 @@ describe("ProductDetailsScreen", () => {
       await screen.findByText("Soft Focus Blush · Rosewood"),
     ).toBeOnTheScreen();
     expect(screen.getByTestId("available-quantity")).toHaveTextContent("3");
-    expect(screen.getByLabelText("SKU: VL-2210")).toBeOnTheScreen();
-    expect(screen.getByLabelText("Category: Makeup")).toBeOnTheScreen();
-    expect(screen.getByLabelText("Price: $42.00")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(L.rowLabel(L.fields.sku, "VL-2210")),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(L.rowLabel(L.fields.category, "Makeup")),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(L.rowLabel(L.fields.price, "$42.00")),
+    ).toBeOnTheScreen();
     expect(screen.getByTestId("stock-message")).toHaveTextContent(
-      /Low stock\. 3 left, at or below the reorder point of 5\./,
+      L.stockMessage.lowStock(3, 5),
+      { exact: false },
     );
   });
 
   it("explains out of stock items", async () => {
     await renderProduct("prod-hh-1180");
     expect(
-      await screen.findByLabelText("Status: Out of stock"),
+      await screen.findByLabelText(
+        `Status: ${LOCALE.inventory.stockStatus.outOfStock}`,
+      ),
     ).toBeOnTheScreen();
     expect(screen.getByTestId("stock-message")).toHaveTextContent(
-      /Out of stock\. Reorder now/,
+      L.stockMessage.outOfStock,
+      { exact: false },
     );
   });
 
   it("shows not found for an unknown product", async () => {
     await renderProduct("prod-999");
-    expect(await screen.findByText("Product not found")).toBeOnTheScreen();
+    expect(await screen.findByText(L.notFoundTitle)).toBeOnTheScreen();
   });
 });

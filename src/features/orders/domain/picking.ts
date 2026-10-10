@@ -3,6 +3,8 @@
  * Pure functions only, like the state machine. Every successful pick returns a
  * new frozen order with an incremented version.
  */
+import { LOCALE } from "@/constants/locale";
+
 import { BarcodeUtils } from "@/utils/barcode-utils";
 
 import { type Order, type OrderItem } from "@/types/order";
@@ -38,14 +40,14 @@ export namespace PickingUtils {
       return {
         ok: false,
         code: "INVALID_BARCODE",
-        message: "Enter a valid barcode of 8 to 14 digits.",
+        message: LOCALE.orders.picking.invalidBarcode,
       };
     }
     if (order.status !== "PICKING") {
       return {
         ok: false,
         code: "ORDER_NOT_PICKING",
-        message: "Start picking this order before scanning products.",
+        message: LOCALE.orders.picking.orderNotPicking,
       };
     }
 
@@ -54,14 +56,18 @@ export namespace PickingUtils {
       return {
         ok: false,
         code: "NOT_IN_ORDER",
-        message: `Wrong product. Barcode ${barcode} is not part of this order.`,
+        message: LOCALE.orders.picking.notInOrder(barcode),
       };
     }
     if (remainingQuantity(item) === 0) {
       return {
         ok: false,
         code: "ALREADY_PICKED",
-        message: `${item.name} is already fully picked (${item.pickedQuantity}/${item.requiredQuantity}). Put the extra unit back.`,
+        message: LOCALE.orders.picking.alreadyPicked(
+          item.name,
+          item.pickedQuantity,
+          item.requiredQuantity,
+        ),
         item,
       };
     }

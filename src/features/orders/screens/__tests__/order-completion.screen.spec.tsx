@@ -1,8 +1,12 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 
+import { LOCALE } from "@/constants/locale";
+
 import { OrderCompletionScreen } from "@/features/orders/screens/order-completion.screen";
 
 import { mockOrders, resetOrdersStore } from "@test/order-test-utils";
+
+const L = LOCALE.orders.completion;
 
 let mockParams: { orderId?: string } = {};
 const mockDismissTo = jest.fn();
@@ -32,17 +36,27 @@ describe("OrderCompletionScreen", () => {
     await renderCompletion("ORD-7842");
 
     expect(
-      screen.getByLabelText("Verified products: 1 of 1"),
+      screen.getByLabelText(
+        L.summaryAccessibilityLabel(L.verifiedProducts, L.ratio(1, 1)),
+      ),
     ).toBeOnTheScreen();
-    expect(screen.getByLabelText("Units picked: 1 of 1")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(
+        L.summaryAccessibilityLabel(L.unitsPicked, L.ratio(1, 1)),
+      ),
+    ).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByTestId("confirm-ready"));
 
     expect(screen.getByTestId("completion-title")).toHaveTextContent(
-      "Ready for collection",
+      L.readyTitle,
     );
     expect(screen.getByLabelText("Status: Ready")).toBeOnTheScreen();
-    expect(screen.getByLabelText("Final status: Ready")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText(
+        L.summaryAccessibilityLabel(L.finalStatus, L.finalReady),
+      ),
+    ).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByTestId("back-to-orders"));
     expect(mockDismissTo).toHaveBeenCalledWith("/orders");
@@ -52,7 +66,8 @@ describe("OrderCompletionScreen", () => {
     await renderCompletion("ORD-7841");
 
     expect(screen.getByTestId("completion-error")).toHaveTextContent(
-      /3 items still to verify/,
+      L.cannotMarkReady(LOCALE.orders.stateMachine.itemsNotVerified(3)),
+      { exact: false },
     );
     expect(screen.getByTestId("confirm-ready")).toBeDisabled();
     expect(screen.getByLabelText("Status: Picking")).toBeOnTheScreen();
@@ -62,7 +77,8 @@ describe("OrderCompletionScreen", () => {
     await renderCompletion("ORD-7846");
 
     expect(screen.getByTestId("completion-error")).toHaveTextContent(
-      /Only orders in Picking can be marked ready/,
+      L.cannotMarkReady(LOCALE.orders.stateMachine.invalidStatus("NEW")),
+      { exact: false },
     );
     expect(screen.getByTestId("confirm-ready")).toBeDisabled();
   });

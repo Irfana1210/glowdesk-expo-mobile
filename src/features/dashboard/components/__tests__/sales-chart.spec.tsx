@@ -1,5 +1,7 @@
 import { render, screen } from "@testing-library/react-native";
 
+import { LOCALE } from "@/constants/locale";
+
 import {
   classifyHours,
   describeChart,
@@ -9,6 +11,7 @@ import {
 
 import { DEMO_SALES_SUMMARY } from "@/mocks/sales";
 
+const L = LOCALE.dashboard.salesChart;
 const hourly = DEMO_SALES_SUMMARY.hourly;
 
 describe("SalesChart", () => {
@@ -33,7 +36,7 @@ describe("SalesChart", () => {
     await render(<SalesChart data={hourly} />);
     expect(peakHour(hourly)?.hour).toBe(13);
     expect(screen.getByTestId("sales-chart-peak")).toHaveTextContent(
-      "Peak 1 pm · $3,310",
+      L.peak("1 pm", "$3,310"),
     );
     expect(screen.getByTestId("sales-bar-16-current")).toBeOnTheScreen();
     expect(screen.getByTestId("sales-bar-20-upcoming")).toBeOnTheScreen();
@@ -43,7 +46,7 @@ describe("SalesChart", () => {
     await render(<SalesChart data={hourly} />);
     const description = describeChart(hourly);
     expect(description).toBe(
-      "Hourly sales from 9am to 4pm, peaking at $3,310 at 1pm. 5pm to 8pm still to come.",
+      `${L.summary(L.hourRange("9am", "4pm"), "$3,310", "1pm")} ${L.stillToCome(L.hourRange("5pm", "8pm"))}`,
     );
     expect(screen.getByRole("image", { name: description })).toBeOnTheScreen();
   });

@@ -8,10 +8,14 @@ import {
   useCameraPermissions,
 } from "expo-camera";
 
+import { LOCALE } from "@/constants/locale";
+
 import { AppText } from "@/components/ui/app-text";
 import { PrimaryButton } from "@/components/ui/primary-button";
 
 import { colors, radius, spacing } from "@/theme";
+
+const L = LOCALE.components.barcodeCamera;
 
 const BARCODE_TYPES = [
   "ean13",
@@ -38,7 +42,7 @@ export const BarcodeCamera: FC<Props> = ({ onScan }) => {
   if (!permission) {
     return (
       <View
-        accessibilityLabel="Checking camera access"
+        accessibilityLabel={L.checkingAccess}
         style={[styles.frame, styles.centered]}
       >
         <ActivityIndicator color={colors.accent} />
@@ -54,22 +58,21 @@ export const BarcodeCamera: FC<Props> = ({ onScan }) => {
       >
         <Ionicons color={colors.accent} name="camera-outline" size={32} />
         <AppText style={styles.center} variant="cardTitle">
-          Camera access needed
+          {L.permissionTitle}
         </AppText>
         <AppText color="textMuted" style={styles.center}>
-          Allow the camera to scan product barcodes, or enter barcodes manually
-          below.
+          {L.permissionMessage}
         </AppText>
         {permission.canAskAgain ? (
           <PrimaryButton
             icon="camera"
-            label="Allow camera"
+            label={L.allowCamera}
             onPress={() => void requestPermission()}
           />
         ) : (
           <PrimaryButton
             icon="settings-outline"
-            label="Open Settings"
+            label={L.openSettings}
             onPress={() => void Linking.openSettings()}
           />
         )}
@@ -85,10 +88,10 @@ export const BarcodeCamera: FC<Props> = ({ onScan }) => {
       >
         <Ionicons color={colors.accent} name="videocam-off-outline" size={32} />
         <AppText style={styles.center} variant="cardTitle">
-          Camera unavailable
+          {L.unavailableTitle}
         </AppText>
         <AppText color="textMuted" style={styles.center}>
-          {mountError} Use manual entry below.
+          {L.mountErrorMessage(mountError)}
         </AppText>
       </View>
     );
@@ -97,11 +100,7 @@ export const BarcodeCamera: FC<Props> = ({ onScan }) => {
   return (
     <View
       accessible
-      accessibilityLabel={
-        onScan
-          ? "Camera viewfinder. Point at a product barcode."
-          : "Scanning paused."
-      }
+      accessibilityLabel={onScan ? L.viewfinder : L.pausedViewfinder}
       style={styles.frame}
     >
       <CameraView
@@ -114,14 +113,14 @@ export const BarcodeCamera: FC<Props> = ({ onScan }) => {
             : undefined
         }
         onMountError={(event) =>
-          setMountError(event.message || "The camera could not start.")
+          setMountError(event.message || L.mountErrorFallback)
         }
       />
       <View pointerEvents="none" style={styles.reticle} />
       {!onScan ? (
         <View pointerEvents="none" style={styles.paused}>
           <AppText color="textOnAccent" variant="bodyStrong">
-            Scanning paused
+            {L.pausedLabel}
           </AppText>
         </View>
       ) : null}
