@@ -7,7 +7,7 @@
     "types": ["jest"],
     "paths": {
       "@/*": ["./src/*"],
-      "@test/*": ["./__tests__/utils/*"]
+      "@test/*": ["./test/utils/*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]

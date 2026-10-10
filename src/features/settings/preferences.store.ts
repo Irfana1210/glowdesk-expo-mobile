@@ -1,0 +1,59 @@
+/** Device preferences, persisted with expo-sqlite's key-value store like the other MVP state. */
+import { Vibration } from "react-native";
+
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+
+import { persistStorage, STORAGE_KEYS } from "@/utils/storage";
+
+export type NotificationPreferences = {
+  lowStock: boolean;
+  newOrders: boolean;
+  rosterChanges: boolean;
+};
+
+type PreferencesState = {
+  notifications: NotificationPreferences;
+  resetPreferences: () => void;
+  setNotification: (
+    key: keyof NotificationPreferences,
+    enabled: boolean,
+  ) => void;
+  setVibrateOnScanError: (enabled: boolean) => void;
+  vibrateOnScanError: boolean;
+};
+
+const DEFAULTS = {
+  vibrateOnScanError: true,
+  notifications: { newOrders: true, lowStock: true, rosterChanges: false },
+};
+
+export const PREFERENCES_STORAGE_KEY = STORAGE_KEYS.preferences;
+
+export const usePreferencesStore = create<PreferencesState>()(
+  persist(
+    (set, get) => ({
+      ...DEFAULTS,
+      setVibrateOnScanError: (enabled) => set({ vibrateOnScanError: enabled }),
+      setNotification: (key, enabled) =>
+        set({ notifications: { ...get().notifications, [key]: enabled } }),
+      resetPreferences: () => set(DEFAULTS),
+    }),
+    {
+      name: PREFERENCES_STORAGE_KEY,
+      version: 1,
+      storage: persistStorage,
+      partialize: (s) => ({
+        vibrateOnScanError: s.vibrateOnScanError,
+        notifications: s.notifications,
+      }),
+    },
+  ),
+);
+
+/** Short vibration for a rejected scan, unless the user turned it off in Settings. */
+export function signalScanError(): void {
+  if (usePreferencesStore.getState().vibrateOnScanError) {
+    Vibration.vibrate(250);
+  }
+}

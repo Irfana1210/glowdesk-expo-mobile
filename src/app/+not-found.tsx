@@ -1,8 +1,9 @@
 import { useRouter } from "expo-router";
 
-import { AppHeader } from "@/components/layout/AppHeader";
-import { Screen } from "@/components/layout/Screen";
-import { EmptyState, PrimaryButton } from "@/components/ui";
+import { AppHeader } from "@/components/layout/app-header";
+import { Screen } from "@/components/layout/screen";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PrimaryButton } from "@/components/ui/primary-button";
 
 export default function NotFoundScreen() {
   const router = useRouter();

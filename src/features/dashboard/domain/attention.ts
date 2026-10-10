@@ -1,6 +1,8 @@
 /**
  * Builds the dashboard's "Needs attention" list from orders, roster and stock. Pure function.
  */
+import { formatClockTime, formatDuration } from "@/utils/format-utils";
+
 import { needsReplenishment } from "@/features/inventory/domain/stock";
 import { type InventoryItem } from "@/features/inventory/types";
 import {
@@ -12,9 +14,8 @@ import {
   type UpcomingBreak,
 } from "@/features/roster/domain/cover";
 
-import { type IconName } from "@/components/ui";
+import { type IconName } from "@/components/ui/button";
 
-import { formatClockTime, formatDuration } from "@/lib/format";
 import { type StatusTone } from "@/theme";
 import { type Order } from "@/types/order";
 

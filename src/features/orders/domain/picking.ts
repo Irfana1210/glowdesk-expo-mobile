@@ -3,7 +3,8 @@
  * Pure functions only, like the state machine. Every successful pick returns a
  * new frozen order with an incremented version.
  */
-import { barcodesMatch, normaliseBarcode } from "@/lib/barcode";
+import { barcodesMatch, normaliseBarcode } from "@/utils/barcode-utils";
+
 import { type Order, type OrderItem } from "@/types/order";
 
 export type PickFailureCode =

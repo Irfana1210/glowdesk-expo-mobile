@@ -5,9 +5,11 @@ import Constants from "expo-constants";
 import { type Href } from "expo-router";
 import { useRouter } from "expo-router";
 
-import { AppHeader } from "@/components/layout/AppHeader";
-import { Screen } from "@/components/layout/Screen";
-import { AppText, type IconName, InlineBanner } from "@/components/ui";
+import { AppHeader } from "@/components/layout/app-header";
+import { Screen } from "@/components/layout/screen";
+import { AppText } from "@/components/ui/app-text";
+import { type IconName } from "@/components/ui/button";
+import { InlineBanner } from "@/components/ui/inline-banner";
 
 import { colors, radius, spacing, touchTarget } from "@/theme";
 

@@ -14,9 +14,10 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 
-import { useAppStateFocusManager } from "@/hooks/useAppStateFocusManager";
+import { createQueryClient } from "@/utils/query-client/app-query-client";
 
-import { createQueryClient } from "@/lib/queryClient";
+import { useAppStateFocusManager } from "@/hooks/query/use-app-state-focus";
+
 import { colors } from "@/theme";
 
 export { ErrorBoundary } from "expo-router";

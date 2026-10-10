@@ -4,7 +4,7 @@
  */
 import { type Order, type OrderItem } from "@/types/order";
 
-import { transitionOrder } from "./orderStateMachine";
+import { transitionOrder } from "./order-state-machine";
 import { isActive } from "./schedule";
 
 export class AssignmentError extends Error {

@@ -1,3 +1,3 @@
-import { BarcodeScannerScreen } from "@/features/orders/screens/BarcodeScannerScreen";
+import { BarcodeScannerScreen } from "@/features/orders/screens/barcode-scanner.screen";
 
 export default BarcodeScannerScreen;

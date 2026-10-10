@@ -69,18 +69,5 @@
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
-  "private": true,
-  "jest": {
-    "preset": "jest-expo",
-    "setupFiles": [
-      "<rootDir>/jest.setup.ts"
-    ],
-    "testMatch": [
-      "<rootDir>/__tests__/**/*.test.ts?(x)"
-    ],
-    "moduleNameMapper": {
-      "^@test/(.*)$": "<rootDir>/__tests__/utils/$1",
-      "^@/(.*)$": "<rootDir>/src/$1"
-    }
-  }
+  "private": true
 }

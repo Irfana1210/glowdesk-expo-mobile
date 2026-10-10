@@ -1,5 +1,6 @@
 /** Inventory rules: stock status, search, filtering and barcode lookup. Pure functions. */
-import { barcodesMatch, normaliseBarcode } from "@/lib/barcode";
+import { barcodesMatch, normaliseBarcode } from "@/utils/barcode-utils";
+
 import { type ProductCategory } from "@/types/product";
 
 import { type InventoryItem, type StockStatus } from "../types";

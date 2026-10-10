@@ -6,7 +6,8 @@ import {
   formatDuration,
   formatWaiting,
   pluralise,
-} from "@/lib/format";
+} from "@/utils/format-utils";
+
 import { type Order } from "@/types/order";
 
 import {
@@ -15,7 +16,7 @@ import {
   minutesOverdue,
   minutesWaiting,
 } from "./domain/schedule";
-import { ORDER_STATUS_META } from "./orderStatusMeta";
+import { ORDER_STATUS_META } from "./order-status-meta";
 
 export type OrderCardModel = {
   accessibilityLabel: string;

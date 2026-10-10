@@ -3,9 +3,9 @@
  * Durations are measured between absolute instants, so overnight shifts and
  * daylight-saving changes are counted in real elapsed time.
  */
-import { type Employee } from "@/features/employees/types";
+import { formatClockTime } from "@/utils/format-utils";
 
-import { formatClockTime } from "@/lib/format";
+import { type Employee } from "@/features/employees/types";
 
 import { type Shift, type ShiftDraft } from "../types";
 import {

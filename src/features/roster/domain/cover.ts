@@ -1,7 +1,7 @@
 /**
  * Live floor-cover rules for the dashboard and roster. Pure functions; `now` is always passed in.
  */
-import { formatClockTime } from "@/lib/format";
+import { formatClockTime } from "@/utils/format-utils";
 
 import { type Shift } from "../types";
 import { atTime, isSameDay } from "./dates";
