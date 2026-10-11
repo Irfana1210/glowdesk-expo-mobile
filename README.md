@@ -8,13 +8,13 @@ mock server.
 
 ## Demo
 
-[![Glowdesk demo: an overdue Click & Collect order picked offline, then the dashboard, inventory, roster and labour screens](docs/media/glowdesk-demo.jpg)](docs/media/glowdesk-demo.mp4)
+[![Glowdesk demo: an overdue Click & Collect order picked offline, then the dashboard, inventory, roster and labour screens](docs/media/glowdesk-demo.jpg)](https://irfana1210.github.io/glowdesk-expo-mobile/media/glowdesk-demo.mp4)
 
 A 25-second walkthrough built from the app's real screens, copy and demo data. An overdue Click & Collect order is
 checked unit by unit, a wrong product is turned away, picking carries on with no signal, and the order is marked ready
 once the changes sync. It ends with the dashboard, inventory, roster and labour screens.
 
-Select the image to download the video (MP4, 8 MB).
+Select the image to watch the video in your browser.
 
 ## Libraries
 
