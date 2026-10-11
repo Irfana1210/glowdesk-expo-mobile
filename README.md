@@ -6,6 +6,8 @@ roster, labour cost and an offline queue that syncs when the connection returns.
 Independent portfolio project. All stores, staff, customers and products are fictional, and data comes from an in-app
 mock server.
 
+[![Glowdesk demo video](docs/media/glowdesk-demo.jpg)](docs/media/glowdesk-demo.mp4)
+
 ## Libraries
 
 - Expo + Expo Router, React Native, TypeScript
