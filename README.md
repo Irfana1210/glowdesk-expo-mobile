@@ -14,7 +14,7 @@ A 25-second walkthrough built from the app's real screens, copy and demo data. A
 checked unit by unit, a wrong product is turned away, picking carries on with no signal, and the order is marked ready
 once the changes sync. It ends with the dashboard, inventory, roster and labour screens.
 
-Select the image to watch the video in your browser.
+**Select the image to watch the video in your browser.**
 
 ## Libraries
 
