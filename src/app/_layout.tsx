@@ -9,15 +9,17 @@ import { DMSans_500Medium } from "@expo-google-fonts/dm-sans/500Medium";
 import { DMSans_600SemiBold } from "@expo-google-fonts/dm-sans/600SemiBold";
 import { DMSans_700Bold } from "@expo-google-fonts/dm-sans/700Bold";
 import { DMSerifDisplay_400Regular } from "@expo-google-fonts/dm-serif-display/400Regular";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 
 import { createQueryClient } from "@/utils/query-client/app-query-client";
+import { QUERY_PERSIST_OPTIONS } from "@/utils/query-client/query-persister";
 import { toastConfig } from "@/utils/toast-config";
 
+import { useOnlineManager } from "@/hooks/network/use-online-manager";
 import { useAppStateFocusManager } from "@/hooks/query/use-app-state-focus";
 
 import { useSessionBootstrap } from "@/features/auth/hooks/use-session-bootstrap";
@@ -25,6 +27,8 @@ import {
   selectSessionStatus,
   useSessionStore,
 } from "@/features/auth/store/session.store";
+import { OrderMutations } from "@/features/orders/hooks/order-mutations";
+import { ShiftMutations } from "@/features/roster/hooks/shift-mutations";
 
 import { colors } from "@/theme";
 
@@ -36,9 +40,18 @@ export const unstable_settings = {
 
 void SplashScreen.preventAutoHideAsync();
 
+/** The app's client, with every mutation that can wait offline registered by key. */
+function createAppQueryClient() {
+  const client = createQueryClient();
+  OrderMutations.register(client);
+  ShiftMutations.register(client);
+  return client;
+}
+
 export default function RootLayout() {
-  const [queryClient] = useState(createQueryClient);
+  const [queryClient] = useState(createAppQueryClient);
   useAppStateFocusManager();
+  useOnlineManager();
   useSessionBootstrap();
   const sessionStatus = useSessionStore(selectSessionStatus);
   const [fontsLoaded, fontError] = useFonts({
@@ -66,7 +79,16 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryClientProvider client={queryClient}>
+      {/* Restores the saved cache, then resumes changes that were waiting for a connection. */}
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={QUERY_PERSIST_OPTIONS}
+        onSuccess={() =>
+          queryClient
+            .resumePausedMutations()
+            .then(() => queryClient.invalidateQueries())
+        }
+      >
         <SafeAreaProvider>
           <StatusBar style="dark" />
           <Stack
@@ -95,7 +117,7 @@ export default function RootLayout() {
           </Stack>
           <Toast config={toastConfig} />
         </SafeAreaProvider>
-      </QueryClientProvider>
+      </PersistQueryClientProvider>
     </GestureHandlerRootView>
   );
 }

@@ -1,14 +1,16 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 import { LOCALE } from "@/constants/locale";
 
+import { MockServer } from "@/services/mock-api/mock-server";
+
 import { OrderDetailsScreen } from "@/features/orders/screens/order-details.screen";
-import { useOrdersStore } from "@/features/orders/store/orders.store";
 
 import { createMockOrders } from "@/mocks/orders";
+import { DEMO_STORE_ID } from "@/mocks/store";
 
-import { resetOrdersStore } from "@test/order-test-utils";
-import { resetRosterStore } from "@test/roster-test-utils";
+import { seedOrders } from "@test/order-test-utils";
+import { renderWithQuery } from "@test/render-with-query";
 
 const L = LOCALE.orders.details;
 
@@ -23,26 +25,26 @@ jest.mock("expo-router", () => ({
   }),
   useLocalSearchParams: () => mockParams,
 }));
-jest.mock("@/features/orders/services/orders.service", () => ({
-  OrdersService: {
-    fetchOrders: jest.fn().mockResolvedValue([]),
-  },
-}));
 
 /** Saturday 10 October 2026, 4:40 pm: the moment the Order Details mockup shows. */
 const NOW = new Date(2026, 9, 10, 16, 40);
-const orderOf = (id: string) =>
-  useOrdersStore.getState().orders.find((o) => o.id === id);
+/** The server's copy of an order. */
+const serverOrder = async (id: string) =>
+  (await MockServer.getOrders(DEMO_STORE_ID)).find((o) => o.id === id);
 
 beforeEach(() => {
   jest.clearAllMocks();
-  resetRosterStore();
 });
 
 async function renderOrder(id: string) {
   mockParams = { id };
-  resetOrdersStore({ orders: createMockOrders(NOW), loadStatus: "ready" });
-  await render(<OrderDetailsScreen now={NOW} />);
+  await seedOrders(createMockOrders(NOW), NOW);
+  await renderWithQuery(<OrderDetailsScreen now={NOW} />);
+  await waitFor(() =>
+    expect(
+      screen.queryByText(LOCALE.orders.common.loadingOrder),
+    ).not.toBeOnTheScreen(),
+  );
 }
 
 describe("OrderDetailsScreen", () => {
@@ -63,6 +65,9 @@ describe("OrderDetailsScreen", () => {
       L.overdue("53 min"),
       { exact: false },
     );
+    expect(
+      await screen.findByText("Jordan Lee", { exact: false }),
+    ).toBeOnTheScreen();
     expect(screen.getByTestId("ORDER_DETAILS.ASSIGNEE")).toHaveTextContent(
       `${L.assignedToPrefix}Jordan Lee`,
     );
@@ -137,7 +142,7 @@ describe("OrderDetailsScreen", () => {
     expect(screen.getByLabelText("Status: Picking")).toBeOnTheScreen();
   });
 
-  it("starts picking a New order", async () => {
+  it("starts picking a New order straight away and syncs it to the server", async () => {
     await renderOrder("ORD-7846");
     expect(screen.getByTestId("ORDER_DETAILS.ASSIGNEE")).toHaveTextContent(
       L.notAssigned,
@@ -149,11 +154,15 @@ describe("OrderDetailsScreen", () => {
     expect(
       screen.queryByTestId("ORDER_DETAILS.START_PICKING"),
     ).not.toBeOnTheScreen();
+    await waitFor(async () =>
+      expect((await serverOrder("ORD-7846"))?.status).toBe("PICKING"),
+    );
   });
 
   it("reassigns the order to another team member", async () => {
     await renderOrder("ORD-7841");
 
+    await screen.findByText("Jordan Lee", { exact: false });
     await fireEvent.press(screen.getByTestId("ORDER_DETAILS.REASSIGN"));
     expect(
       screen.queryByTestId("ORDER_DETAILS.ASSIGN_SHEET.OPTION.emp-07"),
@@ -165,7 +174,9 @@ describe("OrderDetailsScreen", () => {
     expect(screen.getByTestId("ORDER_DETAILS.ASSIGNEE")).toHaveTextContent(
       `${L.assignedToPrefix}Grace Liu`,
     );
-    expect(orderOf("ORD-7841")?.assigneeId).toBe("emp-03");
+    await waitFor(async () =>
+      expect((await serverOrder("ORD-7841"))?.assigneeId).toBe("emp-03"),
+    );
   });
 
   it("cancels an order after confirmation", async () => {
@@ -177,8 +188,8 @@ describe("OrderDetailsScreen", () => {
       screen.getByTestId("CONFIRMATION_MODAL.CONFIRM_ACTION"),
     );
 
-    expect(orderOf("ORD-7846")?.status).toBe("CANCELLED");
-    expect(screen.getByLabelText("Status: Cancelled")).toBeOnTheScreen();
+    expect(await screen.findByLabelText("Status: Cancelled")).toBeOnTheScreen();
+    expect((await serverOrder("ORD-7846"))?.status).toBe("CANCELLED");
     expect(
       screen.queryByTestId("ORDER_DETAILS.MORE_ACTIONS"),
     ).not.toBeOnTheScreen();
@@ -193,6 +204,9 @@ describe("OrderDetailsScreen", () => {
     expect(
       screen.queryByTestId("ORDER_DETAILS.REASSIGN"),
     ).not.toBeOnTheScreen();
+    expect(
+      await screen.findByText("Aisha Rahman", { exact: false }),
+    ).toBeOnTheScreen();
     expect(screen.getByTestId("ORDER_DETAILS.ASSIGNEE")).toHaveTextContent(
       `${L.packedByPrefix}Aisha Rahman`,
     );

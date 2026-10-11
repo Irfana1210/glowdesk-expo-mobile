@@ -5,10 +5,11 @@ import Storage from "expo-sqlite/kv-store";
 
 import { LOCALE } from "@/constants/locale";
 
+import { useMockNetworkStore } from "@/services/mock-api/mock-network.store";
+import { MockServer } from "@/services/mock-api/mock-server";
+
 import { AuthService } from "@/features/auth/services/auth.service";
 import { useSessionStore } from "@/features/auth/store/session.store";
-import { useOrdersStore } from "@/features/orders/store/orders.store";
-import { useRosterStore } from "@/features/roster/store/roster.store";
 import {
   PREFERENCES_STORAGE_KEY,
   signalScanError,
@@ -16,9 +17,10 @@ import {
 } from "@/features/settings/preferences.store";
 import { SettingsScreen } from "@/features/settings/screens/settings.screen";
 
-import { mockOrders, resetOrdersStore } from "@test/order-test-utils";
+import { DEMO_STORE_ID } from "@/mocks/store";
+
+import { mockOrders, TEST_NOW } from "@test/order-test-utils";
 import { renderWithQuery } from "@test/render-with-query";
-import { resetRosterStore } from "@test/roster-test-utils";
 import { signInAs } from "@test/session-test-utils";
 
 const L = LOCALE.settings;
@@ -35,22 +37,12 @@ jest.mock("expo-router", () => ({
 jest.mock("@/features/auth/services/auth.service", () => ({
   AuthService: { signIn: jest.fn(), signOut: jest.fn(() => Promise.resolve()) },
 }));
-jest.mock("@/features/orders/services/orders.service", () => ({
-  OrdersService: {
-    fetchOrders: jest.fn(() =>
-      Promise.resolve(
-        jest.requireActual("@test/order-test-utils").mockOrders(),
-      ),
-    ),
-  },
-}));
-
-beforeEach(() => {
+beforeEach(async () => {
   jest.clearAllMocks();
   signInAs("manager");
   usePreferencesStore.getState().resetPreferences();
-  resetOrdersStore({ orders: mockOrders(), loadStatus: "ready" });
-  resetRosterStore();
+  useMockNetworkStore.getState().reset();
+  await MockServer.seedForTest({ now: TEST_NOW, orders: mockOrders() });
 });
 
 describe("SettingsScreen", () => {
@@ -64,7 +56,7 @@ describe("SettingsScreen", () => {
     ).toBeOnTheScreen();
     expect(
       screen.getByLabelText(
-        L.screen.rowLabel(L.store.store, "RetailOS Melbourne Central"),
+        L.screen.rowLabel(L.store.store, "Glowdesk Melbourne Central"),
       ),
     ).toBeOnTheScreen();
     expect(
@@ -80,7 +72,7 @@ describe("SettingsScreen", () => {
     expect(screen.queryByText(/Team Member/)).not.toBeOnTheScreen();
   });
 
-  it("saves notification preferences and says they are not delivered yet", async () => {
+  it("saves notification preferences on the device", async () => {
     await renderWithQuery(<SettingsScreen />);
 
     await fireEvent(
@@ -96,9 +88,6 @@ describe("SettingsScreen", () => {
       (await Storage.getItem(PREFERENCES_STORAGE_KEY)) ?? "{}",
     );
     expect(saved.state.notifications.rosterChanges).toBe(true);
-    expect(screen.getByTestId("SETTINGS.NOTIFICATIONS_NOTE")).toHaveTextContent(
-      L.notifications.note,
-    );
   });
 
   it("turns scan-error vibration off for the scanners", async () => {
@@ -117,10 +106,14 @@ describe("SettingsScreen", () => {
     expect(vibrate).toHaveBeenCalledTimes(1);
   });
 
-  it("resets demo data after confirmation", async () => {
-    useOrdersStore.getState().startPicking("ORD-7846");
-    const [first] = useRosterStore.getState().shifts;
-    useRosterStore.getState().removeShift(first!.id);
+  it("resets demo data on the server after confirmation", async () => {
+    // Start from changed data: ORD-7846 is being picked and the roster is empty.
+    await MockServer.seedForTest({
+      now: TEST_NOW,
+      orders: mockOrders().map((o) =>
+        o.id === "ORD-7846" ? { ...o, status: "PICKING" as const } : o,
+      ),
+    });
     await renderWithQuery(<SettingsScreen />);
 
     await fireEvent.press(screen.getByTestId("SETTINGS.RESET_DEMO_DATA"));
@@ -133,10 +126,32 @@ describe("SettingsScreen", () => {
       L.reset.done,
       { exact: false },
     );
-    expect(
-      useOrdersStore.getState().orders.find((o) => o.id === "ORD-7846")?.status,
-    ).toBe("NEW");
-    expect(useRosterStore.getState().shifts.length).toBeGreaterThan(0);
+    const orders = await MockServer.getOrders(DEMO_STORE_ID);
+    expect(orders.find((o) => o.id === "ORD-7846")?.status).toBe("NEW");
+    expect((await MockServer.getShifts(DEMO_STORE_ID)).length).toBeGreaterThan(
+      0,
+    );
+  });
+
+  it("switches simulated network conditions in the developer section", async () => {
+    await renderWithQuery(<SettingsScreen />);
+
+    await fireEvent(
+      screen.getByTestId("SETTINGS.DEV.FORCE_OFFLINE"),
+      "valueChange",
+      true,
+    );
+    await fireEvent(
+      screen.getByTestId("SETTINGS.DEV.SLOW_NETWORK"),
+      "valueChange",
+      true,
+    );
+
+    expect(useMockNetworkStore.getState()).toMatchObject({
+      failRequests: false,
+      forceOffline: true,
+      slowNetwork: true,
+    });
   });
 
   it("signs out by clearing device data, preferences and the session", async () => {

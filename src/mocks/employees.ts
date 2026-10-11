@@ -1,5 +1,5 @@
 /**
- * Staff at RetailOS Melbourne Central, from the Roster mockup. Alex Morgan is the demo user
+ * Staff at Glowdesk Melbourne Central, from the Roster mockup. Alex Morgan is the demo user
  * (Store Manager). Two extra records must never be rostered: one inactive, one at another store.
  */
 import { type Employee } from "@/features/employees/types";

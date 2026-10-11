@@ -25,6 +25,8 @@ type OrderCardProps = {
   status: StatusBadgeProps;
   /** "5 items · placed 1:47 pm" */
   summary: string;
+  /** Shown when the order has changes that have not reached the server, e.g. "Waiting to sync". */
+  syncLabel?: string;
   testID?: string;
   /** "Overdue 53 min", "Due 4:44 pm" or "Waiting 3h". */
   timingLabel: string;
@@ -39,6 +41,7 @@ function OrderCardComponent({
   assigneeLabel,
   timingLabel,
   overdue = false,
+  syncLabel,
   onPress,
   accessibilityLabel,
   testID,
@@ -47,7 +50,9 @@ function OrderCardComponent({
   return (
     <Pressable
       accessibilityHint={L.hint}
-      accessibilityLabel={accessibilityLabel}
+      accessibilityLabel={
+        syncLabel ? `${accessibilityLabel}, ${syncLabel}` : accessibilityLabel
+      }
       accessibilityRole="button"
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
       testID={testID}
@@ -60,6 +65,16 @@ function OrderCardComponent({
           <AppText color="textMuted" variant="supporting">
             {summary}
           </AppText>
+          {syncLabel ? (
+            <View style={styles.meta} testID={testID && `${testID}.SYNC`}>
+              <Ionicons
+                color={colors.accent}
+                name="cloud-upload-outline"
+                size={13}
+              />
+              <AppText style={styles.sync}>{syncLabel}</AppText>
+            </View>
+          ) : null}
         </View>
         <StatusBadge {...status} />
       </View>
@@ -122,4 +137,10 @@ const styles = StyleSheet.create({
   meta: { flexDirection: "row", alignItems: "center", gap: 6, flexShrink: 1 },
   flexShrink: { flexShrink: 1 },
   timing: { fontFamily: fontFamily.semibold, fontSize: 12, lineHeight: 16 },
+  sync: {
+    color: colors.accent,
+    fontFamily: fontFamily.semibold,
+    fontSize: 12,
+    lineHeight: 16,
+  },
 });

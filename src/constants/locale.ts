@@ -14,18 +14,36 @@ export namespace LOCALE {
         "This account is no longer active. Ask your store manager.",
       INVALID_CREDENTIALS:
         "That staff ID and PIN don't match. Check them and try again.",
+      FORBIDDEN: "Only managers can see this.",
       NETWORK: "You're offline. Check your connection and try again.",
       NOT_FOUND: "That record no longer exists.",
+      SERVER_ERROR: "The server couldn't complete that. Try again.",
       SESSION_EXPIRED: "Your session has expired. Sign in again.",
       UNKNOWN: "Something went wrong. Try again.",
       VERSION_CONFLICT:
-        "This changed on another device. Showing the latest version.",
+        "This order changed on another device. Showing the latest version.",
     } as Partial<Record<string, string>>,
+  };
+
+  /** Connectivity and the offline queue. */
+  export const sync = {
+    changes: (count: number) =>
+      `${count} ${count === 1 ? "change" : "changes"}`,
+    needsConnection:
+      "You're offline. This needs the server to confirm it, so try again when you're back online.",
+    offlineSaved:
+      "Showing saved data. Changes you make will sync when you're back online.",
+    offlineTitle: "You're offline",
+    offlineWaiting: (changes: string) => `${changes} waiting to sync.`,
+    orderWaiting:
+      "Changes to this order are saved on this device and waiting to sync.",
+    syncing: (changes: string) => `Back online. Syncing ${changes}…`,
+    waitingBadge: "Waiting to sync",
   };
 
   export const auth = {
     signIn: {
-      brandLabel: (store: string) => `RetailOS, ${store}`,
+      brandLabel: (store: string) => `Glowdesk, ${store}`,
       credentials: (staffId: string, pin: string) => `${staffId} · PIN ${pin}`,
       pin: "PIN",
       quickHint: "Signs in as this person",
@@ -74,8 +92,6 @@ export namespace LOCALE {
       yesterday: (time: string) => `Yesterday, ${time}`,
     },
     more: {
-      demoBanner:
-        "Demo mode. Signed in as Alex, Store Manager. This build uses fictional data and has no production authentication.",
       employees: { description: "Planned", label: "Employees" },
       itemSummary: (label: string, description: string) =>
         `${label}, ${description}`,
@@ -89,7 +105,7 @@ export namespace LOCALE {
         label: "Settings",
       },
       title: "More",
-      version: (version: string) => `RetailOS v${version}`,
+      version: (version: string) => `Glowdesk v${version}`,
     },
     notFound: {
       action: "Go to orders",
@@ -195,6 +211,9 @@ export namespace LOCALE {
       stats: {
         onTheFloor: "on the floor",
         nextBreak: "next break",
+        /** Whose break the "next break" time is: anyone in the store, not only the signed-in person. */
+        breakOf: (firstName: string) => `${firstName}'s break`,
+        yourBreak: "your break",
         ordersToAssign: (count: number) =>
           count === 1 ? "order to assign" : "orders to assign",
       },
@@ -290,6 +309,14 @@ export namespace LOCALE {
       summary: (range: string, peakSales: string, peakHour: string) =>
         `Hourly sales from ${range}, peaking at ${peakSales} at ${peakHour}.`,
       stillToCome: (range: string) => `${range} still to come.`,
+      tooltipSales: (amount: string) => `Sales ${amount}`,
+      tooltipTarget: (amount: string) => `Target ${amount}`,
+      tooltipUpcoming: "Still to come",
+      barLabel: (hour: string, sales: string | null, target: string) =>
+        sales === null
+          ? `${hour}, still to come, target ${target}`
+          : `${hour}, sales ${sales}, target ${target}`,
+      barHint: "Shows this hour's sales and target",
       legend: {
         done: "Done",
         thisHour: "This hour",
@@ -418,6 +445,10 @@ export namespace LOCALE {
       percentLabel: "Labour % of forecast sales",
       percentNotAvailable: "not available",
       title: "Labour Management",
+      loadErrorMessage:
+        "Labour costs need the roster, staff and pay rates. Check your connection and try again.",
+      loadErrorTitle: "Couldn't load labour costs",
+      loading: "Loading labour costs…",
       unknown: "Unknown",
       unknownEmployee: "Unknown employee",
     },
@@ -659,6 +690,9 @@ export namespace LOCALE {
       nextWeek: "Next week",
       noShiftsMessage: (day: string) => `Nobody is rostered on ${day}.`,
       noShiftsTitle: "No shifts",
+      loadErrorMessage: "Check your connection and try again.",
+      loadErrorTitle: "Couldn't load the roster",
+      loading: "Loading the roster…",
       previousWeek: "Previous week",
       returnToThisWeekHint: "Returns to this week",
       thisWeek: "This week",
@@ -794,7 +828,6 @@ export namespace LOCALE {
     },
     notifications: {
       title: "Notifications",
-      note: "Your choices are saved on this device. Push notifications are not sent yet; they arrive in a later release.",
       newOrders: {
         label: "New Click & Collect orders",
         description: "When a customer places an order",
@@ -820,12 +853,28 @@ export namespace LOCALE {
       confirmTitle: "Reset demo data?",
       confirmLabel: "Reset data",
       confirmMessage:
-        "All order progress and roster changes saved on this device will be lost.",
+        "All order progress and roster changes will be lost, including changes waiting to sync.",
       done: "Demo orders and roster restored.",
+    },
+    developer: {
+      title: "Developer",
+      note: "Simulated network conditions for demos. Only shown in development builds.",
+      forceOffline: {
+        label: "Force offline",
+        description: "Act as if there is no connection",
+      },
+      slowNetwork: {
+        label: "Slow network",
+        description: "Add a few seconds to every request",
+      },
+      failRequests: {
+        label: "Fail some requests",
+        description: "About one request in four fails with a server error",
+      },
     },
     signOut: {
       label: "Sign out",
-      hint: "Clears data saved on this device and returns to the dashboard",
+      hint: "Clears data saved on this device and returns to sign-in",
       confirmTitle: "Sign out?",
       confirmLabel: "Sign out",
       confirmMessage:

@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: spacing.sm,
   },
-  primary: { minHeight: 52, backgroundColor: colors.inverse },
+  primary: { minHeight: 52, backgroundColor: colors.primary },
   secondary: {
     minHeight: 48,
     backgroundColor: colors.surface,

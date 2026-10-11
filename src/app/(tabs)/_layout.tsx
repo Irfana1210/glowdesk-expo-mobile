@@ -1,12 +1,15 @@
 import { type ComponentProps } from "react";
 import { type ColorValue, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Tabs } from "expo-router/js-tabs";
 
 import { LOCALE } from "@/constants/locale";
 
-import { colors, fontFamily, radius } from "@/theme";
+import { TAB_BAR_HEIGHT } from "@/hooks/use-tab-bar-inset";
+
+import { colors, fontFamily, radius, spacing } from "@/theme";
 
 const L = LOCALE.app.tabs;
 
@@ -25,7 +28,7 @@ const TAB_ICONS: Record<TabRoute, { active: IconName; idle: IconName }> = {
   },
 };
 
-/** The active tab gets a blush pill behind its icon (design handoff). */
+/** The active tab gets a plum pill with a white icon; its label takes the plum tint. */
 function TabIcon({
   route,
   focused,
@@ -35,7 +38,7 @@ function TabIcon({
   return (
     <View style={[styles.iconPill, focused && styles.iconPillActive]}>
       <Ionicons
-        color={color}
+        color={focused ? colors.textOnAccent : color}
         name={focused ? icons.active : icons.idle}
         size={22}
       />
@@ -52,13 +55,20 @@ const TABS: Array<{ name: TabRoute; title: string }> = [
 ];
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.text,
+        tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.inactive,
-        tabBarStyle: styles.bar,
+        tabBarStyle: [
+          styles.bar,
+          {
+            height: TAB_BAR_HEIGHT + insets.bottom,
+            paddingBottom: insets.bottom,
+          },
+        ],
         tabBarLabelStyle: styles.label,
         tabBarItemStyle: styles.item,
         sceneStyle: { backgroundColor: colors.background },
@@ -82,10 +92,19 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   bar: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: colors.surface,
+    borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.border,
-    borderTopWidth: 1,
-    paddingTop: 6,
+    paddingTop: spacing.xs,
+    elevation: 8,
+    shadowColor: colors.text,
+    shadowOffset: { width: 0, height: -6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
   },
   item: { minHeight: 52 },
   label: { fontFamily: fontFamily.medium, fontSize: 11, marginTop: 3 },
@@ -96,5 +115,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  iconPillActive: { backgroundColor: colors.accentSoft },
+  iconPillActive: { backgroundColor: colors.primary },
 });

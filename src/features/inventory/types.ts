@@ -1,6 +1,6 @@
 import { type Product } from "@/types/product";
 
-/** Stock on hand for one product in one store (brief §11 `inventory` table, joined to `products`). */
+/** Stock on hand for one product in one store (the `inventory` table, joined to `products`). */
 export type InventoryItem = {
   availableQuantity: number;
   product: Product;

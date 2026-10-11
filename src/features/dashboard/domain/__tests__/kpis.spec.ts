@@ -4,7 +4,7 @@ import { KpiUtils } from "@/features/dashboard/domain/kpis";
 
 import { DEMO_SALES_SUMMARY } from "@/mocks/sales";
 
-describe("KPI formulas with the brief sample data", () => {
+describe("KPI formulas with the sample store data", () => {
   it("calculates sales achievement as sales / target * 100", () => {
     expect(KpiUtils.salesAchievementPercent(18_500, 20_000)).toBe(92.5);
   });

@@ -36,8 +36,8 @@ import { type Order } from "@/types/order";
 
 import { OrderStateMachine } from "../domain/order-state-machine";
 import { PickingUtils, type PickResult } from "../domain/picking";
-import { useEnsureOrdersLoaded } from "../hooks/use-ensure-orders-loaded";
-import { selectOrderById, useOrdersStore } from "../store/orders.store";
+import { useOrderActions } from "../hooks/use-order-actions";
+import { useOrder } from "../hooks/use-orders";
 
 const L = LOCALE.orders.scanner;
 const C = LOCALE.orders.common;
@@ -68,8 +68,7 @@ export const BarcodeScannerScreen: FC = () => {
     manual?: string;
     orderId: string;
   }>();
-  const order = useOrdersStore(selectOrderById(orderId));
-  const loadStatus = useEnsureOrdersLoaded();
+  const { isPending, order } = useOrder(orderId);
 
   const close = useCallback(() => {
     if (router.canGoBack()) {
@@ -93,7 +92,7 @@ export const BarcodeScannerScreen: FC = () => {
           order={order}
           onDone={close}
         />
-      ) : loadStatus === "idle" || loadStatus === "loading" ? (
+      ) : isPending ? (
         <LoadingState message={C.loadingOrder} />
       ) : (
         <ErrorState
@@ -118,7 +117,7 @@ function ScannerContent({
 }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const scanItem = useOrdersStore((s) => s.scanItem);
+  const { scanItem } = useOrderActions();
 
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [manualCode, setManualCode] = useState("");

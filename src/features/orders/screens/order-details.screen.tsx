@@ -17,8 +17,8 @@ import { FormatUtils } from "@/utils/format-utils";
 
 import { useNow } from "@/hooks/use-now";
 
-import { ROLE_LABELS } from "@/features/employees/types";
-import { useRosterStore } from "@/features/roster/store/roster.store";
+import { useEmployees } from "@/features/employees/hooks/use-employees";
+import { type Employee, ROLE_LABELS } from "@/features/employees/types";
 
 import { AppHeader } from "@/components/layout/app-header";
 import { Screen } from "@/components/layout/screen";
@@ -41,14 +41,16 @@ import { type Order } from "@/types/order";
 
 import { OrderStateMachine } from "../domain/order-state-machine";
 import { ScheduleUtils } from "../domain/schedule";
-import { useEnsureOrdersLoaded } from "../hooks/use-ensure-orders-loaded";
+import { useOrderActions } from "../hooks/use-order-actions";
+import { useOrder } from "../hooks/use-orders";
+import { usePendingOrderIds } from "../hooks/use-pending-order-ids";
 import { ORDER_STATUS_META } from "../order-status-meta";
 import { OrderPresentationUtils } from "../presentation";
-import { selectOrderById, useOrdersStore } from "../store/orders.store";
 
 type Feedback = { message: string; tone: "error" | "success" } | null;
 
 const UNASSIGN = "__unassign__";
+const NO_EMPLOYEES: Array<Employee> = [];
 
 const L = LOCALE.orders.details;
 const C = LOCALE.orders.common;
@@ -58,8 +60,7 @@ export const OrderDetailsScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
   const liveNow = useNow();
   const now = fixedNow ?? liveNow;
   const { id } = useLocalSearchParams<{ id: string }>();
-  const order = useOrdersStore(selectOrderById(id));
-  const loadStatus = useEnsureOrdersLoaded();
+  const { isPending, order } = useOrder(id);
   const [confirmCancel, setConfirmCancel] = useState(false);
 
   const goBack = useCallback(() => {
@@ -69,7 +70,7 @@ export const OrderDetailsScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
   }, [router]);
 
   let content;
-  if (!order && (loadStatus === "idle" || loadStatus === "loading")) {
+  if (!order && isPending) {
     content = <LoadingState message={C.loadingOrder} />;
   } else if (!order) {
     content = (
@@ -136,10 +137,9 @@ function OrderDetailsContent({
 }: ContentProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const startPicking = useOrdersStore((s) => s.startPicking);
-  const assignOrder = useOrdersStore((s) => s.assignOrder);
-  const cancelOrder = useOrdersStore((s) => s.cancelOrder);
-  const employees = useRosterStore((s) => s.employees);
+  const { assignOrder, cancelOrder, startPicking } = useOrderActions();
+  const employees = useEmployees().data ?? NO_EMPLOYEES;
+  const waitingToSync = usePendingOrderIds().includes(order.id);
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [assigning, setAssigning] = useState(false);
 
@@ -195,6 +195,11 @@ function OrderDetailsContent({
     );
   };
 
+  const handleCancel = async () => {
+    onCloseCancel();
+    report(await cancelOrder(order.id), L.cancel.doneAnnouncement(number));
+  };
+
   const openScanner = (manual = false) =>
     router.push({
       pathname: "/orders/scan",
@@ -222,6 +227,13 @@ function OrderDetailsContent({
             message={feedback.message}
             testID="ORDER_DETAILS.FEEDBACK"
             tone={feedback.tone}
+          />
+        ) : null}
+        {waitingToSync ? (
+          <InlineBanner
+            message={LOCALE.sync.orderWaiting}
+            testID="ORDER_DETAILS.WAITING_TO_SYNC"
+            tone="info"
           />
         ) : null}
 
@@ -411,10 +423,7 @@ function OrderDetailsContent({
         title={L.cancel.title(number)}
         visible={confirmCancel}
         onCancel={onCloseCancel}
-        onConfirm={() => {
-          onCloseCancel();
-          report(cancelOrder(order.id), L.cancel.doneAnnouncement(number));
-        }}
+        onConfirm={() => void handleCancel()}
       />
     </View>
   );

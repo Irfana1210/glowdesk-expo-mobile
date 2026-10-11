@@ -7,11 +7,12 @@ import { useRouter } from "expo-router";
 
 import { LOCALE } from "@/constants/locale";
 
+import { useTabBarInset } from "@/hooks/use-tab-bar-inset";
+
 import { AppHeader } from "@/components/layout/app-header";
 import { Screen } from "@/components/layout/screen";
 import { AppText } from "@/components/ui/app-text";
 import { type IconName } from "@/components/ui/button";
-import { InlineBanner } from "@/components/ui/inline-banner";
 
 import { colors, radius, spacing, touchTarget } from "@/theme";
 
@@ -49,12 +50,15 @@ const MENU: Array<MenuItem> = [
 
 export default function MoreTab() {
   const router = useRouter();
+  const tabBarInset = useTabBarInset();
   const version = Constants.expoConfig?.version ?? "dev";
 
   return (
     <Screen testID="MORE.SCREEN">
       <AppHeader subtitle={L.version(version)} title={L.title} />
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: tabBarInset }]}
+      >
         <View style={styles.menu}>
           {MENU.map((item, index) => {
             const enabled = Boolean(item.href);
@@ -102,8 +106,6 @@ export default function MoreTab() {
             );
           })}
         </View>
-
-        <InlineBanner message={L.demoBanner} tone="info" />
       </ScrollView>
     </Screen>
   );

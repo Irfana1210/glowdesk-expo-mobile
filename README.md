@@ -1,151 +1,161 @@
-# RetailOS
+# Glowdesk
 
 A mobile store-operations app for beauty retail teams, built with Expo, React Native and TypeScript.
-It is an independent portfolio project. All stores, customers, brands and products are fictional.
+It is an independent portfolio project. All stores, staff, customers, brands and products are fictional.
 
-> **Status: Milestone 4.** All five tabs work on fictional data: the store dashboard, the full Click & Collect
-> picking workflow, inventory with barcode lookup, the weekly roster with a validated shift editor, and a
-> labour cost estimate built on the roster. Orders and shifts survive an app restart.
-> Everything else is clearly labelled as planned.
+## Business problem
 
-## What works
+A busy beauty store runs several jobs at once. Staff pick Click & Collect orders between customers, managers build the
+weekly roster, and someone has to keep labour cost inside budget while watching stock.
 
-| Area                                                                                                                                                                                       | Status                                                                    |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
-| Expo SDK 57 project, Expo Router with 5 bottom tabs and a nested order details route                                                                                                       | Implemented                                                               |
-| Design tokens: DM Sans body and DM Serif Display headings, 4–24 spacing scale                                                                                                              | Implemented                                                               |
-| Typed order model and pure state machine (`NEW → PICKING → READY → COLLECTED`, cancellations)                                                                                              | Implemented and unit tested                                               |
-| `canMarkReady` / `markOrderReady`: immutable result, version increment, invalid transitions rejected                                                                                       | Implemented and unit tested                                               |
-| Order list: All / New / Picking / Ready / Collected filters with counts, priority indicator, pull to refresh                                                                               | Implemented and component tested                                          |
-| Loading, empty and error states with retry                                                                                                                                                 | Implemented and component tested                                          |
-| Order details: products, SKU, barcode, picked vs required, picking progress                                                                                                                | Implemented and component tested                                          |
-| Start Picking and Mark Ready for Collection (disabled until every item is verified, reason shown)                                                                                          | Implemented and component tested                                          |
-| Barcode scanner with `expo-camera`: permission request, denied and unavailable states                                                                                                      | Implemented (camera needs a physical device)                              |
-| Manual barcode entry fallback for simulators and damaged labels                                                                                                                            | Implemented and component tested                                          |
-| Barcode matching, quantity validation, wrong-product rejection, over-pick prevention                                                                                                       | Implemented and unit tested                                               |
-| Order Completion screen: verified count, confirmation, final status, invalid-transition error                                                                                              | Implemented and component tested                                          |
-| Order state saved on device with `expo-sqlite` key-value storage, restored on restart                                                                                                      | Implemented and tested                                                    |
-| Reset demo data (Settings, with confirmation)                                                                                                                                              | Implemented                                                               |
-| Dashboard KPIs: sales vs target, achievement %, transactions, average transaction value, labour spend and %                                                                                | Implemented and tested                                                    |
-| KPI formulas with safe zero handling (shows "—" and "not available", never NaN)                                                                                                            | Implemented and unit tested                                               |
-| Live pending and ready Click & Collect counts on the dashboard                                                                                                                             | Implemented and component tested                                          |
-| Hourly sales vs target chart (tap a bar for details, screen reader labels per hour)                                                                                                        | Implemented and component tested                                          |
-| Quick actions to Orders, Roster and Inventory                                                                                                                                              | Implemented                                                               |
-| Inventory: search by name, brand, SKU or barcode; category filters; low-stock toggle; stock status                                                                                         | Implemented and tested                                                    |
-| Product details: stock, reorder point and guidance, SKU, barcode, category, price                                                                                                          | Implemented and component tested                                          |
-| Inventory barcode lookup (camera or manual entry) opens the product                                                                                                                        | Implemented and component tested                                          |
-| Weekly roster: week navigation, shifts per day, paid hours, staff count, coverage gaps against trading hours                                                                               | Implemented and tested                                                    |
-| Shift editor (React Hook Form + Zod): add, edit, remove with confirmation                                                                                                                  | Implemented and component tested                                          |
-| Shift validation: end after start, break shorter than shift, overlap detection, inactive or other-store staff blocked, explicit overnight shifts, real elapsed time across daylight saving | Implemented and unit tested                                               |
-| Labour Management: weekly roster cost, budget, labour % of forecast sales, cost by day and by employee, live recalculation                                                                 | Implemented and tested                                                    |
-| Effective-dated pay rates; missing rates flagged rather than costed at zero                                                                                                                | Implemented and unit tested                                               |
-| Pay information restricted to the Manager role (the demo user is a manager; there is no role switch)                                                                                       | Implemented and tested                                                    |
-| Settings: profile, assigned store and trading hours, app version                                                                                                                           | Implemented and component tested                                          |
-| App preference: vibrate on scan errors (used by both scanners), saved on device                                                                                                            | Implemented and tested                                                    |
-| Notification preferences, saved on device                                                                                                                                                  | Implemented. Push notifications are not sent yet, and the screen says so. |
-| Sign out (demo): clears orders, roster changes and preferences on the device, returns to the dashboard                                                                                     | Implemented and tested                                                    |
-| Sales Analytics, Employees                                                                                                                                                                 | Planned (shown as "Planned" in the More tab)                              |
-| CI, EAS Build, Maestro E2E                                                                                                                                                                 | Planned                                                                   |
+These jobs usually live in separate systems, and a wrong item in a collection bag reaches the customer. Glowdesk puts
+them in one app on the shop floor. Barcode checks stop wrong or extra items. An order is only marked ready once the
+server confirms it. Picking keeps working when the store's connection drops.
+
+## Features
+
+Everything in this list is implemented and covered by tests. Planned work is under [Roadmap](#roadmap).
+
+- **Sign-in:** staff ID and 4-digit PIN, a session that persists until it expires, and protected routes.
+- **Dashboard:** sales against target, transactions, labour spend, an hourly sales chart and live Click & Collect counts.
+- **Click & Collect orders:** filter by status, start picking, scan each item, and mark the order ready for collection.
+- **Barcode scanning:** camera scanning with a manual entry fallback, wrong-product rejection and over-pick prevention.
+- **Inventory:** search, category and low-stock filters, product details and barcode lookup.
+- **Roster:** weekly shifts, floor cover by hour, low-cover alerts, and a validated shift editor.
+- **Labour:** weekly cost estimate from the roster, budget and labour %, visible to managers only.
+- **Offline mode:** picking and roster changes show straight away, wait in a queue while offline, and sync in order when the connection returns, even after a restart.
+- **Settings:** profile, store details, preferences, sign out, and developer switches that simulate offline, slow or failing requests.
+
+## Tech stack
+
+| Area        | Choice                                                      |
+| ----------- | ----------------------------------------------------------- |
+| App         | Expo SDK 57, React Native, TypeScript (strict)              |
+| Navigation  | Expo Router                                                 |
+| Server data | TanStack Query, with a saved cache and offline queue        |
+| Network     | NetInfo                                                     |
+| Device data | Zustand, persisted with `expo-sqlite`                       |
+| Forms       | React Hook Form + Zod                                       |
+| Camera      | `expo-camera`                                               |
+| Testing     | Jest, React Native Testing Library                          |
+| Quality     | ESLint, Prettier, cspell, knip, husky pre-commit, GitHub CI |
+
+The app talks to an in-app mock server that behaves like a real API: it adds latency, fails while offline, checks versions and enforces manager-only data. A real backend can replace it without changing screens.
 
 ## Getting started
 
-Requirements: Node 20 or newer, and the **Expo Go** app on a phone (iOS or Android). Expo Go must support SDK 57, which the current store version does.
+Requires Node 20 or newer and the Expo Go app on your phone.
 
 ```bash
 npm install
 npx expo start
 ```
 
-- **iPhone:** open the Camera app, scan the QR code in the terminal, and tap the banner to open in Expo Go.
-- **Android:** open Expo Go and choose _Scan QR code_.
-- The phone and computer must be on the same Wi-Fi network. If the QR code will not connect (guest or corporate Wi-Fi), use `npx expo start --tunnel`.
-- **Simulators:** press `i` (iOS Simulator, needs Xcode) or `a` (Android emulator) in the Expo terminal.
+Scan the QR code with the Camera app on iPhone, or with Expo Go on Android. On a simulator, press `i` for iOS or `a`
+for Android in the terminal that runs Expo.
 
-### Demo walkthrough
+## Demo sign-in
 
-1. Open the **Orders** tab. High-priority orders sit at the top.
-2. Tap **#ORD-7842** (New) and press **Start Picking**. Mark Ready stays disabled and says how many items remain.
-3. Press **Scan Product Barcode**. On a phone, point the camera at a barcode. On a simulator, type a barcode or tap an item in _Still to pick_ to fill it (development builds only).
-4. Try a wrong barcode, for example `9301234000080`, to see the rejection. Scan an item twice past its quantity to see over-pick prevention.
-5. When every item is verified, press **Review and complete**, then **Confirm ready for collection**. The order moves to Ready.
-6. Close and reopen the app. The order keeps its status and picked quantities.
-7. Open **Inventory**, tap **Low stock only**, then open a product. Tap the scan button and enter `9301234000080` to jump to a product by barcode.
-8. Open **Roster**. Sunday has a red dot: nobody is rostered 5pm–9pm. Tap **Add Shift**, pick an employee already working that day, and save to see the overlap error. Try 10pm–6am without **Ends next day** to see the overnight rule.
-9. Open **More → Labour Management**, note the cost, then change a shift in the roster and come back: the cost updates.
-10. Open **More → Settings**. Turn off **Vibrate on scan errors**, or use **Reset demo data** to restore orders and the roster.
+| Staff ID | PIN  | Name        | Role          |
+| -------- | ---- | ----------- | ------------- |
+| RO1001   | 1111 | Alex Morgan | Store Manager |
+| RO1002   | 2222 | Jordan Lee  | Shift Leader  |
 
-Printing the mock barcodes is the easiest way to test the camera on a phone. Each product's barcode is shown under its name on the order details screen.
+Settings has a **Reset demo data** button. It reseeds orders and shifts relative to the current time, so run it before
+a demo.
 
-## Checks
-
-```bash
-npm run typecheck     # tsc --noEmit, strict mode
-npm run lint          # ESLint flat config (standards in docs/coding-standards.md)
-npm run format        # Prettier
-npm run spell         # cspell (en-GB dictionary, Australian spelling)
-npm run knip          # unused files, exports and dependencies
-npm test              # Jest with jest-expo and React Native Testing Library
-npm run check         # everything above; also runs in CI and the husky pre-commit hook
-npx expo-doctor       # Expo SDK dependency health
-```
-
-## Architecture
-
-The full folder map, layers, state and persistence design are in [docs/architecture.md](docs/architecture.md).
-Coding standards (naming, services, safe query hooks, LOCALE copy, namespaced utils, testIDs) are in
-[docs/coding-standards.md](docs/coding-standards.md).
+## Project structure
 
 ```text
-RetailOS/
-├── src/
-│   ├── app/          Expo Router routes (thin files)
-│   ├── features/     orders, dashboard, inventory, roster, labour, employees, settings, session
-│   ├── components/   ui, layout, scanner
-│   ├── constants/    LOCALE copy and primitives
-│   ├── hooks/        Cross-feature hooks, safe query wrapper
-│   ├── mocks/        Fictional data
-│   ├── services/     Query cache keys
-│   ├── theme/        Design tokens
-│   ├── types/        Shared domain types and enums
-│   └── utils/        Namespaced helpers, storage, query client, toasts
-├── test/utils/       Shared test helpers (specs live next to the code in __tests__/)
-├── docs/             Architecture document, design handoff and screen mockups
-├── learnings/        Bugs that slipped past the tests, and what would have caught them
-└── assets/
+src/
+├── app/          Routes
+├── features/     auth, dashboard, orders, inventory, roster, labour, employees, settings
+├── components/   Shared UI, layout and scanner
+├── hooks/        Shared hooks: safe query and mutation wrappers, online state
+├── mocks/        Fictional data
+├── services/     Query cache keys and the in-app mock server
+├── theme/        Design tokens
+└── utils/        Helpers, storage, query client, error handling
 ```
 
-Key decisions:
+Each feature keeps its business rules in `domain/` as pure, unit-tested functions. The
+[architecture document](docs/architecture.md) covers layers, state, offline sync and persistence in detail.
 
-- **Business rules are pure functions** in `features/orders/domain`. Screens never decide whether a transition is valid. Every transition goes through one guarded function, so READY cannot be reached without full verification. The backend must enforce the same rules atomically later.
-- **Zustand holds MVP order state; TanStack Query holds sales.** Orders are edited locally, so they live in a persisted Zustand store for now. Sales are read-only server data, so they are fetched through TanStack Query with caching, retries and pull-to-refresh. When the Supabase backend arrives, orders move to TanStack Query too, and the store keeps only local UI state and the offline queue.
-- **The chart is built from plain views,** not a charting library. Twelve hourly bars do not justify a dependency, and plain views let every bar carry its own screen reader label.
-- **Pending and ready order counts on the dashboard are live** from the order store rather than the brief's static sample (12 and 5), so the dashboard always agrees with the Orders tab.
-- **Times are absolute instants.** Shifts store ISO timestamps, so overnight shifts carry an explicit end date and durations count real elapsed time across daylight-saving changes. Tests run in the Australia/Melbourne timezone so this is checked.
-- **One set of shift rules.** The Zod form schema calls the same `validateShift` the store uses, so the editor and the data layer cannot disagree, and the store re-validates every write.
-- **Two labour figures, on purpose.** The dashboard shows the brief's sample labour spend from the trading system. Labour Management shows an estimate calculated from the roster. Both are labelled.
-- **Pay rates are effective-dated,** matching the `employee_pay_rates` table design, so a rate rise on 1 July costs shifts correctly on either side of it.
-- **Labour spend is labelled as an estimate.** Real Australian payroll needs award rules, penalty rates, overtime and superannuation, which the brief says must not be implied by a flat-rate figure.
-- **Refresh and restore merge by `version`.** When saved, local and fetched copies of an order meet, the higher version wins, so picking progress is never overwritten by stale data. This is the same rule the offline sync milestone will rely on.
-- **Persistence uses `expo-sqlite`'s key-value store** rather than AsyncStorage. SQLite is already in the brief's stack for the offline queue, so this adds no extra dependency. Saved records are checked on load and malformed ones are dropped.
-- **Every pick is a versioned change.** Each scan returns a new order with the version increased. That gives the future backend a version to compare against, so duplicate or stale scans can be rejected.
-- **Scanner debouncing:** the camera reports the same code many times a second. The scanner ignores a repeat of the same code within 2 seconds, so one scan never counts twice.
-- **Mark Ready goes through a confirmation screen** rather than changing status in one tap, because it tells the customer their order is ready.
-- **Accessibility:** every status is shown as icon plus text, never colour alone. Buttons are at least 48 pt tall and expose disabled state. Cards and rows have full screen-reader labels, and font scaling is respected with a cap on dense layouts.
+## Testing
+
+```bash
+npm test          # Jest
+npm run check     # format, lint, type check, spelling, unused code and tests
+```
+
+- **Domain rules:** unit tests for the order state machine, picking, readiness, sales KPIs, labour cost, shift overlap
+  and cover. They include zero values, overnight shifts and daylight-saving changes.
+- **Screens:** component tests with React Native Testing Library for loading, empty and error states, filters, disabled
+  buttons, validation messages and the scanner. They select elements by `testID` and assert against the copy in
+  `LOCALE`, so wording changes don't break tests.
+- **Offline and sync:** tests for the queued changes covering version chaining, restarts with waiting changes, retries
+  after a server error, and rollback after a conflict. They run against the in-app mock server.
+- **Time:** Jest runs in the Australia/Melbourne timezone, and screens accept a `now` prop, so dates behave the same on
+  every machine.
+
+Bugs that got past a passing test suite are written up in [learnings/](learnings/README.md).
+
+## CI/CD
+
+- **GitHub Actions:** [.github/workflows/checks.yml](.github/workflows/checks.yml) runs the type check, format check,
+  ESLint, spelling, unused-code check and tests on every pull request and on pushes to `main`.
+- **Pre-commit:** a husky hook runs the same gates locally before each commit.
+- **Builds:** the app runs in Expo Go today. EAS build profiles are on the roadmap.
+
+## Technical decisions
+
+- **Expo and Expo Router.** One TypeScript codebase for iOS and Android with file-based routes. Route files only
+  default-export a feature screen, so navigation can change without touching feature code.
+- **Feature folders with pure domain rules.** Business rules have no React, storage or network code. They are fast to
+  test, and the mock server applies the same functions, so the device and the server can't disagree.
+- **TanStack Query for server data, Zustand for device state.** Orders, shifts, inventory, sales and pay rates are
+  server state with caching and refetching. Zustand only holds the session, preferences and the simulated network
+  switches, so server data is never copied into a store.
+- **A mock server behind the services.** Each feature's `services/` namespace is the only place data is fetched. Today
+  it calls an in-app mock server that adds latency, fails offline, and returns real error codes such as 403 and 409. A
+  real backend replaces the services, and screens don't change.
+- **Every order change is a command with a version.** Start picking, scan, assign, mark ready and cancel are commands
+  applied on the device and again by the server. Each carries the version it was based on. A stale change is rejected
+  as a conflict instead of overwriting newer work.
+- **Two kinds of change.** Picking, assigning and roster edits show straight away and can wait offline. Marking ready
+  and cancelling wait for the server, because "ready" tells the customer their order can be collected.
+- **Offline queue that survives restarts.** The query cache and paused changes are saved on the device. Each change's
+  handler is registered by key, so a change made offline still sends after the app restarts.
+- **`expo-sqlite` key-value storage.** It runs in Expo Go, which MMKV does not.
+- **Pay rates are protected twice.** The server refuses them to non-managers, and they are never written to the device.
+- **All copy in one place.** User-facing text lives in a `LOCALE` namespace in Australian English.
 
 ## Known limitations
 
-- The camera does not work on the iOS Simulator. Use manual entry there, and a physical device for real scanning.
-- Persistence is local only. There is no backend, so nothing syncs between devices yet.
-- READY orders cannot yet be handed over (marked COLLECTED) or cancelled from the UI.
-- There is no role switch by design: the demo user is a manager. In production the role comes from authentication, and pay data must be protected by Supabase Row Level Security, not only hidden in the app.
-- Sign out has no account to leave in demo mode, so it clears the data saved on the device instead.
-- The Shift Editor's date chips cover the selected week only. Navigate the roster to another week before adding a shift there.
-- Coverage checks ignore when breaks are taken, because break timing is not scheduled.
-- Expo Go on an iOS 18.5 simulator occasionally fails a reload with "Cannot find native module 'ExpoAsset'" after many files change at once. Closing and reopening Expo Go fixes it. Cold launches are unaffected.
-- Product images are coloured monogram tiles, not photos.
-- Expo Router bundles a Material Symbols font through its own dependencies (about 1 MB). It cannot be removed from the app side.
+- **No real backend.** Data comes from the in-app mock server and is saved on the device.
+- **Demo sign-in.** The staff IDs and PINs are in the source code. This is not production authentication.
+- **Labour is an estimate.** Cost is paid hours × base hourly rate. Award rules, penalty rates, overtime, allowances and
+  superannuation are not included, and the app says so on screen.
+- **Collection is not built yet.** Orders stop at Ready. Handing the order to the customer comes in a later milestone.
+- **Roster editing is open to every role.** Only pay information is restricted to managers so far.
+- **Demo shifts cover one week.** They are seeded for the week the app was first opened. Reset demo data in Settings
+  for the current week.
+- **No end-to-end tests or native build setup yet.** A local native build with `npx expo run:ios` fails on Xcode 26.3,
+  because Expo SDK 57's native modules need a newer Xcode.
 
-## Next milestone
+## Roadmap
 
-Day 2 of the brief's delivery plan: EAS Build configuration and decision records. CI with GitHub Actions
-(`.github/workflows/checks.yml`) is in place. After that: Employees and Sales Analytics.
+- Supabase backend: PostgreSQL, Supabase Auth, and Row Level Security for store access and pay rates.
+- Collection hand-over, moving orders from Ready to Collected.
+- Sales Analytics and Employees screens, shown as "Planned" in the More tab today.
+- Manager-only roster editing, enforced by the server.
+- Maestro end-to-end tests for the picking workflow, using the existing `testID`s.
+- EAS build profiles for development and preview builds, run from CI.
+- Error reporting with Sentry through the existing `ReportingUtils` seam.
+- Award and enterprise agreement rules for labour cost.
+
+## Documentation
+
+- [Architecture](docs/architecture.md): folder map, layers, state, offline sync and persistence.
+- [Coding standards](docs/coding-standards.md): naming, services, query hooks and testing conventions.
+- [Learnings](learnings/README.md): bugs that passed a correct-looking test suite, and the habit that would catch them.

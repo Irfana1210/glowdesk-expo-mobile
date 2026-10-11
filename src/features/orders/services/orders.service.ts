@@ -1,15 +1,24 @@
 /**
- * Mock orders API. It mimics network latency so loading states are real.
- * This is the seam where a Supabase client (behind TanStack Query) will plug in later.
+ * Orders API. Today it calls the in-app mock server; a real backend plugs in here and nothing
+ * above this file changes.
  */
-import { MockUtils } from "@/utils/mock-utils";
+import { MockServer } from "@/services/mock-api/mock-server";
 
-import { createMockOrders } from "@/mocks/orders";
+import { type OrderCommand } from "@/features/orders/domain/order-commands";
+
 import { type Order } from "@/types/order";
 
 export namespace OrdersService {
-  export async function fetchOrders(): Promise<Array<Order>> {
-    await MockUtils.simulateLatency();
-    return createMockOrders();
+  export function fetchOrders(storeId: string): Promise<Array<Order>> {
+    return MockServer.getOrders(storeId);
+  }
+
+  /** Sends one change. The server rejects it with a 409 if the order changed since `expectedVersion`. */
+  export function updateOrder(input: {
+    command: OrderCommand;
+    expectedVersion: number;
+    orderId: string;
+  }): Promise<Order> {
+    return MockServer.updateOrder(input);
   }
 }

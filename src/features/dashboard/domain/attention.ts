@@ -8,7 +8,7 @@ import { FormatUtils } from "@/utils/format-utils";
 import { StockUtils } from "@/features/inventory/domain/stock";
 import { type InventoryItem } from "@/features/inventory/types";
 import { ScheduleUtils } from "@/features/orders/domain/schedule";
-import { CoverUtils, type UpcomingBreak } from "@/features/roster/domain/cover";
+import { type UpcomingBreak } from "@/features/roster/domain/cover";
 
 import { type IconName } from "@/components/ui/button";
 
@@ -26,11 +26,12 @@ type AttentionEntry = {
 
 type AttentionInput = {
   breakEmployeeName?: string;
+  /** The next break that would leave the floor short (`CoverUtils.nextBreakNeedingCover`). */
+  breakNeedingCover: UpcomingBreak | null;
   /** Undefined while inventory is loading or unavailable; the stock item is then left out. */
   inventory?: Array<InventoryItem>;
   now: Date;
   orders: Array<Order>;
-  upcomingBreak: UpcomingBreak | null;
 };
 
 export namespace AttentionUtils {
@@ -41,7 +42,7 @@ export namespace AttentionUtils {
 
   export function buildAttention({
     orders,
-    upcomingBreak,
+    breakNeedingCover,
     breakEmployeeName,
     inventory,
     now,
@@ -63,16 +64,16 @@ export namespace AttentionUtils {
       });
     }
 
-    if (upcomingBreak && CoverUtils.breakNeedsCover(upcomingBreak, now)) {
+    if (breakNeedingCover) {
       entries.push({
         key: "breakCover",
         title: LOCALE.dashboard.attention.breakCover.title(
-          FormatUtils.formatClockTime(upcomingBreak.startsAt),
+          FormatUtils.formatClockTime(breakNeedingCover.startsAt),
         ),
         subtitle: LOCALE.dashboard.attention.breakCover.subtitle(
           breakEmployeeName ??
             LOCALE.dashboard.attention.breakCover.fallbackName,
-          upcomingBreak.shift.unpaidBreakMinutes,
+          breakNeedingCover.shift.unpaidBreakMinutes,
         ),
         icon: "people-outline",
         tone: "picking",

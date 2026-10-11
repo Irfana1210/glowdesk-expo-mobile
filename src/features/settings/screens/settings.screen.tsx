@@ -17,6 +17,9 @@ import { LOCALE } from "@/constants/locale";
 import { FormatUtils } from "@/utils/format-utils";
 import { handleError } from "@/utils/handle-api-error";
 
+import { useMockNetworkStore } from "@/services/mock-api/mock-network.store";
+import { MockServer } from "@/services/mock-api/mock-server";
+
 import { AuthUtils } from "@/features/auth/domain/auth";
 import { AuthService } from "@/features/auth/services/auth.service";
 import {
@@ -24,10 +27,8 @@ import {
   useSessionStore,
 } from "@/features/auth/store/session.store";
 import { ROLE_LABELS } from "@/features/employees/types";
-import { useOrdersStore } from "@/features/orders/store/orders.store";
 import { DateUtils } from "@/features/roster/domain/dates";
 import { ShiftUtils } from "@/features/roster/domain/shifts";
-import { useRosterStore } from "@/features/roster/store/roster.store";
 
 import { AppHeader } from "@/components/layout/app-header";
 import { Screen } from "@/components/layout/screen";
@@ -130,6 +131,44 @@ function SwitchRow({
   );
 }
 
+/** Switches for simulated network conditions, so a demo can show offline and error handling. */
+function DeveloperSection() {
+  const D = L.developer;
+  const network = useMockNetworkStore();
+
+  return (
+    <>
+      <Section title={D.title}>
+        <SwitchRow
+          first
+          description={D.forceOffline.description}
+          label={D.forceOffline.label}
+          testID="SETTINGS.DEV.FORCE_OFFLINE"
+          value={network.forceOffline}
+          onChange={network.setForceOffline}
+        />
+        <SwitchRow
+          description={D.slowNetwork.description}
+          label={D.slowNetwork.label}
+          testID="SETTINGS.DEV.SLOW_NETWORK"
+          value={network.slowNetwork}
+          onChange={network.setSlowNetwork}
+        />
+        <SwitchRow
+          description={D.failRequests.description}
+          label={D.failRequests.label}
+          testID="SETTINGS.DEV.FAIL_REQUESTS"
+          value={network.failRequests}
+          onChange={network.setFailRequests}
+        />
+      </Section>
+      <AppText color="textMuted" variant="supporting">
+        {D.note}
+      </AppText>
+    </>
+  );
+}
+
 export const SettingsScreen: FC = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -143,8 +182,6 @@ export const SettingsScreen: FC = () => {
   );
   const setNotification = usePreferencesStore((s) => s.setNotification);
   const resetPreferences = usePreferencesStore((s) => s.resetPreferences);
-  const resetOrders = useOrdersStore((s) => s.resetDemoData);
-  const resetRoster = useRosterStore((s) => s.resetDemoData);
 
   const [pending, setPending] = useState<PendingAction>(null);
   const [busy, setBusy] = useState(false);
@@ -169,11 +206,21 @@ export const SettingsScreen: FC = () => {
   const goBack = () =>
     router.canGoBack() ? router.back() : router.replace("/more");
 
+  // Restores the server's demo data and drops cached data and changes waiting to sync.
+  const resetDemoData = async () => {
+    queryClient.getMutationCache().clear();
+    await MockServer.reset();
+    await queryClient.resetQueries();
+  };
+
   const confirm = async () => {
     const action = pending;
     setBusy(true);
-    resetRoster();
-    await resetOrders();
+    try {
+      await resetDemoData();
+    } catch (error) {
+      handleError(error);
+    }
 
     if (action === "signOut") {
       try {
@@ -256,13 +303,6 @@ export const SettingsScreen: FC = () => {
             />
           ))}
         </Section>
-        <AppText
-          color="textMuted"
-          testID="SETTINGS.NOTIFICATIONS_NOTE"
-          variant="supporting"
-        >
-          {L.notifications.note}
-        </AppText>
 
         <Section title={L.about.title}>
           <InfoRow first label={L.about.appVersion} value={version} />
@@ -271,6 +311,8 @@ export const SettingsScreen: FC = () => {
             value={L.about.platformValue(sdkMajor)}
           />
         </Section>
+
+        {__DEV__ ? <DeveloperSection /> : null}
 
         {message ? (
           <InlineBanner

@@ -1,5 +1,5 @@
 /**
- * Dashboard KPI calculations (brief §6, Screen 1). Pure functions only.
+ * Dashboard KPI calculations. Pure functions only.
  * Every ratio returns null instead of NaN or Infinity when its denominator is zero,
  * so the UI can show "not available" rather than a misleading number.
  */

@@ -19,7 +19,9 @@ import { LOCALE } from "@/constants/locale";
 
 import { successHandler } from "@/utils/success-handler";
 
+import { useEmployees } from "@/features/employees/hooks/use-employees";
 import {
+  type Employee,
   EMPLOYMENT_TYPE_LABELS,
   ROLE_LABELS,
 } from "@/features/employees/types";
@@ -30,6 +32,7 @@ import { AppText } from "@/components/ui/app-text";
 import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 import { ErrorState } from "@/components/ui/error-state";
 import { InlineBanner } from "@/components/ui/inline-banner";
+import { LoadingState } from "@/components/ui/loading-state";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { SecondaryButton } from "@/components/ui/secondary-button";
 import { SelectField } from "@/components/ui/select-field";
@@ -41,7 +44,8 @@ import { MessageType } from "@/types/enums";
 import { DateUtils } from "../domain/dates";
 import { ShiftFormUtils, type ShiftFormValues } from "../domain/shift-form";
 import { type ShiftErrors, ShiftUtils } from "../domain/shifts";
-import { useRosterStore } from "../store/roster.store";
+import { useShiftActions } from "../hooks/use-shift-actions";
+import { useShifts } from "../hooks/use-shifts";
 import { type Shift } from "../types";
 
 const L = LOCALE.roster.shiftEditor;
@@ -54,15 +58,40 @@ export const ShiftEditorScreen: FC<{ now?: Date }> = ({ now }) => {
     shiftId?: string;
     start?: string;
   }>();
-  const shift = useRosterStore((s) =>
-    s.shifts.find((x) => x.id === params.shiftId),
-  );
+  const shiftsQuery = useShifts();
+  const employeesQuery = useEmployees();
+  const shift = shiftsQuery.data?.find((x) => x.id === params.shiftId);
 
   const close = () => {
     if (router.canGoBack()) {
       router.back();
     } else router.replace("/roster");
   };
+
+  // The form's defaults are set once, so it waits for the roster and staff before opening.
+  if (!shiftsQuery.data || !employeesQuery.data) {
+    const failed = shiftsQuery.isError || employeesQuery.isError;
+    return (
+      <Screen testID="SHIFT_EDITOR.SCREEN">
+        <AppHeader
+          title={params.shiftId ? L.editTitle : L.addTitle}
+          onBack={close}
+        />
+        {failed ? (
+          <ErrorState
+            message={LOCALE.roster.roster.loadErrorMessage}
+            title={LOCALE.roster.roster.loadErrorTitle}
+            onRetry={() => {
+              void shiftsQuery.refetch();
+              void employeesQuery.refetch();
+            }}
+          />
+        ) : (
+          <LoadingState message={LOCALE.roster.roster.loading} />
+        )}
+      </Screen>
+    );
+  }
 
   if (params.shiftId && !shift) {
     return (
@@ -84,34 +113,36 @@ export const ShiftEditorScreen: FC<{ now?: Date }> = ({ now }) => {
       : DateUtils.toDateKey(new Date());
   return (
     <ShiftEditorForm
+      employees={employeesQuery.data}
       initialDate={initialDate}
       initialStartHour={ShiftFormUtils.parseStartHour(params.start)}
       now={now ?? new Date()}
       shift={shift}
+      shifts={shiftsQuery.data}
       onDone={close}
     />
   );
 };
 
 function ShiftEditorForm({
+  employees,
   shift,
+  shifts,
   initialDate,
   initialStartHour,
   now,
   onDone,
 }: {
+  employees: Array<Employee>;
   initialDate: string;
   initialStartHour?: number;
   now: Date;
   onDone: () => void;
   shift?: Shift;
+  shifts: Array<Shift>;
 }) {
   const insets = useSafeAreaInsets();
-  const employees = useRosterStore((s) => s.employees);
-  const shifts = useRosterStore((s) => s.shifts);
-  const addShift = useRosterStore((s) => s.addShift);
-  const updateShift = useRosterStore((s) => s.updateShift);
-  const removeShift = useRosterStore((s) => s.removeShift);
+  const { addShift, removeShift, updateShift } = useShiftActions();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const isEditing = Boolean(shift);
 

@@ -7,7 +7,7 @@ import { StaleTimeMs } from "@/types/enums";
 
 import { InventoryService } from "../services/inventory.service";
 
-/** Stock levels are server state, so they live in TanStack Query (brief §9). */
+/** Stock levels are server state, so they live in TanStack Query. */
 export function useInventory(storeId: string = DEMO_STORE_ID) {
   return useSafeQuery({
     queryKey: [INVENTORY_CACHE_KEY, storeId],

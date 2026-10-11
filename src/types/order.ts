@@ -1,4 +1,4 @@
-/** Order domain model (brief §7). */
+/** Order domain model. */
 export type OrderStatus =
   | "NEW"
   | "PICKING"
@@ -7,7 +7,7 @@ export type OrderStatus =
   | "CANCELLED";
 
 /**
- * Not in the brief's minimal model, but the Order List screen (§6) needs a
+ * Not part of the minimal order model, but the Order List screen needs a
  * priority indicator. Optional so the core contract stays unchanged.
  */
 type OrderPriority = "STANDARD" | "HIGH";

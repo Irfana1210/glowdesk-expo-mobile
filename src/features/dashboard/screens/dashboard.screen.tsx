@@ -14,21 +14,23 @@ import { LOCALE } from "@/constants/locale";
 import { FormatUtils } from "@/utils/format-utils";
 
 import { useNow } from "@/hooks/use-now";
+import { useTabBarInset } from "@/hooks/use-tab-bar-inset";
 
 import { AuthUtils } from "@/features/auth/domain/auth";
 import {
   selectSession,
   useSessionStore,
 } from "@/features/auth/store/session.store";
-import { ROLE_LABELS } from "@/features/employees/types";
+import { useEmployees } from "@/features/employees/hooks/use-employees";
+import { type Employee, ROLE_LABELS } from "@/features/employees/types";
 import { useInventory } from "@/features/inventory/hooks/use-inventory";
 import { ScheduleUtils } from "@/features/orders/domain/schedule";
-import { useEnsureOrdersLoaded } from "@/features/orders/hooks/use-ensure-orders-loaded";
-import { useOrdersStore } from "@/features/orders/store/orders.store";
+import { useOrders } from "@/features/orders/hooks/use-orders";
 import { CoverUtils } from "@/features/roster/domain/cover";
 import { DateUtils } from "@/features/roster/domain/dates";
 import { ShiftUtils } from "@/features/roster/domain/shifts";
-import { useRosterStore } from "@/features/roster/store/roster.store";
+import { useShifts } from "@/features/roster/hooks/use-shifts";
+import { type Shift } from "@/features/roster/types";
 
 import { Screen } from "@/components/layout/screen";
 import { AppText } from "@/components/ui/app-text";
@@ -42,6 +44,7 @@ import { ShiftCard } from "@/components/ui/shift-card";
 
 import { DEMO_STORE_ID, DEMO_STORE_SHORT_NAME } from "@/mocks/store";
 import { colors, fontFamily, radius, spacing } from "@/theme";
+import { type Order } from "@/types/order";
 
 import { SalesChart } from "../components/sales-chart";
 import { AttentionUtils } from "../domain/attention";
@@ -50,6 +53,9 @@ import { ShiftCardUtils } from "../domain/shift-card";
 import { useStoreSalesSummary } from "../hooks/use-store-sales-summary";
 
 const L = LOCALE.dashboard.screen;
+const NO_ORDERS: Array<Order> = [];
+const NO_SHIFTS: Array<Shift> = [];
+const NO_EMPLOYEES: Array<Employee> = [];
 const A = LOCALE.dashboard.attention;
 const T = LOCALE.dashboard.today;
 const K = LOCALE.dashboard.kpis;
@@ -57,6 +63,7 @@ const H = LOCALE.dashboard.salesHero;
 
 export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
   const router = useRouter();
+  const tabBarInset = useTabBarInset();
   const liveNow = useNow();
   const now = fixedNow ?? liveNow;
   const scrollRef = useRef<ScrollView>(null);
@@ -66,6 +73,9 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
   const attentionY = useRef(0);
   // Flashes behind "Needs attention" after the bell scrolls to it, so the tap visibly lands.
   const [highlight] = useState(() => new Animated.Value(0));
+  // The sales chart's open tooltip. Any touch on the screen closes it; a bar's own tap then
+  // reopens it there, so tapping elsewhere or scrolling dismisses it.
+  const [chartHour, setChartHour] = useState<number | null>(null);
 
   const showAttention = () => {
     scrollRef.current?.scrollTo({
@@ -96,13 +106,13 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
     [salesQuery.data],
   );
 
-  const ordersLoadStatus = useEnsureOrdersLoaded();
-  const orders = useOrdersStore((s) => s.orders);
-  const refreshOrders = useOrdersStore((s) => s.refreshOrders);
-  const ordersReady = ordersLoadStatus === "ready" || orders.length > 0;
+  const ordersQuery = useOrders();
+  const orders = ordersQuery.data ?? NO_ORDERS;
+  const ordersReady = ordersQuery.data !== undefined;
 
-  const shifts = useRosterStore((s) => s.shifts);
-  const employees = useRosterStore((s) => s.employees);
+  const shiftsQuery = useShifts();
+  const shifts = shiftsQuery.data ?? NO_SHIFTS;
+  const employees = useEmployees().data ?? NO_EMPLOYEES;
   const session = useSessionStore(selectSession);
   const firstName = session ? AuthUtils.firstName(session.name) : "";
 
@@ -114,6 +124,10 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
     () => CoverUtils.nextBreak(today, now),
     [today, now],
   );
+  const breakNeedingCover = useMemo(
+    () => CoverUtils.nextBreakNeedingCover(today, now),
+    [today, now],
+  );
   const shiftCard = useMemo(
     () =>
       ShiftCardUtils.shiftCardModel({
@@ -121,22 +135,33 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
         now,
         staffOnFloor: CoverUtils.staffOnFloor(today, now).length,
         nextBreakAt: upcomingBreak?.startsAt ?? null,
+        nextBreakOf: !upcomingBreak
+          ? undefined
+          : upcomingBreak.shift.employeeId === session?.employeeId
+            ? "you"
+            : {
+                firstName:
+                  employees
+                    .find((e) => e.id === upcomingBreak.shift.employeeId)
+                    ?.name.split(" ")[0] ??
+                  LOCALE.dashboard.attention.breakCover.fallbackName,
+              },
         ordersToAssign: ScheduleUtils.unassignedActiveCount(orders),
       }),
-    [today, now, upcomingBreak, orders, session?.employeeId],
+    [today, now, upcomingBreak, orders, session?.employeeId, employees],
   );
   const attention = useMemo(
     () =>
       AttentionUtils.buildAttention({
         orders,
-        upcomingBreak,
+        breakNeedingCover,
         breakEmployeeName: employees.find(
-          (e) => e.id === upcomingBreak?.shift.employeeId,
+          (e) => e.id === breakNeedingCover?.shift.employeeId,
         )?.name,
         inventory: inventoryQuery.data,
         now,
       }),
-    [orders, upcomingBreak, employees, inventoryQuery.data, now],
+    [orders, breakNeedingCover, employees, inventoryQuery.data, now],
   );
   const orderCounts = useMemo(
     () => ({
@@ -151,13 +176,14 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
   const onRefresh = () => {
     void salesQuery.refetch();
     void inventoryQuery.refetch();
-    void refreshOrders();
+    void ordersQuery.refetch();
+    void shiftsQuery.refetch();
   };
 
   return (
     <Screen testID="DASHBOARD.SCREEN">
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: tabBarInset }]}
         ref={scrollRef}
         refreshControl={
           <RefreshControl
@@ -167,6 +193,8 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
             onRefresh={onRefresh}
           />
         }
+        testID="DASHBOARD.SCROLL"
+        onTouchStart={() => setChartHour(null)}
       >
         <ScreenTitle
           eyebrow={`${FormatUtils.formatShortDate(now)} · ${DEMO_STORE_SHORT_NAME}`}
@@ -340,7 +368,11 @@ export const DashboardScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
 
           {salesQuery.data ? (
             <View style={styles.card}>
-              <SalesChart data={salesQuery.data.hourly} />
+              <SalesChart
+                data={salesQuery.data.hourly}
+                selectedHour={chartHour}
+                onSelectHour={setChartHour}
+              />
             </View>
           ) : null}
         </View>

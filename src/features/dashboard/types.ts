@@ -5,7 +5,7 @@ export type HourlySales = {
   target: number;
 };
 
-/** Daily trading summary for one store (brief §6, Screen 1). Currency is AUD. */
+/** Daily trading summary for one store. Currency is AUD. */
 export type StoreSalesSummary = {
   businessDate: string;
   hourly: Array<HourlySales>;

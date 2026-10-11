@@ -1,5 +1,5 @@
 /**
- * Shift rules (brief §6 Screens 6–7, §8 Labour basics). Pure functions.
+ * Shift rules for the roster, shift editor and labour estimates. Pure functions.
  * Durations are measured between absolute instants, so overnight shifts and
  * daylight-saving changes are counted in real elapsed time.
  */
@@ -56,7 +56,7 @@ export namespace ShiftUtils {
     return Math.max(0, Math.round((end - start) / MS_IN_MINUTE));
   }
 
-  /** Paid Hours = Shift Duration − Unpaid Breaks (brief §6, Screen 8), in minutes. Never negative. */
+  /** Paid Hours = Shift Duration − Unpaid Breaks, in minutes. Never negative. */
   export function paidMinutes(shift: ShiftDraft): number {
     return Math.max(0, shiftDurationMinutes(shift) - shift.unpaidBreakMinutes);
   }
@@ -100,7 +100,7 @@ export namespace ShiftUtils {
     return `${Number.isInteger(hours) ? hours.toFixed(0) : hours.toFixed(2).replace(/0$/, "")}h`;
   }
 
-  /** Every rule from the Shift Editor brief. Returns an empty object when the shift is valid. */
+  /** Every shift editor rule. Returns an empty object when the shift is valid. */
   export function validateShift(
     draft: ShiftDraft,
     context: ShiftValidationContext,

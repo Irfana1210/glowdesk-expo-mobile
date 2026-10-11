@@ -12,28 +12,30 @@ import {
   selectIsManager,
   useSessionStore,
 } from "@/features/auth/store/session.store";
-import { ROLE_LABELS } from "@/features/employees/types";
+import { useEmployees } from "@/features/employees/hooks/use-employees";
+import { type Employee, ROLE_LABELS } from "@/features/employees/types";
 import { WeekNavigator } from "@/features/roster/components/week-navigator";
 import { DateUtils } from "@/features/roster/domain/dates";
 import { ShiftUtils } from "@/features/roster/domain/shifts";
-import { useRosterStore } from "@/features/roster/store/roster.store";
+import { useShifts } from "@/features/roster/hooks/use-shifts";
+import { type Shift } from "@/features/roster/types";
 
 import { AppHeader } from "@/components/layout/app-header";
 import { Screen } from "@/components/layout/screen";
 import { AppText } from "@/components/ui/app-text";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/ui/error-state";
 import { InlineBanner } from "@/components/ui/inline-banner";
 import { KPICard } from "@/components/ui/kpi-card";
+import { LoadingState } from "@/components/ui/loading-state";
 import { SecondaryButton } from "@/components/ui/secondary-button";
 
-import {
-  MOCK_PAY_RATES,
-  WEEKLY_LABOUR_BUDGET,
-  WEEKLY_SALES_FORECAST,
-} from "@/mocks/pay-rates";
+import { WEEKLY_LABOUR_BUDGET, WEEKLY_SALES_FORECAST } from "@/mocks/pay-rates";
 import { colors, radius, spacing } from "@/theme";
 
 import { LabourUtils } from "../domain/labour";
+import { usePayRates } from "../hooks/use-pay-rates";
+import { type PayRate } from "../types";
 
 const L = LOCALE.labour.labour;
 const RESTRICTED = LOCALE.labour.restricted;
@@ -56,28 +58,73 @@ export const LabourScreen: FC<{ now?: Date }> = ({ now = new Date() }) => {
       </Screen>
     );
   }
-  return <LabourContent now={now} onBack={goBack} />;
+  return <LabourData now={now} onBack={goBack} />;
 };
 
-function LabourContent({ now, onBack }: { now: Date; onBack: () => void }) {
+/** Loads shifts, staff and pay rates, then shows the costs. Pay rates come from the server only. */
+function LabourData({ now, onBack }: { now: Date; onBack: () => void }) {
+  const shiftsQuery = useShifts();
+  const employeesQuery = useEmployees();
+  const ratesQuery = usePayRates();
+  const queries = [shiftsQuery, employeesQuery, ratesQuery];
+
+  if (shiftsQuery.data && employeesQuery.data && ratesQuery.data) {
+    return (
+      <LabourContent
+        employees={employeesQuery.data}
+        now={now}
+        rates={ratesQuery.data}
+        shifts={shiftsQuery.data}
+        onBack={onBack}
+      />
+    );
+  }
+  const failed = queries.find((q) => q.isError);
+  return (
+    <Screen testID="LABOUR.SCREEN">
+      <AppHeader title={L.title} onBack={onBack} />
+      {failed ? (
+        <ErrorState
+          message={L.loadErrorMessage}
+          title={L.loadErrorTitle}
+          onRetry={() => queries.forEach((q) => void q.refetch())}
+        />
+      ) : (
+        <LoadingState message={L.loading} />
+      )}
+    </Screen>
+  );
+}
+
+function LabourContent({
+  employees,
+  now,
+  onBack,
+  rates,
+  shifts,
+}: {
+  employees: Array<Employee>;
+  now: Date;
+  onBack: () => void;
+  rates: Array<PayRate>;
+  shifts: Array<Shift>;
+}) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const shifts = useRosterStore((s) => s.shifts);
-  const employees = useRosterStore((s) => s.employees);
   const [weekStart, setWeekStart] = useState(() => DateUtils.startOfWeek(now));
 
-  // Derived straight from the roster store, so any shift change recalculates immediately.
+  // Derived from the cached roster, so a shift change recalculates immediately.
   const summary = useMemo(
     () =>
       LabourUtils.weeklyLabourSummary({
         weekStart,
         shifts,
         employees,
-        rates: MOCK_PAY_RATES,
+        rates,
         budget: WEEKLY_LABOUR_BUDGET,
         salesForecastByWeekday: WEEKLY_SALES_FORECAST,
       }),
-    [weekStart, shifts, employees],
+    [weekStart, shifts, employees, rates],
   );
   const maxDayCost = Math.max(...summary.byDay.map((d) => d.cost), 1);
   const overBudget = summary.budgetRemaining < 0;

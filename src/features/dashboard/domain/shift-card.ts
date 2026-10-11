@@ -13,6 +13,8 @@ import { type ShiftCardProps } from "@/components/ui/shift-card";
 type ShiftCardInput = {
   myShift: Shift | undefined;
   nextBreakAt: Date | null;
+  /** First name of the person whose break is next, or "you" when it is the signed-in person's. */
+  nextBreakOf?: { firstName: string } | "you";
   now: Date;
   ordersToAssign: number;
   staffOnFloor: number;
@@ -24,8 +26,17 @@ export namespace ShiftCardUtils {
     now,
     staffOnFloor,
     nextBreakAt,
+    nextBreakOf,
     ordersToAssign,
   }: ShiftCardInput): ShiftCardProps {
+    const S = LOCALE.dashboard.shiftCard.stats;
+    const breakLabel = !nextBreakAt
+      ? S.nextBreak
+      : nextBreakOf === "you"
+        ? S.yourBreak
+        : nextBreakOf
+          ? S.breakOf(nextBreakOf.firstName)
+          : S.nextBreak;
     const stats = [
       {
         value: String(staffOnFloor),
@@ -35,7 +46,7 @@ export namespace ShiftCardUtils {
         value: nextBreakAt
           ? FormatUtils.formatClockCompact(nextBreakAt)
           : LOCALE.dashboard.shiftCard.noValue,
-        label: LOCALE.dashboard.shiftCard.stats.nextBreak,
+        label: breakLabel,
       },
       {
         value: String(ordersToAssign),

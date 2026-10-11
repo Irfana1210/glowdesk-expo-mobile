@@ -8,13 +8,18 @@ import {
 } from "react-native";
 
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { onlineManager } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 
 import { LOCALE } from "@/constants/locale";
 
-import { useNow } from "@/hooks/use-now";
+import { errorMessage } from "@/utils/handle-api-error";
 
-import { useRosterStore } from "@/features/roster/store/roster.store";
+import { useNow } from "@/hooks/use-now";
+import { useTabBarInset } from "@/hooks/use-tab-bar-inset";
+
+import { useEmployees } from "@/features/employees/hooks/use-employees";
+import { type Employee } from "@/features/employees/types";
 
 import { Screen } from "@/components/layout/screen";
 import { AppText } from "@/components/ui/app-text";
@@ -31,8 +36,8 @@ import { type Order, type OrderStatus } from "@/types/order";
 
 import { OrderListCard } from "../components/order-list-card";
 import { ScheduleUtils } from "../domain/schedule";
-import { useEnsureOrdersLoaded } from "../hooks/use-ensure-orders-loaded";
-import { useOrdersStore } from "../store/orders.store";
+import { useOrders } from "../hooks/use-orders";
+import { usePendingOrderIds } from "../hooks/use-pending-order-ids";
 
 const L = LOCALE.orders.list;
 
@@ -79,18 +84,31 @@ function searchOrders(
   );
 }
 
+const NO_ORDERS: Array<Order> = [];
+const NO_EMPLOYEES: Array<Employee> = [];
 const keyExtractor = (order: Order) => order.id;
 const Separator = () => <View style={styles.separator} />;
 
 export const OrderListScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
   const router = useRouter();
-  const loadStatus = useEnsureOrdersLoaded();
-  const orders = useOrdersStore((s) => s.orders);
-  const loadError = useOrdersStore((s) => s.loadError);
-  const isRefreshing = useOrdersStore((s) => s.isRefreshing);
-  const loadOrders = useOrdersStore((s) => s.loadOrders);
-  const refreshOrders = useOrdersStore((s) => s.refreshOrders);
-  const employees = useRosterStore((s) => s.employees);
+  const tabBarInset = useTabBarInset();
+  const ordersQuery = useOrders();
+  const orders = ordersQuery.data ?? NO_ORDERS;
+  const loadError = ordersQuery.error ? errorMessage(ordersQuery.error) : null;
+  const employees = useEmployees().data ?? NO_EMPLOYEES;
+  const pendingIds = usePendingOrderIds();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Pull to refresh does nothing offline: the saved list is already showing, and the banner
+  // explains why it cannot update.
+  const refresh = async () => {
+    if (!onlineManager.isOnline()) {
+      return;
+    }
+    setIsRefreshing(true);
+    await ordersQuery.refetch();
+    setIsRefreshing(false);
+  };
 
   const [filter, setFilter] = useState<OrderFilter>("ALL");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -141,22 +159,23 @@ export const OrderListScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
         assigneeName={nameOf(item.assigneeId)}
         now={now}
         order={item}
+        pendingSync={pendingIds.includes(item.id)}
         onPress={openOrder}
       />
     ),
-    [nameOf, now, openOrder],
+    [nameOf, now, openOrder, pendingIds],
   );
 
   const hasData = orders.length > 0;
   let body;
-  if (!hasData && (loadStatus === "idle" || loadStatus === "loading")) {
+  if (!hasData && ordersQuery.isPending) {
     body = <LoadingState message={L.loading} />;
-  } else if (!hasData && loadStatus === "error") {
+  } else if (!hasData && ordersQuery.isError) {
     body = (
       <ErrorState
         message={loadError ?? L.loadErrorMessage}
         title={L.loadErrorTitle}
-        onRetry={() => void loadOrders()}
+        onRetry={() => void ordersQuery.refetch()}
       />
     );
   } else {
@@ -183,7 +202,10 @@ export const OrderListScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
             </View>
           ) : null
         }
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingBottom: tabBarInset },
+        ]}
         data={visible}
         keyExtractor={keyExtractor}
         keyboardShouldPersistTaps="handled"
@@ -192,7 +214,7 @@ export const OrderListScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
             colors={[colors.accent]}
             refreshing={isRefreshing}
             tintColor={colors.accent}
-            onRefresh={() => void refreshOrders()}
+            onRefresh={() => void refresh()}
           />
         }
         renderItem={renderItem}

@@ -1,22 +1,23 @@
-# RetailOS architecture
+# Glowdesk architecture
 
-This document explains how the RetailOS code is organised and how data moves through it. It is for engineers reading or extending the codebase. The design handoff is in [DESIGN_HANDOFF.md](DESIGN_HANDOFF.md) with mockups in [screens/](screens/), and the coding standards in [coding-standards.md](coding-standards.md).
+This document explains how the Glowdesk code is organised and how data moves through it. It is for engineers reading or extending the codebase. The coding standards are in [coding-standards.md](coding-standards.md).
 
 ## Principles
 
 - **Feature-based modules.** Each business area (auth, orders, inventory, roster, labour, dashboard, settings) owns its domain rules, state, components and screens in one folder under `src/features/`.
 - **Business rules are pure functions.** Every rule lives in a `domain/` folder with no React, storage or network code. Screens and stores call these functions. They never re-implement a rule.
 - **Routes are thin.** Files in `src/app/` only map a URL to a feature screen, so navigation can change without touching feature code.
-- **Server state and local state are kept apart.** Read-only data that will come from the backend (sales, inventory) goes through TanStack Query, and so does sign-in, as a mutation. Data the user edits on the device (orders, shifts, preferences) and the signed-in session live in persisted Zustand stores until the backend and offline queue exist.
+- **Server state and local state are kept apart.** Everything the server owns (orders, shifts, staff, pay rates, sales, inventory) goes through TanStack Query, with mutations for changes. Device-only state (the session, preferences and the simulated network switches) lives in persisted Zustand stores.
+- **Works offline.** Picking and roster changes show straight away, wait in a saved queue while offline, and sync in order when the connection returns.
 
 ## Folder structure
 
 ```text
-RetailOS/
+Glowdesk/
 ├── src/
 │   ├── app/                         Expo Router routes (thin files only, default-export a screen)
-│   │   ├── _layout.tsx              Root stack, fonts, splash, QueryClient, safe area, toasts,
-│   │   │                            route guards (Stack.Protected) for signed-in and signed-out screens
+│   │   ├── _layout.tsx              Root stack, fonts, splash, saved QueryClient, online state, safe area,
+│   │   │                            toasts, route guards (Stack.Protected) for signed-in and signed-out screens
 │   │   ├── index.tsx                Redirects to /dashboard when signed in, otherwise /sign-in
 │   │   ├── sign-in.tsx              Sign-in screen (only reachable while signed out)
 │   │   ├── +not-found.tsx
@@ -38,10 +39,11 @@ RetailOS/
 │   │   │   ├── screens/             sign-in
 │   │   │   └── types.ts             Session, SignInInput, SessionStatus
 │   │   ├── orders/
-│   │   │   ├── services/            OrdersService (mock, simulated latency)
-│   │   │   ├── domain/              OrderStateMachine, PickingUtils, ScheduleUtils, AssignmentUtils
-│   │   │   ├── store/               orders.store.ts: useOrdersStore (Zustand, persisted)
-│   │   │   ├── hooks/               use-ensure-orders-loaded (deep-link safe loading)
+│   │   │   ├── services/            OrdersService: fetchOrders, updateOrder (calls the mock server)
+│   │   │   ├── domain/              OrderStateMachine, PickingUtils, ScheduleUtils, AssignmentUtils,
+│   │   │   │                        OrderCommandUtils (one command per change, shared with the server)
+│   │   │   ├── hooks/               use-orders (useSafeQuery), use-order-actions (optimistic, queued),
+│   │   │   │                        order-mutations (registered by key), use-pending-order-ids
 │   │   │   ├── components/          order-list-card, order-status-badge
 │   │   │   ├── screens/             order-list, order-details, barcode-scanner, order-completion
 │   │   │   ├── presentation.ts      OrderPresentationUtils: card and label text, pure
@@ -61,36 +63,45 @@ RetailOS/
 │   │   ├── roster/
 │   │   │   ├── domain/              DateUtils (Monday weeks, DST-safe), ShiftUtils (validation, coverage),
 │   │   │   │                        CoverUtils (floor cover, breaks), ShiftFormUtils (zod)
-│   │   │   ├── store/               roster.store.ts: useRosterStore (Zustand, persisted)
+│   │   │   ├── services/            RosterService: fetch, create, update, delete shifts
+│   │   │   ├── hooks/               use-shifts, use-shift-actions (optimistic, queued), shift-mutations
 │   │   │   ├── components/          week-navigator, week-day-selector, floor-cover-chart
 │   │   │   └── screens/             roster, shift-editor
 │   │   ├── labour/
+│   │   │   ├── services/            PayRatesService (managers only, enforced by the server)
+│   │   │   ├── hooks/               use-pay-rates
 │   │   │   ├── domain/labour.ts     LabourUtils: effective-dated pay rates, shift cost, weekly summary
 │   │   │   └── screens/             labour
-│   │   ├── employees/types.ts       Employee, staff ID, roles, employment types (shared by roster, labour, auth)
-│   │   └── settings/                preferences.store.ts, settings screen (profile, sign out, reset demo data)
+│   │   ├── employees/               types.ts (Employee, roles), EmployeesService, use-employees
+│   │   └── settings/                preferences.store.ts, settings screen (profile, sign out, reset demo
+│   │                                data, developer switches for simulated network conditions)
 │   │   (each folder has sibling __tests__/ with *.spec.ts(x))
 │   │
 │   ├── components/
 │   │   ├── ui/                      Design-system components, one kebab-case file each (no barrel)
-│   │   ├── layout/                  screen, app-header
+│   │   ├── layout/                  screen, app-header, connectivity-banner (offline and syncing)
+│   │   │                            (tab screens pad for the floating tab bar with useTabBarInset)
 │   │   └── scanner/                 barcode-camera, manual-barcode-entry (used by orders and inventory)
 │   ├── constants/                   locale.ts (LOCALE copy), primitives.ts (time units, session length,
 │   │                                platform flags)
 │   ├── hooks/                       use-now; query/ holds use-safe-query, use-safe-mutation,
-│   │                                use-handle-error and use-app-state-focus
+│   │                                use-handle-error, use-app-state-focus, use-pending-change-count;
+│   │                                network/ holds use-online-manager and use-is-online
 │   ├── mocks/                       Fictional store, products, orders, inventory, sales, staff, shifts,
 │   │                                pay rates, demo sign-in credentials
-│   ├── services/cache-keys/         TanStack Query cache keys
+│   ├── services/
+│   │   ├── cache-keys/              TanStack Query cache and mutation keys
+│   │   └── mock-api/                MockServer (in-app API) and the simulated network switches
 │   ├── theme/                       Colour, typography and spacing tokens
 │   ├── types/                       Shared domain types (orders, products), ApiError (stable error codes)
 │   │                                and enums (StaleTimeMs, MessageType)
-│   └── utils/                       FormatUtils, BarcodeUtils, storage (expo-sqlite), query-client,
-│                                    handle-api-error, success-handler, toast-config, ReportingUtils
+│   └── utils/                       FormatUtils, BarcodeUtils, storage (expo-sqlite), query-client and
+│                                    query-persister, handle-api-error, success-handler, toast-config,
+│                                    ReportingUtils
 │
 ├── test/utils/                      Shared test helpers, imported as @test/*
 ├── __mocks__/                       Jest manual mocks for native modules (expo-sqlite kv-store)
-├── docs/                            This document, the design handoff and screen mockups
+├── docs/                            This document
 ├── learnings/                       Bugs that passed a correct-looking test suite
 ├── scripts/plugins/eslint/          Custom ESLint rules (no-object-exports, inline-if-to-scoped)
 ├── .github/workflows/checks.yml     CI: typecheck, format, lint, spelling, knip, tests
@@ -118,16 +129,26 @@ src/app (routes)
 
 ## State
 
-| Data                        | Where it lives                   | Why                                                                              |
-| --------------------------- | -------------------------------- | -------------------------------------------------------------------------------- |
-| Orders and picking progress | `useOrdersStore`, persisted      | Edited on the device. Must survive a restart (brief §19).                        |
-| Shifts                      | `useRosterStore`, persisted      | Managers add, edit and remove shifts locally until the backend exists.           |
-| Preferences                 | `usePreferencesStore`, persisted | Device-level settings.                                                           |
-| Sales summary, inventory    | TanStack Query                   | Read-only server data. Caching, retries and refetch on foreground come for free. |
-| Signed-in session           | `useSessionStore`, persisted     | Reopens signed in until the session expires. Its role gates pay information.     |
-| Sign-in request             | TanStack Query mutation          | Pending and error states for the form. Success writes the session store.         |
+| Data                           | Where it lives                  | Why                                                                          |
+| ------------------------------ | ------------------------------- | ---------------------------------------------------------------------------- |
+| Orders, shifts, staff          | TanStack Query, saved on device | Server data. Opens instantly from the saved cache, even offline.             |
+| Order and shift changes        | TanStack Query mutations        | Optimistic, queued offline, sent in order, resumed after a restart.          |
+| Pay rates                      | TanStack Query, never saved     | Managers only, and too sensitive to write to the device.                     |
+| Sales summary, inventory       | TanStack Query                  | Read-only server data with caching, retries and refetch on foreground.       |
+| Signed-in session              | `useSessionStore`, persisted    | Reopens signed in until the session expires. Its role gates pay information. |
+| Preferences, simulated network | Zustand, persisted              | Device-level settings.                                                       |
 
-Every store write goes through the domain rules first, so a store can never hold an invalid order transition or shift.
+Every change is checked with the domain rules on the device first, and again by the server.
+
+## Offline and sync
+
+- **Online state.** `useOnlineManager` feeds TanStack Query's online manager from NetInfo and the "Force offline" switch. While offline, queries pause and the connectivity banner shows how many changes are waiting.
+- **Queued changes.** Start picking, scan, assign and every roster change update the cache straight away and call `mutate`. Offline, the mutation pauses instead of failing.
+- **Order and versions.** All order changes share one mutation scope, so they reach the server one at a time, in the order they were made. Each carries the version it was based on, and the server rejects a stale one with a 409.
+- **Restarts.** The query cache and paused mutations are saved with the TanStack persister. Each mutation's `mutationFn` is registered by key, so after a restart `resumePausedMutations` sends what was waiting.
+- **Rollback.** A rejected change shows an error toast and reloads the server's copy, which undoes the optimistic update.
+- **Server-confirmed changes.** Mark ready and cancel are never optimistic. They need a connection, and the button explains why when offline.
+- **Mock server.** `MockServer` stands in for the backend: it saves its data on the device, waits like a network request, fails while offline, and applies the same domain rules. Developer switches in Settings slow it down, force it offline, or make it fail some requests.
 
 ## Sign-in and route guards
 
@@ -142,10 +163,10 @@ The app has a demo sign-in with a staff ID and a 4-digit PIN. The two demo login
 
 ## Persistence
 
-`src/utils/storage.ts` provides one JSON storage adapter over `expo-sqlite`'s key-value store, used by all four persisted stores (orders, roster, preferences, session). SQLite is already in the brief's stack for the offline mutation queue (brief §10), so no extra dependency was needed.
+Everything saved on the device uses `expo-sqlite`'s key-value store: the Zustand stores (session, preferences, simulated network), the TanStack Query cache with its waiting changes, and the mock server's data.
 
-- Saved records are type-checked on load, and malformed ones are dropped rather than trusted.
-- Orders merge by `version` when saved and fetched copies meet, so newer local progress is never overwritten.
+- The mock server type-checks its saved records on load, and drops malformed ones rather than trusting them.
+- The saved query cache is trusted for a day and has a version, so a change in data shape discards it.
 - Storage keys are fixed in `STORAGE_KEYS`. Renaming one without a migration would silently discard data on users' devices.
 - Stores are versioned, and a shape change ships with a `migrate`. For example, session version 2 renames a saved `SHIFT_RUNNER` role to `SHIFT_LEADER`.
 
@@ -163,7 +184,5 @@ Run everything with `npm run check`: format, lint, type check, spelling, knip an
 Each `services/` namespace is the seam for Supabase. When it arrives:
 
 1. Replace the mock service functions with Supabase queries. Screens do not change.
-2. Move orders from Zustand to TanStack Query, with mutations for start picking, scan and mark ready.
-3. Enforce the same domain rules on the server, atomically, with version checks.
-4. Add the offline mutation queue next to `src/utils/storage.ts` as described in brief §10.
-5. Replace the demo session with Supabase Auth, and protect pay rates with Row Level Security.
+2. Enforce the same domain rules on the server, atomically, with version checks.
+3. Replace the demo session with Supabase Auth, and protect pay rates with Row Level Security.

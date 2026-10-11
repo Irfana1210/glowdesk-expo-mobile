@@ -1,5 +1,5 @@
 /**
- * Stock on hand at RetailOS Melbourne Central, from the Inventory mockup.
+ * Stock on hand at Glowdesk Melbourne Central, from the Inventory mockup.
  * A reorder point of 5 gives the mockup's statuses: 3 low, 1 out, 3 in stock.
  */
 import { type InventoryItem } from "@/features/inventory/types";

@@ -1,13 +1,19 @@
-import { act, fireEvent, render, screen } from "@testing-library/react-native";
+import { type QueryClient } from "@tanstack/react-query";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 import { LOCALE } from "@/constants/locale";
 
+import { ORDERS_CACHE_KEY } from "@/services/cache-keys";
+import { MockServer } from "@/services/mock-api/mock-server";
+
 import { BarcodeScannerScreen } from "@/features/orders/screens/barcode-scanner.screen";
-import { useOrdersStore } from "@/features/orders/store/orders.store";
 
 import { MOCK_PRODUCTS } from "@/mocks/products";
+import { DEMO_STORE_ID } from "@/mocks/store";
+import { type Order } from "@/types/order";
 
-import { mockOrders, resetOrdersStore } from "@test/order-test-utils";
+import { seedOrders } from "@test/order-test-utils";
+import { renderWithQuery } from "@test/render-with-query";
 
 const L = LOCALE.orders.scanner;
 const PICKING = LOCALE.orders.picking;
@@ -21,11 +27,6 @@ jest.mock("expo-router", () => ({
     replace: mockReplace,
   }),
   useLocalSearchParams: () => mockParams,
-}));
-jest.mock("@/features/orders/services/orders.service", () => ({
-  OrdersService: {
-    fetchOrders: jest.fn().mockResolvedValue([]),
-  },
 }));
 
 type MockPermission = {
@@ -50,16 +51,30 @@ jest.mock("expo-camera", () => ({
 }));
 
 const P = MOCK_PRODUCTS;
+let client: QueryClient;
+
+/** The quantity this device shows, straight from the query cache. */
 const pickedQuantity = (orderId: string, sku: string) =>
-  useOrdersStore
-    .getState()
-    .orders.find((o) => o.id === orderId)
+  client
+    .getQueryData<Array<Order>>([ORDERS_CACHE_KEY, DEMO_STORE_ID])
+    ?.find((o) => o.id === orderId)
     ?.items.find((i) => i.sku === sku)?.pickedQuantity;
 
-async function renderScanner(orderId: string) {
-  mockParams = { orderId };
-  resetOrdersStore({ orders: mockOrders(), loadStatus: "ready" });
-  await render(<BarcodeScannerScreen />);
+const serverQuantity = async (orderId: string, sku: string) =>
+  (await MockServer.getOrders(DEMO_STORE_ID))
+    .find((o) => o.id === orderId)
+    ?.items.find((i) => i.sku === sku)?.pickedQuantity;
+
+async function renderScanner(orderId: string, manual?: string) {
+  mockParams = manual ? { orderId, manual } : { orderId };
+  await seedOrders();
+  ({ client } = await renderWithQuery(<BarcodeScannerScreen />));
+  await screen.findByTestId("BARCODE_SCANNER.SCREEN");
+  await waitFor(() =>
+    expect(
+      screen.queryByText(LOCALE.orders.common.loadingOrder),
+    ).not.toBeOnTheScreen(),
+  );
 }
 
 async function typeBarcode(code: string) {
@@ -146,6 +161,9 @@ describe("BarcodeScannerScreen", () => {
     });
 
     expect(pickedQuantity("ORD-7841", P.velourBlush.sku)).toBe(1);
+    await waitFor(async () =>
+      expect(await serverQuantity("ORD-7841", P.velourBlush.sku)).toBe(1),
+    );
   });
 
   it("offers completion and pauses the camera once every item is verified", async () => {
@@ -188,9 +206,7 @@ describe("BarcodeScannerScreen", () => {
   });
 
   it("focuses manual entry when opened with Type code", async () => {
-    mockParams = { orderId: "ORD-7841", manual: "1" };
-    resetOrdersStore({ orders: mockOrders(), loadStatus: "ready" });
-    await render(<BarcodeScannerScreen />);
+    await renderScanner("ORD-7841", "1");
 
     expect(
       screen.getByTestId("MANUAL_BARCODE_ENTRY.BARCODE").props.autoFocus,

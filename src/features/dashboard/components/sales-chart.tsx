@@ -1,5 +1,5 @@
-import { type FC } from "react";
-import { StyleSheet, View } from "react-native";
+import { type FC, useState } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { LOCALE } from "@/constants/locale";
 
@@ -16,9 +16,19 @@ const L = LOCALE.dashboard.salesChart;
 type Props = {
   data: Array<HourlySales>;
   height?: number;
+  /** Called when a bar is tapped or hovered, or with null to close the tooltip. */
+  onSelectHour?: (hour: number | null) => void;
+  /**
+   * The bar showing its tooltip. Pass it with `onSelectHour` so the screen can close the tooltip
+   * when the user taps elsewhere; without them the chart keeps its own selection.
+   */
+  selectedHour?: number | null;
 };
 
 type BarKind = "done" | "current" | "upcoming";
+
+/** Hours still to come show as a short dashed outline. */
+const UPCOMING_HEIGHT = 18;
 
 /** The latest hour with sales is "this hour"; hours after it are still to come. */
 export function classifyHours(data: Array<HourlySales>): Array<BarKind> {
@@ -67,11 +77,23 @@ export function describeChart(data: Array<HourlySales>): string {
     : summary;
 }
 
+const TOOLTIP_WIDTH = 116;
+
 /**
  * Sales by hour as a bar chart built from plain views, so there is no charting dependency.
- * The whole chart is one image for screen readers, with a sentence describing it.
+ * Tap a bar, or hover where a pointer is available, to see that hour's sales and target. The
+ * heading carries a sentence describing the whole chart, and each bar is a button of its own.
  */
-export const SalesChart: FC<Props> = ({ data, height = 92 }) => {
+export const SalesChart: FC<Props> = ({
+  data,
+  height = 92,
+  onSelectHour,
+  selectedHour: controlledHour,
+}) => {
+  const [ownHour, setOwnHour] = useState<number | null>(null);
+  const selectedHour = controlledHour === undefined ? ownHour : controlledHour;
+  const setSelectedHour = onSelectHour ?? setOwnHour;
+
   if (data.length === 0 || data.every((p) => p.sales === 0)) {
     return (
       <View style={styles.container}>
@@ -92,7 +114,11 @@ export const SalesChart: FC<Props> = ({ data, height = 92 }) => {
   return (
     <View style={styles.container} testID="SALES_CHART">
       <View style={styles.header}>
-        <AppText accessibilityRole="header" variant="cardTitle">
+        <AppText
+          accessibilityLabel={`${L.title}. ${describeChart(data)}`}
+          accessibilityRole="header"
+          variant="cardTitle"
+        >
           {L.title}
         </AppText>
         {peak ? (
@@ -109,41 +135,65 @@ export const SalesChart: FC<Props> = ({ data, height = 92 }) => {
         ) : null}
       </View>
 
-      <View
-        accessible
-        accessibilityLabel={describeChart(data)}
-        accessibilityRole="image"
-        style={styles.plot}
-      >
+      <View style={styles.plot}>
         {data.map((point, index) => {
           const kind = kinds[index];
+          const upcoming = kind === "upcoming";
+          const barHeight = upcoming
+            ? UPCOMING_HEIGHT
+            : Math.max(4, Math.round((point.sales / max) * height));
+          const selected = selectedHour === point.hour;
+          const hourLabel = FormatUtils.formatHour(point.hour).replace(
+            /(am|pm)$/,
+            " $1",
+          );
           return (
-            <View
+            <Pressable
+              accessibilityHint={L.barHint}
+              accessibilityLabel={L.barLabel(
+                hourLabel,
+                upcoming ? null : FormatUtils.formatCurrency(point.sales),
+                FormatUtils.formatCurrency(point.target),
+              )}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
               key={point.hour}
-              style={styles.column}
+              style={[styles.column, selected && styles.columnSelected]}
               testID={`SALES_CHART.BAR.${point.hour}.${kind}`}
+              onHoverIn={() => setSelectedHour(point.hour)}
+              onHoverOut={() => setSelectedHour(null)}
+              onPress={() => setSelectedHour(selected ? null : point.hour)}
             >
+              {selected ? (
+                <Tooltip
+                  align={
+                    index < 2
+                      ? "start"
+                      : index > data.length - 3
+                        ? "end"
+                        : "center"
+                  }
+                  bottom={barHeight + 26}
+                  hour={hourLabel}
+                  point={point}
+                  upcoming={upcoming}
+                />
+              ) : null}
               <View style={[styles.barArea, { height }]}>
                 <View
                   style={[
                     styles.bar,
-                    kind === "upcoming"
-                      ? styles.upcoming
-                      : {
-                          height: Math.max(
-                            4,
-                            Math.round((point.sales / max) * height),
-                          ),
-                        },
+                    upcoming ? styles.upcoming : { height: barHeight },
                     kind === "done" && styles.done,
                     kind === "current" && styles.current,
+                    selected && styles.barSelected,
                   ]}
                 />
               </View>
               <AppText maxFontSizeMultiplier={1.1} style={styles.hour}>
                 {FormatUtils.formatHourShort(point.hour, index === 0)}
               </AppText>
-            </View>
+            </Pressable>
           );
         })}
       </View>
@@ -163,6 +213,49 @@ export const SalesChart: FC<Props> = ({ data, height = 92 }) => {
     </View>
   );
 };
+
+/** The value callout above a selected bar. Kept on screen at the chart's left and right edges. */
+function Tooltip({
+  align,
+  bottom,
+  hour,
+  point,
+  upcoming,
+}: {
+  align: "center" | "end" | "start";
+  bottom: number;
+  hour: string;
+  point: HourlySales;
+  upcoming: boolean;
+}) {
+  return (
+    <View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      pointerEvents="none"
+      style={[
+        styles.tooltip,
+        { bottom },
+        align === "start" && styles.tooltipStart,
+        align === "center" && styles.tooltipCenter,
+        align === "end" && styles.tooltipEnd,
+      ]}
+      testID="SALES_CHART.TOOLTIP"
+    >
+      <AppText color="textOnDark" style={styles.tooltipHour}>
+        {hour}
+      </AppText>
+      <AppText color="textOnDark" style={styles.tooltipValue}>
+        {upcoming
+          ? L.tooltipUpcoming
+          : L.tooltipSales(FormatUtils.formatCurrency(point.sales))}
+      </AppText>
+      <AppText color="textOnDark" style={styles.tooltipTarget}>
+        {L.tooltipTarget(FormatUtils.formatCurrency(point.target))}
+      </AppText>
+    </View>
+  );
+}
 
 function LegendKey({ label, swatch }: { label: string; swatch: object }) {
   return (
@@ -185,6 +278,31 @@ const styles = StyleSheet.create({
   },
   plot: { flexDirection: "row", gap: 6, alignItems: "flex-end" },
   column: { flex: 1, alignItems: "center", gap: 6 },
+  columnSelected: { zIndex: 1 },
+  barSelected: { opacity: 0.75 },
+  tooltip: {
+    position: "absolute",
+    width: TOOLTIP_WIDTH,
+    gap: 2,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: colors.emphasis,
+  },
+  tooltipStart: { left: 0 },
+  tooltipCenter: { left: "50%", marginLeft: -TOOLTIP_WIDTH / 2 },
+  tooltipEnd: { right: 0 },
+  tooltipHour: { fontFamily: fontFamily.regular, fontSize: 11, lineHeight: 14 },
+  tooltipValue: {
+    fontFamily: fontFamily.semibold,
+    fontSize: 13,
+    lineHeight: 17,
+  },
+  tooltipTarget: {
+    fontFamily: fontFamily.regular,
+    fontSize: 11,
+    lineHeight: 14,
+  },
   barArea: { width: "100%", justifyContent: "flex-end" },
   bar: {
     width: "100%",
@@ -196,7 +314,7 @@ const styles = StyleSheet.create({
   done: { backgroundColor: colors.accent },
   current: { backgroundColor: colors.accentSoft },
   upcoming: {
-    height: 18,
+    height: UPCOMING_HEIGHT,
     borderWidth: 1,
     borderStyle: "dashed",
     borderColor: "#A49CA6",

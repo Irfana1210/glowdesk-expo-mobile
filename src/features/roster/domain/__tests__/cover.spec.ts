@@ -58,12 +58,59 @@ describe("staffOnFloor and breaks", () => {
     ).not.toContain("emp-03");
   });
 
-  it("finds the next break and flags it for cover when it is within the hour", () => {
+  it("finds the next break, but needs no cover when three others stay on the floor", () => {
     const upcoming = CoverUtils.nextBreak(today, NOW);
     expect(upcoming?.shift.employeeId).toBe("emp-03");
     expect(upcoming?.startsAt.getHours()).toBe(17);
-    expect(CoverUtils.breakNeedsCover(upcoming!, NOW)).toBe(true);
-    expect(CoverUtils.breakNeedsCover(upcoming!, at(15, 0))).toBe(false);
+    // Alex, Jordan and Leo are all on the floor during Grace's 5:00–5:30 pm break.
+    expect(CoverUtils.floorCountDuringBreak(today, byName("emp-03"))).toBe(3);
+    expect(CoverUtils.breakNeedsCover(upcoming!, NOW, today)).toBe(false);
+    expect(CoverUtils.nextBreakNeedingCover(today, NOW)).toBeNull();
+  });
+
+  it("flags a break within the hour that would leave the floor short", () => {
+    // Aisha's noon break leaves only Alex and Jordan (who starts at 12) on the floor.
+    expect(CoverUtils.floorCountDuringBreak(today, byName("emp-05"))).toBe(2);
+    const short = CoverUtils.nextBreakNeedingCover(today, at(11, 30));
+    expect(short?.shift.employeeId).toBe("emp-05");
+    expect(short?.startsAt.getHours()).toBe(12);
+    // More than an hour away: not flagged yet.
+    expect(CoverUtils.nextBreakNeedingCover(today, at(10, 30))).toBeNull();
+  });
+
+  it("counts a shift ending part-way through a break", () => {
+    const cover = (h: number) => ({
+      id: `cover-${h}`,
+      storeId: "x",
+      employeeId: `e-${h}`,
+      startAt: at(9).toISOString(),
+      endAt: at(h).toISOString(),
+      unpaidBreakMinutes: 0,
+    });
+    const onBreak: Shift = {
+      id: "b",
+      storeId: "x",
+      employeeId: "b",
+      startAt: at(9).toISOString(),
+      endAt: at(17).toISOString(),
+      unpaidBreakMinutes: 30,
+      breakStartAt: at(14).toISOString(),
+    };
+    // Three others at 2:00 pm, but one leaves at 2:15 pm, mid-break.
+    const shifts = [
+      onBreak,
+      cover(17),
+      cover(17),
+      { ...cover(14), endAt: at(14, 15).toISOString() },
+    ];
+    expect(CoverUtils.floorCountDuringBreak(shifts, onBreak)).toBe(2);
+    expect(
+      CoverUtils.breakNeedsCover(
+        { shift: onBreak, startsAt: at(14) },
+        at(13, 30),
+        shifts,
+      ),
+    ).toBe(true);
   });
 
   it("returns null when no breaks are left today", () => {
@@ -105,27 +152,47 @@ describe("shiftProgress", () => {
 describe("shiftState", () => {
   it("matches the states shown in the Roster mockup at 4:40 pm", () => {
     expect(
-      CoverUtils.shiftState(byName("emp-01"), NOW, { isCurrentUser: true }),
+      CoverUtils.shiftState(byName("emp-01"), NOW, {
+        dayShifts: today,
+        isCurrentUser: true,
+      }),
     ).toEqual({
       label: COVER.onTheFloorYou,
       tone: "on",
     });
-    expect(CoverUtils.shiftState(byName("emp-03"), NOW)).toEqual({
-      label: COVER.breakNeedsCover("5:00 pm"),
+    // Grace's 5 pm break is covered by the three others, so no warning.
+    expect(
+      CoverUtils.shiftState(byName("emp-03"), NOW, { dayShifts: today }),
+    ).toEqual({
+      label: COVER.onTheFloor,
+      tone: "on",
+    });
+    expect(
+      CoverUtils.shiftState(byName("emp-05"), at(11, 30), { dayShifts: today }),
+    ).toEqual({
+      label: COVER.breakNeedsCover("12:00 pm"),
       tone: "warn",
     });
-    expect(CoverUtils.shiftState(byName("emp-05"), NOW)).toEqual({
+    expect(
+      CoverUtils.shiftState(byName("emp-05"), NOW, { dayShifts: today }),
+    ).toEqual({
       label: COVER.finished,
       tone: "off",
     });
   });
 
   it("shows breaks in progress and shifts not yet started", () => {
-    expect(CoverUtils.shiftState(byName("emp-03"), at(17, 10))).toEqual({
+    expect(
+      CoverUtils.shiftState(byName("emp-03"), at(17, 10), {
+        dayShifts: today,
+      }),
+    ).toEqual({
       label: COVER.onBreakUntil("5:30 pm"),
       tone: "warn",
     });
-    expect(CoverUtils.shiftState(byName("emp-04"), at(10))).toEqual({
+    expect(
+      CoverUtils.shiftState(byName("emp-04"), at(10), { dayShifts: today }),
+    ).toEqual({
       label: COVER.starts("4:00 pm"),
       tone: "off",
     });

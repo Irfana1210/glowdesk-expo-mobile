@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 import { LOCALE } from "@/constants/locale";
 
@@ -7,7 +7,8 @@ import { RosterScreen } from "@/features/roster/screens/roster.screen";
 
 import { createMockShifts } from "@/mocks/shifts";
 
-import { resetRosterStore } from "@test/roster-test-utils";
+import { renderWithQuery } from "@test/render-with-query";
+import { seedRoster } from "@test/roster-test-utils";
 import { signInAs } from "@test/session-test-utils";
 
 const L = LOCALE.roster.roster;
@@ -21,15 +22,25 @@ jest.mock("expo-router", () => ({ useRouter: () => ({ push: mockPush }) }));
 /** Saturday 10 October 2026, 4:40 pm: the moment the Roster mockup shows. */
 const NOW = new Date(2026, 9, 10, 16, 40);
 
-beforeEach(() => {
+beforeEach(async () => {
   jest.clearAllMocks();
   signInAs("manager");
-  resetRosterStore(NOW);
+  await seedRoster(NOW);
 });
+
+/** Renders the roster and waits for the shifts to load from the mock server. */
+async function renderRoster(now: Date) {
+  await renderWithQuery(<RosterScreen now={now} />);
+  await waitFor(() =>
+    expect(
+      screen.queryByText(LOCALE.roster.roster.loading),
+    ).not.toBeOnTheScreen(),
+  );
+}
 
 describe("RosterScreen", () => {
   it("shows the week, selects today and totals the week", async () => {
-    await render(<RosterScreen now={NOW} />);
+    await renderRoster(NOW);
 
     expect(screen.getByTestId("ROSTER.WEEK_RANGE")).toHaveTextContent(
       "5 – 11 Oct",
@@ -49,7 +60,7 @@ describe("RosterScreen", () => {
   });
 
   it("shows floor cover for today like the mockup", async () => {
-    await render(<RosterScreen now={NOW} />);
+    await renderRoster(NOW);
 
     expect(screen.getByTestId("ROSTER.DAY_TOTALS")).toHaveTextContent(
       L.dayTotals(6, "37.5 h"),
@@ -67,7 +78,7 @@ describe("RosterScreen", () => {
   });
 
   it("does not offer cover for a gap that is already over", async () => {
-    await render(<RosterScreen now={NOW} />);
+    await renderRoster(NOW);
 
     // At 4:40 pm the 11 am gap has passed, so it is information, not a button.
     expect(
@@ -79,7 +90,7 @@ describe("RosterScreen", () => {
   });
 
   it("opens Add shift at a low hour from the bar or the note button", async () => {
-    await render(<RosterScreen now={NOW} />);
+    await renderRoster(NOW);
     await fireEvent.press(
       screen.getByTestId("WEEK_DAY_SELECTOR.DAY.2026-10-11"),
     );
@@ -102,7 +113,7 @@ describe("RosterScreen", () => {
   });
 
   it("offers today's gap while it is still ahead", async () => {
-    await render(<RosterScreen now={new Date(2026, 9, 10, 10, 15)} />);
+    await renderRoster(new Date(2026, 9, 10, 10, 15));
 
     expect(screen.getByTestId("FLOOR_COVER_CHART.ADD_COVER")).toHaveTextContent(
       /Add cover at 11 am/,
@@ -110,7 +121,7 @@ describe("RosterScreen", () => {
   });
 
   it("lists today's shifts working first with live states", async () => {
-    await render(<RosterScreen now={NOW} />);
+    await renderRoster(NOW);
 
     const rows = screen
       .getAllByTestId(/^ROSTER\.SHIFT_ROW\./)
@@ -135,7 +146,7 @@ describe("RosterScreen", () => {
           "Beauty Advisor · Casual",
           "1:00 – 9:00 pm",
           `${ROW.breakMinutes(30)} · 7.5h`,
-          COVER.breakNeedsCover("5:00 pm"),
+          COVER.onTheFloor,
         ].join(", "),
       ),
     ).toBeOnTheScreen();
@@ -154,7 +165,7 @@ describe("RosterScreen", () => {
   });
 
   it("shows another day without live states and flags its cover", async () => {
-    await render(<RosterScreen now={NOW} />);
+    await renderRoster(NOW);
     await fireEvent.press(
       screen.getByTestId("WEEK_DAY_SELECTOR.DAY.2026-10-11"),
     );
@@ -174,7 +185,7 @@ describe("RosterScreen", () => {
   });
 
   it("marks overnight shifts", async () => {
-    await render(<RosterScreen now={NOW} />);
+    await renderRoster(NOW);
     await fireEvent.press(
       screen.getByTestId("WEEK_DAY_SELECTOR.DAY.2026-10-08"),
     );
@@ -193,7 +204,7 @@ describe("RosterScreen", () => {
   });
 
   it("navigates weeks, shows an empty day and returns to this week", async () => {
-    await render(<RosterScreen now={NOW} />);
+    await renderRoster(NOW);
 
     await fireEvent.press(screen.getByTestId("ROSTER.NEXT_WEEK"));
     expect(screen.getByTestId("ROSTER.WEEK_RANGE")).toHaveTextContent(
@@ -215,7 +226,7 @@ describe("RosterScreen", () => {
   });
 
   it("opens the editor to add or edit a shift", async () => {
-    await render(<RosterScreen now={NOW} />);
+    await renderRoster(NOW);
 
     await fireEvent.press(screen.getByTestId("ROSTER.ADD_SHIFT"));
     expect(mockPush).toHaveBeenCalledWith({
@@ -233,7 +244,7 @@ describe("RosterScreen", () => {
   });
 
   it("disables Add shift on a past day and says why", async () => {
-    await render(<RosterScreen now={NOW} />);
+    await renderRoster(NOW);
     expect(screen.getByTestId("ROSTER.ADD_SHIFT")).toBeEnabled();
 
     await fireEvent.press(

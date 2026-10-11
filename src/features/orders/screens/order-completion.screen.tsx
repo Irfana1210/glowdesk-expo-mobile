@@ -9,6 +9,8 @@ import { LOCALE } from "@/constants/locale";
 
 import { FormatUtils } from "@/utils/format-utils";
 
+import { useIsOnline } from "@/hooks/network/use-is-online";
+
 import { AppHeader } from "@/components/layout/app-header";
 import { Screen } from "@/components/layout/screen";
 import { AppText } from "@/components/ui/app-text";
@@ -23,9 +25,9 @@ import { type Order } from "@/types/order";
 
 import { OrderStatusBadge } from "../components/order-status-badge";
 import { OrderStateMachine } from "../domain/order-state-machine";
-import { useEnsureOrdersLoaded } from "../hooks/use-ensure-orders-loaded";
+import { useOrderActions } from "../hooks/use-order-actions";
+import { useOrder } from "../hooks/use-orders";
 import { OrderPresentationUtils } from "../presentation";
-import { selectOrderById, useOrdersStore } from "../store/orders.store";
 
 const L = LOCALE.orders.completion;
 const C = LOCALE.orders.common;
@@ -33,8 +35,7 @@ const C = LOCALE.orders.common;
 export const OrderCompletionScreen: FC = () => {
   const router = useRouter();
   const { orderId } = useLocalSearchParams<{ orderId: string }>();
-  const order = useOrdersStore(selectOrderById(orderId));
-  const loadStatus = useEnsureOrdersLoaded();
+  const { isPending, order } = useOrder(orderId);
 
   const goBack = useCallback(() => {
     if (router.canGoBack()) {
@@ -47,7 +48,7 @@ export const OrderCompletionScreen: FC = () => {
       <AppHeader title={L.title} onBack={goBack} />
       {order ? (
         <CompletionContent order={order} onBack={goBack} />
-      ) : loadStatus === "idle" || loadStatus === "loading" ? (
+      ) : isPending ? (
         <LoadingState message={C.loadingOrder} />
       ) : (
         <ErrorState
@@ -83,7 +84,8 @@ function CompletionContent({
 }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const markReady = useOrdersStore((s) => s.markReady);
+  const { isConfirming, markReady } = useOrderActions();
+  const online = useIsOnline();
   const [error, setError] = useState<string | null>(null);
 
   const progress = OrderStateMachine.getPickingProgress(order);
@@ -95,8 +97,9 @@ function CompletionContent({
   const readiness = OrderStateMachine.canMarkReady(order);
   const isComplete = order.status === "READY" || order.status === "COLLECTED";
 
-  const confirm = () => {
-    const result = markReady(order.id);
+  // Not optimistic: the order only shows as ready once the server has confirmed it.
+  const confirm = async () => {
+    const result = await markReady(order.id);
     if (result.ok) {
       setError(null);
       AccessibilityInfo.announceForAccessibility(
@@ -177,6 +180,13 @@ function CompletionContent({
             tone="error"
           />
         ) : null}
+        {!isComplete && !online ? (
+          <InlineBanner
+            message={LOCALE.sync.needsConnection}
+            testID="ORDER_COMPLETION.OFFLINE"
+            tone="info"
+          />
+        ) : null}
       </ScrollView>
 
       <View
@@ -198,11 +208,12 @@ function CompletionContent({
               accessibilityHint={
                 readiness.ok ? L.confirmReadyHint : readiness.message
               }
-              disabled={!readiness.ok}
+              disabled={!readiness.ok || !online}
               icon="checkmark-done-outline"
               label={L.confirmReady}
+              loading={isConfirming}
               testID="ORDER_COMPLETION.CONFIRM_READY"
-              onPress={confirm}
+              onPress={() => void confirm()}
             />
             <SecondaryButton label={C.backToOrder} onPress={onBack} />
           </>

@@ -13,6 +13,8 @@ import { useRouter } from "expo-router";
 
 import { LOCALE } from "@/constants/locale";
 
+import { useTabBarInset } from "@/hooks/use-tab-bar-inset";
+
 import { Screen } from "@/components/layout/screen";
 import { AppText } from "@/components/ui/app-text";
 import { ErrorState } from "@/components/ui/error-state";
@@ -51,6 +53,7 @@ const Separator = () => <View style={styles.separator} />;
 
 export const InventoryScreen: FC = () => {
   const router = useRouter();
+  const tabBarInset = useTabBarInset();
   const inventory = useInventory();
   const items = useMemo(() => inventory.data ?? [], [inventory.data]);
   const [filter, setFilter] = useState<InventoryFilter>(
@@ -161,7 +164,10 @@ export const InventoryScreen: FC = () => {
             />
           </View>
         }
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingBottom: tabBarInset },
+        ]}
         data={visible}
         initialNumToRender={12}
         keyExtractor={keyExtractor}
@@ -277,7 +283,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.inverse,
+    backgroundColor: colors.primary,
   },
   pressed: { opacity: 0.85 },
   chips: { paddingBottom: spacing.sm },

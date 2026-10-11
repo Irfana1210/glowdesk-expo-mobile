@@ -22,7 +22,7 @@ export const BrandMark: FC<Props> = ({ eyebrow }) => (
     style={styles.container}
   >
     <Image source={APP_ICON} style={styles.icon} />
-    <AppText style={styles.wordmark}>RetailOS</AppText>
+    <AppText style={styles.wordmark}>Glowdesk</AppText>
     <AppText color="textMuted" variant="eyebrow">
       {eyebrow}
     </AppText>

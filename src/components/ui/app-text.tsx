@@ -14,7 +14,7 @@ type AppTextProps = {
   variant?: TypographyVariant;
 } & TextProps;
 
-/** Text with the RetailOS type scale. Respects the OS font size, capped so dense layouts stay usable. */
+/** Text with the Glowdesk type scale. Respects the OS font size, capped so dense layouts stay usable. */
 export const AppText: FC<AppTextProps> = ({
   variant = "body",
   color = "text",

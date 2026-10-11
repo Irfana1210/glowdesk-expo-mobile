@@ -127,10 +127,80 @@ export namespace CoverUtils {
       : null;
   }
 
-  export function breakNeedsCover(upcoming: UpcomingBreak, now: Date): boolean {
-    return (
+  /**
+   * The fewest other people on the floor at any moment of `shift`'s break, or null when it has no
+   * break. Counts shifts that start or end mid-break and anyone else's overlapping break.
+   */
+  export function floorCountDuringBreak(
+    dayShifts: Array<Shift>,
+    shift: Shift,
+  ): number | null {
+    const window = breakWindow(shift);
+    if (!window) {
+      return null;
+    }
+    const others = dayShifts.filter((s) => s.id !== shift.id);
+    // Cover only changes when someone starts, finishes or goes on or off a break.
+    const moments = new Set([window.start]);
+    for (const other of others) {
+      const otherBreak = breakWindow(other);
+      for (const time of [
+        t(other.startAt),
+        t(other.endAt),
+        otherBreak?.start,
+        otherBreak?.end,
+      ]) {
+        if (time !== undefined && time > window.start && time < window.end) {
+          moments.add(time);
+        }
+      }
+    }
+    return Math.min(
+      ...[...moments].map(
+        (time) => staffOnFloor(others, new Date(time)).length,
+      ),
+    );
+  }
+
+  /**
+   * True when a break starts within the notice period and would leave fewer than
+   * `MIN_FLOOR_COVER` people on the floor. A break the rest of the team already covers needs nothing.
+   */
+  export function breakNeedsCover(
+    upcoming: UpcomingBreak,
+    now: Date,
+    dayShifts: Array<Shift>,
+  ): boolean {
+    const startsSoon =
       upcoming.startsAt.getTime() - now.getTime() <=
-      BREAK_COVER_NOTICE_MINUTES * MS_IN_MINUTE
+      BREAK_COVER_NOTICE_MINUTES * MS_IN_MINUTE;
+    if (!startsSoon) {
+      return false;
+    }
+    const cover = floorCountDuringBreak(dayShifts, upcoming.shift);
+    return cover !== null && cover < MIN_FLOOR_COVER;
+  }
+
+  /** The first break today, starting within the notice period, that would leave the floor short. */
+  export function nextBreakNeedingCover(
+    dayShifts: Array<Shift>,
+    now: Date,
+  ): UpcomingBreak | null {
+    return (
+      dayShifts
+        .map((shift) => ({ shift, window: breakWindow(shift) }))
+        .filter(
+          (b) =>
+            b.window !== null &&
+            b.window.start > now.getTime() &&
+            DateUtils.isSameDay(new Date(b.window.start), now),
+        )
+        .map(({ shift, window }) => ({
+          shift,
+          startsAt: new Date(window?.start ?? 0),
+        }))
+        .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime())
+        .find((b) => breakNeedsCover(b, now, dayShifts)) ?? null
     );
   }
 
@@ -160,7 +230,10 @@ export namespace CoverUtils {
   export function shiftState(
     shift: Shift,
     now: Date,
-    { isCurrentUser = false } = {},
+    {
+      dayShifts,
+      isCurrentUser = false,
+    }: { dayShifts: Array<Shift>; isCurrentUser?: boolean },
   ): ShiftState {
     const progress = shiftProgress(shift, now);
     if (progress.phase === "finished") {
@@ -186,7 +259,7 @@ export namespace CoverUtils {
     }
     if (window && window.start > now.getTime()) {
       const startsAt = new Date(window.start);
-      if (breakNeedsCover({ shift, startsAt }, now)) {
+      if (breakNeedsCover({ shift, startsAt }, now, dayShifts)) {
         return {
           label: LOCALE.roster.cover.breakNeedsCover(
             FormatUtils.formatClockTime(startsAt),

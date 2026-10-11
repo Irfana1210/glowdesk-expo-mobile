@@ -4,6 +4,8 @@ import { type Edge, SafeAreaView } from "react-native-safe-area-context";
 
 import { colors } from "@/theme";
 
+import { ConnectivityBanner } from "./connectivity-banner";
+
 type Props = {
   children: ReactNode;
   /** Tab screens skip the bottom edge because the tab bar already handles it. */
@@ -18,6 +20,7 @@ export const Screen: FC<Props> = ({
 }) => {
   return (
     <SafeAreaView edges={edges} style={styles.container} testID={testID}>
+      <ConnectivityBanner />
       {children}
     </SafeAreaView>
   );

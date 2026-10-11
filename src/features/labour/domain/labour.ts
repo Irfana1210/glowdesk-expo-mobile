@@ -1,5 +1,5 @@
 /**
- * Labour cost estimates (brief §6, Screen 8). Pure functions.
+ * Labour cost estimates. Pure functions.
  *
  *   Paid Hours = Shift Duration − Unpaid Breaks
  *   Base Labour Cost = Paid Hours × Hourly Rate

@@ -4,7 +4,10 @@ import { MS_IN_MINUTE, MS_IN_SECOND } from "@/constants/primitives";
 export enum StaleTimeMs {
   Default = MS_IN_SECOND * 30,
   Inventory = MS_IN_MINUTE,
+  Orders = MS_IN_SECOND * 15,
+  ReferenceData = MS_IN_MINUTE * 5,
   SalesSummary = MS_IN_MINUTE,
+  Shifts = MS_IN_SECOND * 30,
 }
 
 export enum MessageType {

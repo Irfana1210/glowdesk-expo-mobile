@@ -1,4 +1,4 @@
-# RetailOS — Coding Standards
+# Glowdesk — Coding Standards
 
 Expo (expo-router) app with TypeScript, TanStack Query, Zustand and react-hook-form + zod.
 
@@ -20,9 +20,9 @@ src/
 │   ├── services/     # *.service.ts — the only place data is fetched
 │   ├── store/        # *.store.ts — Zustand, client state only
 │   └── types.ts
-├── hooks/            # Generic hooks; hooks/query/ holds the safe query wrapper
+├── hooks/            # Generic hooks; query/ (safe wrappers, pending changes), network/ (online state)
 ├── mocks/            # Fictional demo data factories
-├── services/         # cache-keys/
+├── services/         # cache-keys/, mock-api/ (in-app mock server and simulated network)
 ├── theme/            # Tokens → semantic colours, typography, spacing
 ├── types/            # Shared types and enums (StaleTimeMs, MessageType, ToastTypes)
 └── utils/            # Namespaced utilities, storage, query client, toast + error handling
@@ -38,7 +38,7 @@ Code is grouped by feature, then by type inside the feature. Cross-feature impor
 | --------- | ------------------------ | ------------------------- |
 | Screen    | `order-list.screen.tsx`  | `OrderListScreen`         |
 | Component | `order-card.tsx`         | `OrderCard`               |
-| Store     | `orders.store.ts`        | `useOrdersStore`          |
+| Store     | `session.store.ts`       | `useSessionStore`         |
 | Service   | `orders.service.ts`      | `OrdersService` namespace |
 | Hook      | `use-inventory.ts`       | `useInventory`            |
 | Utils     | `format-utils.ts`        | `FormatUtils` namespace   |
@@ -68,7 +68,8 @@ Code is grouped by feature, then by type inside the feature. Cross-feature impor
 - All data access goes through a `namespace XxxService` in `features/<name>/services/`.
 - Service files only contain the namespace. No helpers or types — put those in `types.ts` or utils.
 - Never fetch from components or stores directly; call the service.
-- Today services return mock data after `MockUtils.simulateLatency()`. Supabase plugs in here.
+- Today services call `MockServer` (`src/services/mock-api/`), which behaves like a real API: latency,
+  offline failures, version checks and role checks. Supabase plugs in here; nothing above changes.
 
 ## TanStack Query — Safe Hooks
 
@@ -79,14 +80,20 @@ Code is grouped by feature, then by type inside the feature. Cross-feature impor
 - Cache keys are flat constants in `src/services/cache-keys/index.ts`, used as the first element of
   the query key: `[INVENTORY_CACHE_KEY, storeId]`. Never inline a key string.
 - Stale times come from the `StaleTimeMs` enum. Never hardcode a number.
+- Changes that can wait offline register their `mutationFn` with `setMutationDefaults` by mutation
+  key (`OrderMutations.register`, `ShiftMutations.register`), so a paused change resumes after a
+  restart. Never rename a mutation key. Feature hooks validate with the domain rules, write the
+  optimistic result to the cache, then call `mutate`.
+- Changes the server must confirm first (mark ready, cancel) use `networkMode: "always"`, are not
+  optimistic, and are disabled offline with an explanation.
 
 ## Zustand Stores
 
-- Zustand is for client/device state (order picking progress, roster edits, preferences). Server
-  state belongs in TanStack Query.
+- Zustand is for client/device state (session, preferences, simulated network switches). Server
+  state, including orders and shifts, belongs in TanStack Query.
 - Type stores as `type States` + `type Actions`, created with `create<States & Actions>()`.
 - Actions return result objects (`{ ok: true } | { ok: false; message }`) instead of throwing.
-- Selectors live next to the store (`selectOrderById`).
+- Selectors live next to the store (`selectStoreId`, `selectIsManager`).
 
 Persistence uses Zustand's `persist` middleware on expo-sqlite's key-value
 store (`persistStorage` in `src/utils/storage.ts`), not MMKV. Keys live in `STORAGE_KEYS` and are
@@ -130,13 +137,18 @@ Forms use react-hook-form with `zodResolver`.
 
 - `StyleSheet.create()` with tokens from `@/theme` (`colors`, `spacing`, `radius`, `typography`).
   Never raw hex values in screens.
+- Colour roles: `colors.primary` (plum) for primary buttons and the selected tab, `colors.emphasis`
+  (deep plum) for emphasis surfaces such as the shift card, `colors.inverse` (ink) for selected
+  chips and the day picker, `colors.accent` for icons and chart bars.
+- The tab bar floats over content. Tab screens pad their scrolling content with
+  `useTabBarInset()` so the last rows are not hidden under it.
 - Status is always icon + text, never colour alone. Touch targets ≥ `touchTarget` (48).
 - Text respects OS font scaling up to `maxFontScale`.
 
 ## Accessibility and testIDs
 
 - `testID` uses uppercase dot notation: `SCREEN.CHILD.ELEMENT` (e.g. `ORDER_LIST.CARD.ORD-7841`).
-  Maestro flows and specs select by testID.
+  Specs select by testID, and so will the planned Maestro flows.
 - Interactive elements have an `accessibilityRole` and label. Announce async outcomes with
   `AccessibilityInfo.announceForAccessibility`.
 

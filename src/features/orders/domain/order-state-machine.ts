@@ -1,5 +1,5 @@
 /**
- * Order state machine and validation rules (brief §7 and §8).
+ * Order state machine and validation rules.
  *
  * Pure functions only: no React, no store, no I/O. Every transition returns a
  * new frozen order with an incremented version and never mutates its input.
@@ -78,7 +78,7 @@ export namespace OrderStateMachine {
     );
   }
 
-  /** Brief §8: status PICKING, at least one item, positive quantities, all picked. */
+  /** Ready rules: status PICKING, at least one item, positive quantities, all picked. */
   export function canMarkReady(order: Order): ReadinessResult {
     if (order.status !== "PICKING") {
       return {

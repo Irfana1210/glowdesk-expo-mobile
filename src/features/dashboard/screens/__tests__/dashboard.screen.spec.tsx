@@ -4,10 +4,11 @@ import { fireEvent, screen } from "@testing-library/react-native";
 
 import { LOCALE } from "@/constants/locale";
 
+import { MockServer } from "@/services/mock-api/mock-server";
+
 import { DashboardScreen } from "@/features/dashboard/screens/dashboard.screen";
 import { SalesService } from "@/features/dashboard/services/sales.service";
 import { InventoryService } from "@/features/inventory/services/inventory.service";
-import { useRosterStore } from "@/features/roster/store/roster.store";
 
 import { createMockInventory } from "@/mocks/inventory";
 import { createMockOrders } from "@/mocks/orders";
@@ -15,7 +16,6 @@ import { DEMO_SALES_SUMMARY } from "@/mocks/sales";
 import { createMockShifts } from "@/mocks/shifts";
 import { spacing } from "@/theme";
 
-import { resetOrdersStore } from "@test/order-test-utils";
 import { renderWithQuery } from "@test/render-with-query";
 import { signInAs } from "@test/session-test-utils";
 
@@ -36,11 +36,6 @@ jest.mock("@/features/inventory/services/inventory.service", () => ({
     fetchInventory: jest.fn(),
   },
 }));
-jest.mock("@/features/orders/services/orders.service", () => ({
-  OrdersService: {
-    fetchOrders: jest.fn().mockResolvedValue([]),
-  },
-}));
 
 const mockedFetchSales = jest.mocked(SalesService.fetchStoreSalesSummary);
 const mockedFetchInventory = jest.mocked(InventoryService.fetchInventory);
@@ -48,11 +43,14 @@ const mockedFetchInventory = jest.mocked(InventoryService.fetchInventory);
 /** Saturday 10 October 2026, 4:40 pm: the moment the Dashboard mockup shows. */
 const NOW = new Date(2026, 9, 10, 16, 40);
 
-beforeEach(() => {
+beforeEach(async () => {
   jest.clearAllMocks();
   signInAs("manager");
-  resetOrdersStore({ orders: createMockOrders(NOW), loadStatus: "ready" });
-  useRosterStore.setState({ shifts: createMockShifts(NOW) });
+  await MockServer.seedForTest({
+    now: NOW,
+    orders: createMockOrders(NOW),
+    shifts: createMockShifts(NOW),
+  });
   mockedFetchSales.mockResolvedValue(DEMO_SALES_SUMMARY);
   mockedFetchInventory.mockResolvedValue(createMockInventory());
 });
@@ -76,7 +74,8 @@ describe("DashboardScreen", () => {
       screen.getByLabelText(`4 ${L.shiftCard.stats.onTheFloor}`),
     ).toBeOnTheScreen();
     expect(
-      screen.getByLabelText(`5:00 ${L.shiftCard.stats.nextBreak}`),
+      // The next break in the store is Grace's, so the card names her.
+      screen.getByLabelText(`5:00 ${L.shiftCard.stats.breakOf("Grace")}`),
     ).toBeOnTheScreen();
     expect(
       screen.getByLabelText(`7 ${L.shiftCard.stats.ordersToAssign(7)}`),
@@ -93,14 +92,13 @@ describe("DashboardScreen", () => {
       L.attention.orders.title(3),
       { exact: false },
     );
+    // Grace's 5 pm break leaves three on the floor, so it needs no cover.
     expect(
-      screen.getByTestId("DASHBOARD.ATTENTION.breakCover"),
-    ).toHaveTextContent(L.attention.breakCover.title("5:00 pm"), {
-      exact: false,
-    });
+      screen.queryByTestId("DASHBOARD.ATTENTION.breakCover"),
+    ).not.toBeOnTheScreen();
     expect(
       screen.getByRole("button", {
-        name: L.screen.notificationsLabel(3),
+        name: L.screen.notificationsLabel(2),
       }),
     ).toBeOnTheScreen();
 
@@ -108,7 +106,7 @@ describe("DashboardScreen", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/orders");
   });
 
-  it("shows the brief sample KPIs with correct calculations", async () => {
+  it("shows the sample KPIs with correct calculations", async () => {
     await renderWithQuery(<DashboardScreen now={NOW} />);
 
     expect(
@@ -197,6 +195,22 @@ describe("DashboardScreen", () => {
       screen.getByTestId("DASHBOARD.ATTENTION.HIGHLIGHT"),
     ).toBeOnTheScreen();
     scrollTo.mockRestore();
+  });
+
+  it("closes the sales tooltip when the user touches elsewhere", async () => {
+    await renderWithQuery(<DashboardScreen now={NOW} />);
+    const hidden = { includeHiddenElements: true };
+
+    await fireEvent.press(await screen.findByTestId("SALES_CHART.BAR.13.done"));
+    expect(screen.getByTestId("SALES_CHART.TOOLTIP", hidden)).toBeOnTheScreen();
+
+    await fireEvent(
+      screen.getByTestId("DASHBOARD.KPI_TRANSACTIONS.VALUE"),
+      "touchStart",
+    );
+    expect(
+      screen.queryByTestId("SALES_CHART.TOOLTIP", hidden),
+    ).not.toBeOnTheScreen();
   });
 
   it("opens settings from the profile button", async () => {

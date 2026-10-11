@@ -1,6 +1,6 @@
 import { SESSION_DURATION_MS } from "@/constants/primitives";
 
-import { MockUtils } from "@/utils/mock-utils";
+import { MockServer } from "@/services/mock-api/mock-server";
 
 import { AuthUtils } from "@/features/auth/domain/auth";
 
@@ -15,11 +15,14 @@ import { type Session, type SignInInput } from "../types";
  * A real backend plugs in here; the screen and store do not change.
  */
 export namespace AuthService {
-  export async function signIn(
+  export function signIn(
     input: SignInInput,
     now: Date = new Date(),
   ): Promise<Session> {
-    await MockUtils.simulateLatency();
+    return MockServer.respond(() => issueSession(input, now));
+  }
+
+  function issueSession(input: SignInInput, now: Date): Session {
     const staffId = AuthUtils.normaliseStaffId(input.staffId);
     const credential = MOCK_CREDENTIALS.find(
       (c) => c.staffId === staffId && c.pin === input.pin,
@@ -49,7 +52,7 @@ export namespace AuthService {
   }
 
   /** Invalidates the session server-side. The mock has nothing to revoke. */
-  export async function signOut(): Promise<void> {
-    await MockUtils.simulateLatency();
+  export function signOut(): Promise<void> {
+    return MockServer.respond(() => undefined);
   }
 }

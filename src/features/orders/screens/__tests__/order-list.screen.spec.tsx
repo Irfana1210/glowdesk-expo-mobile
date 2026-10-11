@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { fireEvent, screen } from "@testing-library/react-native";
 
 import { LOCALE } from "@/constants/locale";
 
@@ -7,8 +7,7 @@ import { OrdersService } from "@/features/orders/services/orders.service";
 
 import { createMockOrders } from "@/mocks/orders";
 
-import { resetOrdersStore } from "@test/order-test-utils";
-import { resetRosterStore } from "@test/roster-test-utils";
+import { renderWithQuery } from "@test/render-with-query";
 
 const L = LOCALE.orders.list;
 const CARD = LOCALE.orders.card;
@@ -36,14 +35,12 @@ const cardIds = () =>
 
 beforeEach(() => {
   jest.clearAllMocks();
-  resetOrdersStore();
-  resetRosterStore();
   mockedFetchOrders.mockResolvedValue(orders());
 });
 
 describe("OrderListScreen", () => {
   it("loads orders and shows the overdue banner", async () => {
-    await render(<OrderListScreen now={NOW} />);
+    await renderWithQuery(<OrderListScreen now={NOW} />);
 
     expect(
       await screen.findByTestId("ORDER_LIST.CARD.ORD-7841"),
@@ -56,7 +53,7 @@ describe("OrderListScreen", () => {
   });
 
   it("sorts overdue orders first, most overdue at the top", async () => {
-    await render(<OrderListScreen now={NOW} />);
+    await renderWithQuery(<OrderListScreen now={NOW} />);
     await screen.findByTestId("ORDER_LIST");
 
     expect(cardIds().slice(0, 4)).toEqual([
@@ -68,7 +65,7 @@ describe("OrderListScreen", () => {
   });
 
   it("shows the mockup details on each card", async () => {
-    await render(<OrderListScreen now={NOW} />);
+    await renderWithQuery(<OrderListScreen now={NOW} />);
     await screen.findByTestId("ORDER_LIST");
 
     expect(
@@ -100,7 +97,7 @@ describe("OrderListScreen", () => {
   });
 
   it("shows counts for every filter and filters by status", async () => {
-    await render(<OrderListScreen now={NOW} />);
+    await renderWithQuery(<OrderListScreen now={NOW} />);
     await screen.findByTestId("ORDER_LIST");
 
     expect(screen.getByLabelText("All, 20 orders")).toBeOnTheScreen();
@@ -135,7 +132,7 @@ describe("OrderListScreen", () => {
   });
 
   it("searches by order number, initials or team member", async () => {
-    await render(<OrderListScreen now={NOW} />);
+    await renderWithQuery(<OrderListScreen now={NOW} />);
     await screen.findByTestId("ORDER_LIST");
 
     await fireEvent.press(screen.getByTestId("ORDER_LIST.TOGGLE_SEARCH"));
@@ -158,7 +155,7 @@ describe("OrderListScreen", () => {
     mockedFetchOrders.mockResolvedValue(
       orders().filter((o) => o.status === "NEW"),
     );
-    await render(<OrderListScreen now={NOW} />);
+    await renderWithQuery(<OrderListScreen now={NOW} />);
     await screen.findByTestId("ORDER_LIST");
 
     await fireEvent.press(screen.getByTestId("FILTER_CHIPS.OPTION.COLLECTED"));
@@ -171,7 +168,7 @@ describe("OrderListScreen", () => {
     mockedFetchOrders.mockResolvedValue(
       orders().filter((o) => o.status === "READY"),
     );
-    await render(<OrderListScreen now={NOW} />);
+    await renderWithQuery(<OrderListScreen now={NOW} />);
     await screen.findByTestId("ORDER_LIST");
 
     expect(
@@ -183,7 +180,7 @@ describe("OrderListScreen", () => {
     mockedFetchOrders.mockRejectedValueOnce(
       new Error("Network request failed"),
     );
-    await render(<OrderListScreen now={NOW} />);
+    await renderWithQuery(<OrderListScreen now={NOW} />);
 
     expect(await screen.findByText(L.loadErrorTitle)).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole("button", { name: "Try again" }));
@@ -193,7 +190,7 @@ describe("OrderListScreen", () => {
   });
 
   it("opens order details when a card is pressed", async () => {
-    await render(<OrderListScreen now={NOW} />);
+    await renderWithQuery(<OrderListScreen now={NOW} />);
     await fireEvent.press(
       await screen.findByTestId("ORDER_LIST.CARD.ORD-7841"),
     );

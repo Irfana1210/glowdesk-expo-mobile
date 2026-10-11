@@ -1,4 +1,4 @@
-/** Employee reference data (brief §11 `employees` table). Shared by roster, labour and the planned Employees screen. */
+/** Employee reference data (the `employees` table). Shared by roster, labour and the planned Employees screen. */
 export type EmployeeRole =
   | "STORE_MANAGER"
   | "ASSISTANT_MANAGER"

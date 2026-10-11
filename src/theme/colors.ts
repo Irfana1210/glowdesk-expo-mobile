@@ -19,8 +19,12 @@ export const colors = {
   accent: palette.secondary,
   accentText: palette.secondaryText,
   accentSoft: palette.blush,
-  /** Selected chips, day picker and the dark shift card. */
+  /** Ink for selected chips and the roster day picker. */
   inverse: palette.text,
+  /** Brand plum for primary buttons and the selected tab. */
+  primary: palette.plum,
+  /** Deep plum for emphasis surfaces: the shift card, chart tooltip and offline bar. */
+  emphasis: palette.plumDeep,
   avatar: "#F3EEF4",
   success: palette.success,
   successDark: palette.successDark,

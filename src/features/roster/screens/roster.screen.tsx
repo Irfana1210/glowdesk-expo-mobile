@@ -9,11 +9,13 @@ import { LOCALE } from "@/constants/locale";
 import { FormatUtils } from "@/utils/format-utils";
 
 import { useNow } from "@/hooks/use-now";
+import { useTabBarInset } from "@/hooks/use-tab-bar-inset";
 
 import {
   selectSession,
   useSessionStore,
 } from "@/features/auth/store/session.store";
+import { useEmployees } from "@/features/employees/hooks/use-employees";
 import {
   type Employee,
   EMPLOYMENT_TYPE_LABELS,
@@ -23,6 +25,8 @@ import {
 import { Screen } from "@/components/layout/screen";
 import { AppText } from "@/components/ui/app-text";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/ui/error-state";
+import { LoadingState } from "@/components/ui/loading-state";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { ScreenTitle } from "@/components/ui/screen-title";
 import { ShiftRow } from "@/components/ui/shift-row";
@@ -41,11 +45,13 @@ import { WeekDaySelector } from "../components/week-day-selector";
 import { CoverUtils } from "../domain/cover";
 import { DateUtils } from "../domain/dates";
 import { ShiftUtils } from "../domain/shifts";
-import { useRosterStore } from "../store/roster.store";
+import { useShifts } from "../hooks/use-shifts";
 import { type Shift } from "../types";
 
 const L = LOCALE.roster.roster;
 const ROW = LOCALE.roster.rosterRow;
+const NO_SHIFTS: Array<Shift> = [];
+const NO_EMPLOYEES: Array<Employee> = [];
 
 function initialsOf(name: string): string {
   return name
@@ -58,10 +64,12 @@ function initialsOf(name: string): string {
 
 export const RosterScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
   const router = useRouter();
+  const tabBarInset = useTabBarInset();
   const liveNow = useNow();
   const now = fixedNow ?? liveNow;
-  const shifts = useRosterStore((s) => s.shifts);
-  const employees = useRosterStore((s) => s.employees);
+  const shiftsQuery = useShifts();
+  const shifts = shiftsQuery.data ?? NO_SHIFTS;
+  const employees = useEmployees().data ?? NO_EMPLOYEES;
   const session = useSessionStore(selectSession);
 
   const [weekStart, setWeekStart] = useState(() => DateUtils.startOfWeek(now));
@@ -223,7 +231,15 @@ export const RosterScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
           />
         </View>
 
-        {dayShifts.length === 0 ? (
+        {shiftsQuery.isPending ? (
+          <LoadingState message={L.loading} />
+        ) : shiftsQuery.isError && !shiftsQuery.data ? (
+          <ErrorState
+            message={L.loadErrorMessage}
+            title={L.loadErrorTitle}
+            onRetry={() => void shiftsQuery.refetch()}
+          />
+        ) : dayShifts.length === 0 ? (
           <EmptyState
             icon="calendar-clear-outline"
             message={L.noShiftsMessage(DateUtils.formatDayLabel(selected))}
@@ -234,6 +250,7 @@ export const RosterScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
             <RosterRow
               avatarColor={avatarColor(shift.employeeId)}
               currentEmployeeId={session?.employeeId}
+              dayShifts={dayShifts}
               employee={employeesById.get(shift.employeeId)}
               key={shift.id}
               now={now}
@@ -254,7 +271,7 @@ export const RosterScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
         </AppText>
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: tabBarInset }]}>
         {isPastDay ? (
           <AppText
             color="textMuted"
@@ -281,6 +298,8 @@ export const RosterScreen: FC<{ now?: Date }> = ({ now: fixedNow }) => {
 type RosterRowProps = {
   avatarColor: string | undefined;
   currentEmployeeId: string | undefined;
+  /** Everyone rostered that day, so a coming break is flagged only if it leaves the floor short. */
+  dayShifts: Array<Shift>;
   employee: Employee | undefined;
   now: Date;
   onEdit: (shiftId: string) => void;
@@ -293,6 +312,7 @@ function RosterRow({
   employee,
   avatarColor,
   currentEmployeeId,
+  dayShifts,
   now,
   showState,
   onEdit,
@@ -303,6 +323,7 @@ function RosterRow({
     : "";
   const state = showState
     ? CoverUtils.shiftState(shift, now, {
+        dayShifts,
         isCurrentUser: shift.employeeId === currentEmployeeId,
       })
     : null;

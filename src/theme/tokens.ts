@@ -1,5 +1,5 @@
 /**
- * RetailOS design tokens, from docs/DESIGN_HANDOFF.md.
+ * Glowdesk design tokens, from docs/DESIGN_HANDOFF.md.
  * Raw values only. Screens use the semantic layers in colors.ts, typography.ts and spacing.ts.
  */
 
@@ -9,7 +9,12 @@ export const palette = {
   mutedText: "#5E5A61",
   inactiveTab: "#6E6672",
   blush: "#EBCDD3",
-  secondary: "#816C83",
+  /** Brand plum: primary buttons and the selected tab. White on it is 7.5:1. */
+  plum: "#6B4777",
+  /** Deeper plum for emphasis surfaces: the shift card, chart tooltip and offline bar. */
+  plumDeep: "#523460",
+  /** Lighter plum for icons, chart bars and switches. 4.7:1 on the page background. */
+  secondary: "#8A5F96",
   secondaryText: "#6F5B71",
   success: "#4C826C",
   successDark: "#3E6E5A",
@@ -35,11 +40,14 @@ export const statusPalette = {
 
 export type StatusTone = keyof typeof statusPalette;
 
-/** Colours used on the dark "your shift" card. */
+/**
+ * Colours used on the deep plum "your shift" card. White text is 10.4:1 on it and the muted
+ * text 7.9:1, both well above WCAG AA.
+ */
 export const darkSurface = {
-  background: "#222024",
+  background: palette.plumDeep,
   text: "#FFFFFF",
-  mutedText: "#D6CFD8",
+  mutedText: "#E9DCEC",
   track: "rgba(255, 255, 255, 0.18)",
   divider: "rgba(255, 255, 255, 0.14)",
   pill: "#3E6E5A",

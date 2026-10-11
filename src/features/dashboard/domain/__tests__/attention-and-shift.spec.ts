@@ -15,10 +15,10 @@ const today = ShiftUtils.shiftsOnDay(createMockShifts(NOW), NOW);
 const orders = createMockOrders(NOW);
 
 describe("buildAttention", () => {
-  it("matches the three items in the Dashboard mockup", () => {
+  it("lists overdue orders and low stock, but not a break the team already covers", () => {
     const items = AttentionUtils.buildAttention({
       orders,
-      upcomingBreak: CoverUtils.nextBreak(today, NOW),
+      breakNeedingCover: CoverUtils.nextBreakNeedingCover(today, NOW),
       breakEmployeeName: "Grace Liu",
       inventory: createMockInventory(),
       now: NOW,
@@ -32,14 +32,25 @@ describe("buildAttention", () => {
         href: "/orders",
       },
       {
-        title: L.attention.breakCover.title("5:00 pm"),
-        subtitle: L.attention.breakCover.subtitle("Grace Liu", 30),
-        href: "/roster",
-      },
-      {
         title: L.attention.stock.title(4),
         subtitle: L.attention.stock.subtitle("Velour Soft Focus Blush", 3),
         href: "/inventory",
+      },
+    ]);
+  });
+
+  it("asks for break cover when a break would leave the floor short", () => {
+    const morning = new Date(2026, 9, 10, 11, 30);
+    const items = AttentionUtils.buildAttention({
+      orders: [],
+      breakNeedingCover: CoverUtils.nextBreakNeedingCover(today, morning),
+      breakEmployeeName: "Aisha Rahman",
+      now: morning,
+    });
+    expect(items.map(({ title, subtitle }) => ({ title, subtitle }))).toEqual([
+      {
+        title: L.attention.breakCover.title("12:00 pm"),
+        subtitle: L.attention.breakCover.subtitle("Aisha Rahman", 30),
       },
     ]);
   });
@@ -48,7 +59,7 @@ describe("buildAttention", () => {
     expect(
       AttentionUtils.buildAttention({
         orders: [],
-        upcomingBreak: null,
+        breakNeedingCover: null,
         now: NOW,
       }),
     ).toEqual([]);
@@ -64,6 +75,7 @@ describe("shiftCardModel", () => {
       now: NOW,
       staffOnFloor: CoverUtils.staffOnFloor(today, NOW).length,
       nextBreakAt: CoverUtils.nextBreak(today, NOW)?.startsAt ?? null,
+      nextBreakOf: { firstName: "Grace" },
       ordersToAssign: 7,
     });
     expect(model).toMatchObject({
@@ -75,9 +87,24 @@ describe("shiftCardModel", () => {
     expect(Math.round(model.percent ?? 0)).toBe(90);
     expect(model.stats).toEqual([
       { value: "4", label: L.shiftCard.stats.onTheFloor },
-      { value: "5:00", label: L.shiftCard.stats.nextBreak },
+      { value: "5:00", label: L.shiftCard.stats.breakOf("Grace") },
       { value: "7", label: L.shiftCard.stats.ordersToAssign(7) },
     ]);
+  });
+
+  it("labels the next break as yours when it is the signed-in person's", () => {
+    const model = ShiftCardUtils.shiftCardModel({
+      myShift: alex,
+      now: new Date(2026, 9, 10, 12, 30),
+      staffOnFloor: 3,
+      nextBreakAt: new Date(2026, 9, 10, 13),
+      nextBreakOf: "you",
+      ordersToAssign: 0,
+    });
+    expect(model.stats[1]).toEqual({
+      value: "1:00",
+      label: L.shiftCard.stats.yourBreak,
+    });
   });
 
   it("handles before, after and no shift", () => {

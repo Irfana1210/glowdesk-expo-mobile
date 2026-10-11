@@ -7,7 +7,8 @@ import { ReportingUtils } from "@/utils/reporting-utils";
 import { isApiError } from "@/types/api-error";
 import { ToastTypes } from "@/types/enums";
 
-function messageFor(error: unknown): string {
+/** The message to show for a failed server call: copy for its code, else the server's message. */
+export function errorMessage(error: unknown): string {
   if (isApiError(error)) {
     return LOCALE.errors.byCode[error.code] ?? error.message;
   }
@@ -20,5 +21,5 @@ export function handleError(
   position: ToastPosition = "top",
 ): void {
   ReportingUtils.reportError(error);
-  Toast.show({ type: ToastTypes.Error, text1: messageFor(error), position });
+  Toast.show({ type: ToastTypes.Error, text1: errorMessage(error), position });
 }

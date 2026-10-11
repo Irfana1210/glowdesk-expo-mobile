@@ -7,6 +7,8 @@ import { persist } from "zustand/middleware";
 
 import { persistStorage, STORAGE_KEYS } from "@/utils/storage";
 
+import { DEMO_STORE_ID } from "@/mocks/store";
+
 import { AuthUtils } from "../domain/auth";
 import { type Session, type SessionStatus } from "../types";
 
@@ -60,5 +62,7 @@ export const useSessionStore = create<States & Actions>()(
 
 export const selectSession = (s: States) => s.session;
 export const selectSessionStatus = (s: States) => s.status;
+/** Screens behind sign-in always have a session. The fallback keeps component tests simple. */
+export const selectStoreId = (s: States) => s.session?.storeId ?? DEMO_STORE_ID;
 export const selectIsManager = (s: States) =>
   s.session ? AuthUtils.canViewPayInformation(s.session.role) : false;

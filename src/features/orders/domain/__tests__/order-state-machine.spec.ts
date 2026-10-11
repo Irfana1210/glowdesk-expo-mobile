@@ -50,7 +50,7 @@ describe("canTransition", () => {
     expect(OrderStateMachine.canTransition(from, to)).toBe(true);
   });
 
-  it("allows exactly the five transitions in the brief and nothing else", () => {
+  it("allows exactly the five allowed transitions and nothing else", () => {
     const allowed = ALL_STATUSES.flatMap((from) =>
       ALL_STATUSES.filter((to) =>
         OrderStateMachine.canTransition(from, to),
