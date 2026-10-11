@@ -6,7 +6,15 @@ roster, labour cost and an offline queue that syncs when the connection returns.
 Independent portfolio project. All stores, staff, customers and products are fictional, and data comes from an in-app
 mock server.
 
-[![Glowdesk demo video](docs/media/glowdesk-demo.jpg)](docs/media/glowdesk-demo.mp4)
+## Demo
+
+[![Glowdesk demo: an overdue Click & Collect order picked offline, then the dashboard, inventory, roster and labour screens](docs/media/glowdesk-demo.jpg)](docs/media/glowdesk-demo.mp4)
+
+A 25-second walkthrough built from the app's real screens, copy and demo data. An overdue Click & Collect order is
+checked unit by unit, a wrong product is turned away, picking carries on with no signal, and the order is marked ready
+once the changes sync. It ends with the dashboard, inventory, roster and labour screens.
+
+Select the image to download the video (MP4, 8 MB).
 
 ## Libraries
 
