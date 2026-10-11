@@ -101,7 +101,7 @@ Glowdesk/
 │
 ├── test/utils/                      Shared test helpers, imported as @test/*
 ├── __mocks__/                       Jest manual mocks for native modules (expo-sqlite kv-store)
-├── docs/                            This document
+├── docs/                            This document and the coding standards
 ├── learnings/                       Bugs that passed a correct-looking test suite
 ├── scripts/plugins/eslint/          Custom ESLint rules (no-object-exports, inline-if-to-scoped)
 ├── .github/workflows/checks.yml     CI: typecheck, format, lint, spelling, knip, tests
