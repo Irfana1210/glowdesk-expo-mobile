@@ -148,7 +148,7 @@ Every change is checked with the domain rules on the device first, and again by 
 - **Restarts.** The query cache and paused mutations are saved with the TanStack persister. Each mutation's `mutationFn` is registered by key, so after a restart `resumePausedMutations` sends what was waiting.
 - **Rollback.** A rejected change shows an error toast and reloads the server's copy, which undoes the optimistic update.
 - **Server-confirmed changes.** Mark ready and cancel are never optimistic. They need a connection, and the button explains why when offline.
-- **Mock server.** `MockServer` stands in for the backend: it saves its data on the device, waits like a network request, fails while offline, and applies the same domain rules. Developer switches in Settings slow it down, force it offline, or make it fail some requests.
+- **Mock server.** `MockServer` stands in for the backend: it saves its data on the device, waits like a network request, fails while offline, and applies the same domain rules. Developer switches in Settings slow it down, force it offline, or make every request fail.
 
 ## Sign-in and route guards
 

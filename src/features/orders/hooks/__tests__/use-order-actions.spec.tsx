@@ -140,9 +140,16 @@ describe("useOrderActions offline queue", () => {
   it("retries a change the server briefly failed, so the changes queued after it still apply", async () => {
     const client = await loadedClient();
     const { result } = await renderActions(client);
-    // The first send hits a simulated 503; every request after it succeeds.
+    // The first send hits a simulated 503, then the switch turns off, so every retry succeeds.
     useMockNetworkStore.setState({ failRequests: true });
-    jest.spyOn(Math, "random").mockReturnValueOnce(0).mockReturnValue(0.99);
+    const send = MockServer.updateOrder;
+    jest.spyOn(MockServer, "updateOrder").mockImplementation(async (input) => {
+      try {
+        return await send(input);
+      } finally {
+        useMockNetworkStore.setState({ failRequests: false });
+      }
+    });
 
     await act(async () => {
       result.current.scanItem("ORD-7841", BARCODE);

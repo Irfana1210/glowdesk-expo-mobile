@@ -48,14 +48,16 @@ describe("MockServer requests", () => {
     );
   });
 
-  it("fails some requests with a server error when asked to", async () => {
+  it("fails every request with a server error until the switch is turned off", async () => {
     useMockNetworkStore.getState().setFailRequests(true);
-    jest.spyOn(Math, "random").mockReturnValue(0);
+    expect(await failureCode(MockServer.getOrders(DEMO_STORE_ID))).toBe(
+      "SERVER_ERROR",
+    );
     expect(await failureCode(MockServer.getOrders(DEMO_STORE_ID))).toBe(
       "SERVER_ERROR",
     );
 
-    jest.spyOn(Math, "random").mockReturnValue(0.9);
+    useMockNetworkStore.getState().setFailRequests(false);
     expect(await MockServer.getOrders(DEMO_STORE_ID)).toHaveLength(20);
   });
 

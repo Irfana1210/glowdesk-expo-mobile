@@ -48,8 +48,6 @@ type MockDb = {
 
 type SavedDb = MockDb & { schemaVersion: number };
 
-/** One request in this many fails while "Fail some requests" is on. */
-const FAILURE_ONE_IN = 4;
 const SCHEMA_VERSION = 1;
 
 const ORDER_STATUSES: ReadonlyArray<OrderStatus> = [
@@ -166,7 +164,7 @@ export namespace MockServer {
     if (!onlineManager.isOnline()) {
       throw new ApiError("NETWORK", "The device is offline.", 0);
     }
-    if (failRequests && Math.floor(Math.random() * FAILURE_ONE_IN) === 0) {
+    if (failRequests) {
       throw new ApiError("SERVER_ERROR", "Simulated server error.", 503);
     }
     const current = await data();

@@ -868,8 +868,9 @@ export namespace LOCALE {
         description: "Add a few seconds to every request",
       },
       failRequests: {
-        label: "Fail some requests",
-        description: "About one request in four fails with a server error",
+        label: "Fail every request",
+        description:
+          "Every request fails with a server error until you turn this off",
       },
     },
     signOut: {
